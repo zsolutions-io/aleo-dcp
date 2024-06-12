@@ -2,5 +2,13 @@
   "program": "secret_custody_protocol.aleo",
   "version": "0.0.0",
   "description": "",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": [
+    {
+      "name": "protocol_validators.aleo",
+      "location": "local",
+      "network": null,
+      "path": "../protocol_validators"
+    }
+  ]
 }

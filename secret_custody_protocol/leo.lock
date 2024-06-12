@@ -1,6 +1,6 @@
 [[package]]
 name = "protocol_validators.aleo"
 location = "local"
-path = "/Users/palong/aleo/aleo-store-programs/secret-custody-protocol/secret_custody_protocol_dynamic/../protocol_validators"
+path = "/Users/palong/aleo/aleo-store-programs/secret-custody-protocol/secret_custody_protocol/../protocol_validators"
 checksum = "b9c6d2c880ea9a1fd2d2d504a89ffec1501fdad453dfd3f8d9949fda710a04c2"
 dependencies = []
