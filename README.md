@@ -1,35 +1,47 @@
 # Secret Custody Protocol
 
-An Aleo program to allow any other Aleo program to custody private data.
+An MPC protocol built on Aleo to **allow any Aleo program to custody arbitrary private data.**
 
-It currently supports 15 validators that can be dynamically updated, but the amount of validators can be
+It currently supports 15 validators that can be dynamically updated through a voting mechanism, but the number of validators could be increased.
+
+## How it works?
+
+An arbitrary Aleo record (from any program) containing the private data is transferred to a random address, whose View Key is simultaneously split among n validators using the Shamir secret sharing algorithm. This is the `custody` step.
+
+This view key can later be requested to be sent privately to any destination address, by initial program. This is the `request` step.
+
+Immediately after, a decentralized network of validators handle the request. It's consists of bots running a script, that provide their respective share to the destination address. This is the `submission` step.
+
+The requester can then reconstruct the View Key offchain using k of n shares and decipher the private data from the original record. This is the `reconstruction` step.
+
+The idea is that `request`, `submission` and `reconstruction` steps can all happen "at once", without the need of any validation from the signer of `custody` step transaction.
+
+This enables use cases such as private data NFT marketplace with one click buy or fully private DEX on Aleo.
 
 ## Usage
 
-### Example
+### How to use it from any program?
 
 For a program to custody private data, it must import `secret_custody_protocol.aleo`.
 
-To custody data, it simultanuously:
-     - calls `secret_custody_protocol.aleo/custody_data_as_program(data_view_key, threshold, ...)`
-     - sends any records to `(data_view_key * group::GEN) as address`
-It can later :
-     - calls `secret_custody_protocol.aleo/request_data_as_program` to initiate a data request.
-
-Validator bots then call `process_request_as_validator` to accept the data request.
-`secret_custody_protocol.aleo/assert_request_completed_as_program` can then be used by the program to check if data was transmitted.
+1. To custody data, it must:
+    - Call `secret_custody_protocol.aleo/custody_data_as_program(data_view_key, threshold, ...)`
+    - Send any records to `(data_view_key * group::GEN) as address`
+2. It can then call `secret_custody_protocol.aleo/request_data_as_program` to initiate a data request.
+3. Validator bots automatically call `process_request_as_validator` to accept the data request.
+4. `secret_custody_protocol.aleo/assert_request_completed_as_program` can then be used by the program to check if data was effectively transmitted.
 
 ### Example
 
 Marketplace program for NFTs with secret data:
 
 ```rust
+rustCopier le code
 import secret_custody_protocol.aleo;
 import arc721.aleo;
 import credits.aleo;
 
-
-program marketplace.aleo{
+program marketplace.aleo {
     const mpc_threshold: u8 = 8u8;
 
     record MarketplaceNFTData {
@@ -45,7 +57,7 @@ program marketplace.aleo{
         nft_data_address: address
     }
 
-    mapping listings: scalar => ListingData; 
+    mapping listings: scalar => ListingData;
                    // nft_commit => listing_data;
     mapping listings_buyer: scalar => address;
                             // nft_commit => buyer;
@@ -59,7 +71,6 @@ program marketplace.aleo{
         return commitment;
     }
 
-
     async transition list(
         private nft: arc721.aleo/NFT,   // private nft record to list
         public price: u64,              // total price paid by seller
@@ -67,7 +78,7 @@ program marketplace.aleo{
         private privacy_random_coefficients: [field; 14],
         private validators: [address; 15],
     ) -> (MarketplaceNFTData, Future) {
-        let (transfer_future, nft_data): (Future, arc721.aleo/NFTData) 
+        let (transfer_future, nft_data): (Future, arc721.aleo/NFTData)
             = arc721.aleo/transfer_private_to_public(
                 nft, self.address
             );
@@ -105,7 +116,7 @@ program marketplace.aleo{
             custody_data_as_program_future
         );
         return (
-            out_nft_data, 
+            out_nft_data,
             list_future,
         );
     }
@@ -121,7 +132,7 @@ program marketplace.aleo{
         transfer_future.await();
         custody_data_as_program_future.await();
 
-        let listing_data: ListingData = ListingData{
+        let listing_data: ListingData = ListingData {
             price: price,
             seller: seller,
             data_custody_hash: custody_hash,
@@ -130,13 +141,12 @@ program marketplace.aleo{
         listings.set(nft_commit, listing_data);
     }
 
-
     async transition accept_listing(
         nft_commit: field,
         listing_data: ListingData,
         validators: [address; 15]
         /*
-            Validators associated with the listing can be retrieved using: 
+            Validators associated with the listing can be retrieved using:
                 protocol_validators.aleo/validator_sets.get(
                     secret_custody_protocol.aleo/custodies.get(
                         listing_data.data_custody_hash
@@ -180,11 +190,10 @@ program marketplace.aleo{
         assert_eq(retrieved_listing_data, listing_data);
         assert(listings_buyer.contains(nft_commit).not());
         listings_buyer.set(nft_commit, caller);
-        
+
         pay_marketplace_future.await();
         request_data_as_program_future.await();
     }
-
 
     // {nft_data, nft_edition} are retrieved by executing 'reconstruct_secret.aleo' offchain on shares sent to buyer by validators
     async transition withdraw_nft(
@@ -192,7 +201,7 @@ program marketplace.aleo{
         nft_edition: scalar,
         listing_data: ListingData
         /*
-            Validators associated with the listing can be retrieved using: 
+            Validators associated with the listing can be retrieved using:
                 protocol_validators.aleo/validator_sets.get(
                     secret_custody_protocol.aleo/custodies.get(
                         listing_data.data_custody_hash
@@ -201,9 +210,9 @@ program marketplace.aleo{
         */
     ) -> (arc721.aleo/NFT, AcceptedListing, Future) {
         let nft_commit: field = commit_token(nft_data, nft_edition);
-        
+
         let (
-            purshased_nft,
+            purchased_nft,
             transfer_nft_to_buyer_future
         ): (arc721.aleo/NFT, Future) = arc721.aleo/transfer_public_to_private(
             nft_data,
@@ -218,7 +227,7 @@ program marketplace.aleo{
             transfer_nft_to_buyer_future,
         );
         return (
-            purshased_nft,
+            purchased_nft,
             accept_listing_future,
             accepted_listing
         );
@@ -238,7 +247,6 @@ program marketplace.aleo{
     }
 }
 
-
 ```
 
-*This is a very simplified marketplace to focus on `secret_custody_protocol.aleo` program usage. Private seller/buyer and offers are not shown here while possible.*
+*This is a very simplified marketplace to focus on the `secret_custody_protocol.aleo` program usage. This is why private seller/buyer and offers are not shown here.*
