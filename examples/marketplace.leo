@@ -1,29 +1,3 @@
-# Secret Custody Protocol
-
-An Aleo program to allow any other Aleo program to custody private data.
-
-It currently supports 15 validators that can be dynamically updated, but the amount of validators can be
-
-## Usage
-
-### Example
-
-For a program to custody private data, it must import `secret_custody_protocol.aleo`.
-
-To custody data, it simultanuously:
-     - calls `secret_custody_protocol.aleo/custody_data_as_program(data_view_key, threshold, ...)`
-     - sends any records to `(data_view_key * group::GEN) as address`
-It can later :
-     - calls `secret_custody_protocol.aleo/request_data_as_program` to initiate a data request.
-
-Validator bots then call `process_request_as_validator` to accept the data request.
-`secret_custody_protocol.aleo/assert_request_completed_as_program` can then be used by the program to check if data was transmitted.
-
-### Example
-
-Marketplace program for NFTs with secret data:
-
-```rust
 import secret_custody_protocol.aleo;
 import arc721.aleo;
 import credits.aleo;
@@ -238,7 +212,3 @@ program marketplace.aleo{
     }
 }
 
-
-```
-
-*This is a very simplified marketplace to focus on `secret_custody_protocol.aleo` program usage. Private seller/buyer and offers are not shown here while possible.*
