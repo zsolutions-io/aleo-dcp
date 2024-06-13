@@ -1,0 +1,4 @@
+outputs/
+build/
+**/.DS_Store
+**/.env
