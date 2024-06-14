@@ -6,18 +6,19 @@ import credits.aleo;
 program marketplace.aleo{
     const mpc_threshold: u8 = 8u8;
 
-    record NFTView{
-        owner: address,
-        data: data,
-        edition: scalar
-    }
-
     struct ListingData {
         price: u64,
         seller: address,
         data_custody_hash: field,
         nft_data_address: address
     }
+    
+    record NFTView{
+        owner: address,
+        data: data,
+        edition: scalar
+    }
+
 
     mapping listings: field => ListingData; 
     // nft_commit => listing_data;
@@ -62,41 +63,8 @@ program marketplace.aleo{
 
         let data_custody_hash: field = BHP256::hash_to_field(data_custody);
 
-        let (
-            share0,
-            share1,
-            share2,
-            share3,
-            share4,
-            share5,
-            share6,
-            share7,
-            share8,
-            share9,
-            share10,
-            share11,
-            share12,
-            share13,
-            share14,
-            custody_data_as_program_future
-        ): (
-            secret_custody_protocol.aleo/ValidatorShare,
-            secret_custody_protocol.aleo/ValidatorShare,
-            secret_custody_protocol.aleo/ValidatorShare,
-            secret_custody_protocol.aleo/ValidatorShare,
-            secret_custody_protocol.aleo/ValidatorShare,
-            secret_custody_protocol.aleo/ValidatorShare,
-            secret_custody_protocol.aleo/ValidatorShare,
-            secret_custody_protocol.aleo/ValidatorShare,
-            secret_custody_protocol.aleo/ValidatorShare,
-            secret_custody_protocol.aleo/ValidatorShare,
-            secret_custody_protocol.aleo/ValidatorShare,
-            secret_custody_protocol.aleo/ValidatorShare,
-            secret_custody_protocol.aleo/ValidatorShare,
-            secret_custody_protocol.aleo/ValidatorShare,
-            secret_custody_protocol.aleo/ValidatorShare,
-            Future
-        ) = secret_custody_protocol.aleo/custody_data_as_program(
+        let custody_data_as_program_future: Future =
+            secret_custody_protocol.aleo/custody_data_as_program(
                 secret_random_viewkey, // private data_view_key: scalar,
                 privacy_random_coefficients, // private coefficients: [field; 14],
                 validators, // private validators: [address; 15],

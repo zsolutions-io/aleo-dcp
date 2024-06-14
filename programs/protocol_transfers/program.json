@@ -1,5 +1,5 @@
 {
-  "program": "secret_custody_protocol.aleo",
+  "program": "protocol_transfers.aleo",
   "version": "0.0.0",
   "description": "",
   "license": "MIT",
@@ -11,13 +11,7 @@
       "path": "../protocol_core"
     },
     {
-      "name": "protocol_transfers.aleo",
-      "location": "local",
-      "network": null,
-      "path": "../protocol_transfers"
-    },
-    {
-      "name": "secret_custody_protocol.aleo",
+      "name": "credits.aleo",
       "location": "network",
       "network": "testnet",
       "path": null
