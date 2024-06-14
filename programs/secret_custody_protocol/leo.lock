@@ -1,6 +1,20 @@
 [[package]]
-name = "protocol_validators.aleo"
-location = "local"
-path = "/Users/palong/aleo/aleo-store-programs/secret-custody-protocol/secret_custody_protocol/../protocol_validators"
-checksum = "b9c6d2c880ea9a1fd2d2d504a89ffec1501fdad453dfd3f8d9949fda710a04c2"
+name = "credits.aleo"
+network = "testnet"
+location = "network"
+checksum = "a96e301bc901ca10ad7c35da423f0b1721cc30842252a098c47c1a7bd8cb2364"
 dependencies = []
+
+[[package]]
+name = "protocol_core.aleo"
+location = "local"
+path = "/Users/palong/aleo/aleo-store-programs/secret-custody-protocol/programs/secret_custody_protocol/../protocol_core"
+checksum = "ae732ad9afa51e1b4503e6c4686b01cceaa48c99de66916c86407b8dc734bf89"
+dependencies = ["credits.aleo"]
+
+[[package]]
+name = "protocol_transfers.aleo"
+location = "local"
+path = "/Users/palong/aleo/aleo-store-programs/secret-custody-protocol/programs/secret_custody_protocol/../protocol_transfers"
+checksum = "1bc6fec5e5dd1cb167217d30081f95a4457d1aa5261f572ef2c4b2f98cf2e53f"
+dependencies = ["protocol_core.aleo", "credits.aleo"]

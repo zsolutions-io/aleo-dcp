@@ -5,10 +5,16 @@
   "license": "MIT",
   "dependencies": [
     {
-      "name": "protocol_validators.aleo",
+      "name": "protocol_core.aleo",
       "location": "local",
       "network": null,
-      "path": "../protocol_validators"
+      "path": "../protocol_core"
+    },
+    {
+      "name": "protocol_transfers.aleo",
+      "location": "local",
+      "network": null,
+      "path": "../protocol_transfers"
     }
   ]
 }
