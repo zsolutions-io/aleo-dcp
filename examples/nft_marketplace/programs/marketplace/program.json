@@ -1,0 +1,26 @@
+{
+  "program": "marketplace.aleo",
+  "version": "0.1.0",
+  "description": "",
+  "license": "MIT",
+  "dependencies": [
+    {
+      "name": "secret_custody_protocol.aleo",
+      "location": "local",
+      "network": null,
+      "path": "../../../../programs/secret_custody_protocol"
+    },
+    {
+      "name": "credits.aleo",
+      "location": "network",
+      "network": "testnet",
+      "path": null
+    },
+    {
+      "name": "arc721.aleo",
+      "location": "local",
+      "network": null,
+      "path": "../arc721/"
+    }
+  ]
+}
