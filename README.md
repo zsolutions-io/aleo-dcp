@@ -1,6 +1,6 @@
 # Secret Custody Protocol
 
-A MPC protocol built on Aleo to **allow any Aleo program to custody arbitrary private data** that can be programatically withdrawn.
+A MPC protocol built on Aleo to **allow any Aleo program to custody arbitrary private data** that can be programatically withdrawn. It enables use cases such as private data NFT marketplace with one click buy or private DEXs on Aleo.
 
 It currently supports unlimited amount of validators that can be dynamically updated through a voting mechanism.
 
@@ -15,8 +15,6 @@ Immediately after, a decentralized network of validators handle the request. It'
 The requester can then reconstruct the View Key offchain using k of n shares and decipher the private data from the original record. This is the `reconstruction` step.
 
 The idea is that `request`, `submission` and `reconstruction` steps can all happen "at once", without the need of any validation from the signer of `custody` step transaction.
-
-This enables use cases such as private data NFT marketplace with one click buy or fully private DEX on Aleo.
 
 ## Usage
 
