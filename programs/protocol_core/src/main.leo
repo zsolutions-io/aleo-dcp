@@ -15,7 +15,7 @@
 */
 
 program protocol_core.aleo {
-    const default_authority: address = aleo1rupdxnwys2qktts6dqy7l4pjvng0ruapjxsht6ftsjlcmupl6c8sezw5n3; // APrivateKey1zkpGLq4y2tb8f54kkc1hKN3SWtcGDBikqWoHdx5xw2iLoLd
+    const default_authority: address = aleo1wamjqlka7d0gazlxdys6n8e8zeee3ymedwvw8elvh7529kwd45rq0plgax;
 
     struct Proposal {
         validators: [address; 16],

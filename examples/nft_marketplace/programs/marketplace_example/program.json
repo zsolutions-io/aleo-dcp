@@ -1,5 +1,5 @@
 {
-  "program": "marketplace.aleo",
+  "program": "marketplace_example.aleo",
   "version": "0.1.0",
   "description": "",
   "license": "MIT",
@@ -11,10 +11,10 @@
       "path": "../../../../programs/secret_custody_protocol/"
     },
     {
-      "name": "arc721.aleo",
+      "name": "arc721_example.aleo",
       "location": "local",
       "network": null,
-      "path": "../arc721"
+      "path": "../arc721_example"
     }
   ]
 }
