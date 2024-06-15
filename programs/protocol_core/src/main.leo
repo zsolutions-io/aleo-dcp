@@ -58,7 +58,7 @@ program protocol_core.aleo {
     mapping proposals: field => Proposal;
     // proposal hash => validator addresses
 
-    mapping votes: field => [bool; 15];
+    mapping votes: field => [bool; 16];
     // proposal hash => validator addresses
 
     mapping custodies: field => CustodyState;
@@ -86,12 +86,13 @@ program protocol_core.aleo {
             || element == array[12u8]
             || element == array[13u8]
             || element == array[14u8]
+            || element == array[15u8]
         );
     }
 
     inline set_bool_in_array(
-        array: [bool; 15], index: u8, value: bool
-    ) -> [bool; 15] {
+        array: [bool; 16], index: u8, value: bool
+    ) -> [bool; 16] {
         return [
             (index == 0u8) ? value : array[0u8],
             (index == 1u8) ? value : array[1u8],
@@ -107,7 +108,8 @@ program protocol_core.aleo {
             (index == 11u8) ? value : array[11u8],
             (index == 12u8) ? value : array[12u8],
             (index == 13u8) ? value : array[13u8],
-            (index == 14u8) ? value : array[14u8]
+            (index == 14u8) ? value : array[14u8],
+            (index == 15u8) ? value : array[15u8]
         ];
     }
 
@@ -130,19 +132,21 @@ program protocol_core.aleo {
             : (index == 12u8) ? array[12u8]
             : (index == 13u8) ? array[13u8]
             : (index == 14u8) ? array[14u8]
+            : (index == 15u8) ? array[15u8]
             : (0group as address)
         );
     }
 
-    inline new_bool_array() -> [bool; 15] {
+    inline new_bool_array() -> [bool; 16] {
         return [
-            false, false, false, false, false,
-            false, false, false, false, false,
-            false, false, false, false, false
+            false, false, false, false,
+            false, false, false, false,
+            false, false, false, false,
+            false, false, false, false
         ];
     }
 
-    inline are_votes_approved(vote_values: [bool; 15], threshold: u8) -> bool {
+    inline are_votes_approved(vote_values: [bool; 16], threshold: u8) -> bool {
         let approval_amounts: u8 = (
             (vote_values[0u8] as u8)
             + (vote_values[1u8] as u8)
@@ -159,6 +163,7 @@ program protocol_core.aleo {
             + (vote_values[12u8] as u8)
             + (vote_values[13u8] as u8)
             + (vote_values[14u8] as u8)
+            + (vote_values[15u8] as u8)
         );
         return (approval_amounts >= threshold);
     }
@@ -260,11 +265,11 @@ program protocol_core.aleo {
             caller
         );
 
-        let current_votes: [bool; 15] = votes.get_or_use(
+        let current_votes: [bool; 16] = votes.get_or_use(
             proposal_hash,
             new_bool_array()
         );
-        let new_votes: [bool; 15] = set_bool_in_array(
+        let new_votes: [bool; 16] = set_bool_in_array(
             current_votes,
             caller_index,
             value
@@ -309,7 +314,7 @@ program protocol_core.aleo {
         
         let prev_threshold: u8 = vote_approval_threshold.get(true);
 
-        let current_votes: [bool; 15] = votes.get(proposal_hash);
+        let current_votes: [bool; 16] = votes.get(proposal_hash);
         assert(
             are_votes_approved(current_votes, prev_threshold)
         );
