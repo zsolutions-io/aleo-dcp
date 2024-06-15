@@ -36,7 +36,6 @@ For a program to custody private data, it must import `secret_custody_protocol.a
 Marketplace program for NFTs with secret data:
 
 ```rust
-rustCopier le code
 import secret_custody_protocol.aleo;
 import arc721.aleo;
 import credits.aleo;
@@ -44,56 +43,61 @@ import credits.aleo;
 program marketplace.aleo {
     const mpc_threshold: u8 = 8u8;
 
-    record MarketplaceNFTData {
-        owner: address,
-        data: [field; 4],
-        edition: scalar
-    }
-
     struct ListingData {
         price: u64,
         seller: address,
         data_custody_hash: field,
         nft_data_address: address
     }
-
-    mapping listings: scalar => ListingData;
-                   // nft_commit => listing_data;
-    mapping listings_buyer: scalar => address;
-                            // nft_commit => buyer;
-
-    inline commit_token(
-        data: [field; 4],
+    
+    record NFTView{
+        owner: address,
+        data: data,
         edition: scalar
+    }
+
+
+    mapping listings: field => ListingData; 
+    // nft_commit => listing_data;
+
+    mapping listings_buyer: field => address;
+    // nft_commit => buyer;
+
+
+    inline commit_nft(
+        nft_data: data,
+        nft_edition: scalar
     ) -> field {
-        let data_hash: field = BHP256::hash_to_field(data);
-        let commitment: field = BHP256::commit_to_field(data_hash, edition);
+        let data_hash: field = BHP256::hash_to_field(nft_data);
+        let commitment: field = BHP256::commit_to_field(data_hash, nft_edition);
         return commitment;
     }
+
+
 
     async transition list(
         private nft: arc721.aleo/NFT,   // private nft record to list
         public price: u64,              // total price paid by seller
         private secret_random_viewkey: scalar,
-        private privacy_random_coefficients: [field; 14],
-        private validators: [address; 15],
-    ) -> (MarketplaceNFTData, Future) {
-        let (transfer_future, nft_data): (Future, arc721.aleo/NFTData)
+        private privacy_random_coefficients: [field; 15],
+        private validators: [address; 16],
+    ) -> (NFTView, Future) {
+        let (nft_view, transfer_future): (arc721.aleo/NFTView, Future) 
             = arc721.aleo/transfer_private_to_public(
                 nft, self.address
             );
         let nft_data_address: address = (secret_random_viewkey * group::GEN) as address;
-        let out_nft_data: MarketplaceNFTData = MarketplaceNFTData {
+        let out_nft_view: NFTView = NFTView {
             owner: nft_data_address,
             data: nft.data,
             edition: nft.edition
         };
-        let nft_commit: field = commit_token(nft.data, nft.edition);
+        let nft_commit: field = commit_nft(nft.data, nft.edition);
 
-        let data_custody: secret_custody_protocol.aleo/Custody = secret_custody_protocol.aleo/Custody {
+        let data_custody: Custody = Custody {
             initiator: self.caller,
             data_address: nft_data_address,
-            threshold: threshold,
+            threshold: mpc_threshold,
         };
 
         let data_custody_hash: field = BHP256::hash_to_field(data_custody);
@@ -103,7 +107,7 @@ program marketplace.aleo {
                 secret_random_viewkey, // private data_view_key: scalar,
                 privacy_random_coefficients, // private coefficients: [field; 14],
                 validators, // private validators: [address; 15],
-                threshold // private threshold: u8 <= 15
+                mpc_threshold // private threshold: u8 <= 15
             );
 
         let list_future: Future = finalize_list(
@@ -116,7 +120,7 @@ program marketplace.aleo {
             custody_data_as_program_future
         );
         return (
-            out_nft_data,
+            out_nft_view, 
             list_future,
         );
     }
@@ -132,7 +136,7 @@ program marketplace.aleo {
         transfer_future.await();
         custody_data_as_program_future.await();
 
-        let listing_data: ListingData = ListingData {
+        let listing_data: ListingData = ListingData{
             price: price,
             seller: seller,
             data_custody_hash: custody_hash,
@@ -141,31 +145,42 @@ program marketplace.aleo {
         listings.set(nft_commit, listing_data);
     }
 
+
     async transition accept_listing(
-        nft_commit: field,
-        listing_data: ListingData,
-        validators: [address; 15]
+        public nft_commit: field,
+        private listing_data: ListingData,
+        public validators: [address; 16],
+        public validator_fee: u64,
+        private protocol_fee_record: credits.aleo/credits,
         /*
-            Validators associated with the listing can be retrieved using:
+            Validators associated with the listing can be retrieved using: 
                 protocol_validators.aleo/validator_sets.get(
                     secret_custody_protocol.aleo/custodies.get(
                         listing_data.data_custody_hash
                     )
                 )
         */
-    ) -> Future {
+    ) -> (credits.aleo/credits, Future) {
         let pay_marketplace_future: Future =
             credits.aleo/transfer_public(
                 listing_data.seller,
                 listing_data.price
             );
 
-        let request_data_as_program_future: Future =
+        let (
+            change,
+            request_data_as_program_future
+        ): (
+            credits.aleo/credits,
+            Future
+        ) =
             secret_custody_protocol.aleo/request_data_as_program(
                 listing_data.nft_data_address, // private data_address: address,
                 self.signer, // private to: address,
                 mpc_threshold, // private threshold: u8,
                 validators,// public validators: [address; 15],
+                validator_fee,
+                protocol_fee_record,
             );
         let accept_listing_future: Future = finalize_accept_listing(
             self.caller,
@@ -174,10 +189,7 @@ program marketplace.aleo {
             pay_marketplace_future,
             request_data_as_program_future,
         );
-        return (
-            accept_listing_future,
-            accepted_listing
-        );
+        return (change, accept_listing_future);
     }
     async function finalize_accept_listing(
         caller: address,
@@ -190,29 +202,30 @@ program marketplace.aleo {
         assert_eq(retrieved_listing_data, listing_data);
         assert(listings_buyer.contains(nft_commit).not());
         listings_buyer.set(nft_commit, caller);
-
+        
         pay_marketplace_future.await();
         request_data_as_program_future.await();
     }
 
+
     // {nft_data, nft_edition} are retrieved by executing 'reconstruct_secret.aleo' offchain on shares sent to buyer by validators
     async transition withdraw_nft(
-        nft_data: [field; 4],
+        nft_data: data,
         nft_edition: scalar,
         listing_data: ListingData
         /*
-            Validators associated with the listing can be retrieved using:
+            Validators associated with the listing can be retrieved using: 
                 protocol_validators.aleo/validator_sets.get(
                     secret_custody_protocol.aleo/custodies.get(
                         listing_data.data_custody_hash
                     )
                 )
         */
-    ) -> (arc721.aleo/NFT, AcceptedListing, Future) {
-        let nft_commit: field = commit_token(nft_data, nft_edition);
-
+    ) -> (arc721.aleo/NFT, Future) {
+        let nft_commit: field = commit_nft(nft_data, nft_edition);
+        
         let (
-            purchased_nft,
+            purshased_nft,
             transfer_nft_to_buyer_future
         ): (arc721.aleo/NFT, Future) = arc721.aleo/transfer_public_to_private(
             nft_data,
@@ -227,9 +240,8 @@ program marketplace.aleo {
             transfer_nft_to_buyer_future,
         );
         return (
-            purchased_nft,
-            accept_listing_future,
-            accepted_listing
+            purshased_nft,
+            accept_listing_future
         );
     }
     async function finalize_withdraw_nft(
@@ -246,7 +258,6 @@ program marketplace.aleo {
         transfer_nft_to_buyer_future.await();
     }
 }
-
 ```
 
 *This is a very simplified marketplace to focus on the `secret_custody_protocol.aleo` program usage. This is why private seller/buyer and offers are not shown here.*

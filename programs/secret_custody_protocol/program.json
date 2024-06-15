@@ -15,12 +15,6 @@
       "location": "local",
       "network": null,
       "path": "../protocol_transfers"
-    },
-    {
-      "name": "secret_custody_protocol.aleo",
-      "location": "network",
-      "network": "testnet",
-      "path": null
     }
   ]
 }
