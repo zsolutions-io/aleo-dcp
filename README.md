@@ -1,6 +1,6 @@
 # Secret Custody Protocol
 
-A MPC protocol built on Aleo to **allow any Aleo program to custody arbitrary private data** that can be programatically withdrawn. It enables use cases such as private data NFT marketplace with one click buy or private DEXs on Aleo.
+A MPC protocol built on Aleo to **allow any Aleo program to custody arbitrary private data** that can be programatically withdrawn. It enables use cases such as private data NFT marketplace with one click buy or private orders DEXs on Aleo.
 
 It currently supports unlimited amount of validators that can be dynamically updated through a voting mechanism.
 
