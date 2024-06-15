@@ -49,8 +49,6 @@ program secret_custody_protocol.aleo {
         assert_neq(self.caller, self.signer);
         let secret: field = data_view_key as field;
 
-        // TODO: not all coefficients 0 check ???
-
         let data_address: address = (data_view_key * group::GEN) as address;
         let custodied_data: Custody = Custody {
             initiator: self.caller,

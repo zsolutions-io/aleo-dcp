@@ -36,7 +36,7 @@ program reconstruct_secret.aleo {
         return ((f == 0field) ? 1field : f).inv();
     }
 
-    function reconstruct(shares: [Share; 15]) -> field {
+    function reconstruct(shares: [Share; 16]) -> field {
         let secret: field = 0field;
         for i: u8 in 0u8..15u8{
             let lagrange_coeff: field = 1field;
@@ -56,7 +56,7 @@ program reconstruct_secret.aleo {
         return secret;
     }
 
-    transition call_reconstruct(shares: [Share; 15]) -> field {
+    transition call_reconstruct(shares: [Share; 16]) -> field {
         let reconstructed_secret: field = reconstruct(shares);
         return reconstructed_secret;
     }

@@ -103,9 +103,9 @@ program marketplace.aleo {
         let custody_data_as_program_future: Future =
             secret_custody_protocol.aleo/custody_data_as_program(
                 secret_random_viewkey, // private data_view_key: scalar,
-                privacy_random_coefficients, // private coefficients: [field; 14],
-                validators, // private validators: [address; 15],
-                mpc_threshold // private threshold: u8 <= 15
+                privacy_random_coefficients, // private coefficients: [field; 15],
+                validators, // private validators: [address; 16],
+                mpc_threshold // private threshold: u8 <= 16
             );
 
         let list_future: Future = finalize_list(
@@ -152,8 +152,8 @@ program marketplace.aleo {
         private protocol_fee_record: credits.aleo/credits,
         /*
             Validators associated with the listing can be retrieved using: 
-                protocol_validators.aleo/validator_sets.get(
-                    secret_custody_protocol.aleo/custodies.get(
+                protocol_core.aleo/validator_sets.get(
+                    protocol_core.aleo/custodies.get(
                         listing_data.data_custody_hash
                     )
                 )

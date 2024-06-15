@@ -67,8 +67,8 @@ program marketplace.aleo {
         let custody_data_as_program_future: Future =
             secret_custody_protocol.aleo/custody_data_as_program(
                 secret_random_viewkey, // private data_view_key: scalar,
-                privacy_random_coefficients, // private coefficients: [field; 14],
-                validators, // private validators: [address; 15],
+                privacy_random_coefficients, // private coefficients: [field; 15],
+                validators, // private validators: [address; 16],
                 mpc_threshold // private threshold: u8 <= 15
             );
 
@@ -140,7 +140,7 @@ program marketplace.aleo {
                 listing_data.nft_data_address, // private data_address: address,
                 self.signer, // private to: address,
                 mpc_threshold, // private threshold: u8,
-                validators,// public validators: [address; 15],
+                validators,// public validators: [address; 16],
                 validator_fee,
                 protocol_fee_record,
             );
