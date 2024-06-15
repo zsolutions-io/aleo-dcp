@@ -1,8 +1,8 @@
 # Secret Custody Protocol
 
-An MPC protocol built on Aleo to **allow any Aleo program to custody arbitrary private data.**
+A MPC protocol built on Aleo to **allow any Aleo program to custody arbitrary private data** that can be programatically withdrawn.
 
-It currently supports 15 validators that can be dynamically updated through a voting mechanism, but the number of validators could be increased.
+It currently supports unlimited amount of validators that can be dynamically updated through a voting mechanism.
 
 ## How it works?
 
