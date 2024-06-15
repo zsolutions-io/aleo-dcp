@@ -1,11 +1,8 @@
-
 /*
     Protocol to allow programs to custody and distribute private data.
 
     Next Step:
-        - Validator credits incentive
-            + add request_data_as_program transition a credits record input, and k*amount
-            + distribute amount/k on process_request_as_validator
+        - Multiple aleo credits
 
     Limit:
     15 validators maximum limit (16 max transition outputs - 1 future).
@@ -14,55 +11,16 @@
     contact@aleo.store - Pierre-André LONG
 */
 
-import protocol_validators.aleo;
+import protocol_core.aleo;
+import protocol_transfers.aleo;
 
 program secret_custody_protocol.aleo {
-    // hash(Custody) => CustodyState
-    mapping custodies: field => CustodyState;
-    // hash(Custody) => Amount of shares submitted from validators to destination
-    mapping submitted_shares: field => u8;
-
-    struct CustodyState {
-        validator_set_index: u64,
-        requested: bool
-    }
-
-    struct Custody {
-        initiator: address,
-        data_address: address,
-        threshold: u8,
-    }
-
-    struct Share {
-        share_val: field,
-        index: field,
-    }
-
-    record ValidatorShare {
-        owner: address,
-        share: Share,
-        custody: Custody,
-    }
-
-    record WithdrawRequest {
-        owner: address,
-        custody_hash: field,
-        to: address,
-    }
-
-    record DestinationShare {
-        owner: address,
-        share: Share,
-    }
-
-
     inline hash_custody(custody: Custody) -> field {
         return BHP256::hash_to_field(custody);
     }
 
-
-    function evaluate_polynomial(
-        coefficients: [field; 14],
+    inline evaluate_polynomial(
+        coefficients: [field; 15],
         threshold: u8,
         eval_point: field,
         secret: field
@@ -76,7 +34,6 @@ program secret_custody_protocol.aleo {
         return y;
     }
 
-
     /*
         Child program simultanuously (in same transaction):
             - calls receive_precord_as_program(data_view_key)
@@ -85,29 +42,14 @@ program secret_custody_protocol.aleo {
     */
     async transition custody_data_as_program(
         private data_view_key: scalar,
-        private coefficients: [field; 14],
-        private validators: [address; 15],
+        private coefficients: [field; 15],
+        public validators: [address; 16],
         private threshold: u8  // <= 15
-    ) -> (
-        ValidatorShare,
-        ValidatorShare,
-        ValidatorShare,
-        ValidatorShare,
-        ValidatorShare,
-        ValidatorShare,
-        ValidatorShare,
-        ValidatorShare,
-        ValidatorShare,
-        ValidatorShare,
-        ValidatorShare,
-        ValidatorShare,
-        ValidatorShare,
-        ValidatorShare,
-        ValidatorShare,
-        Future
-    ){
-        assert_neq(self.caller, self.signer); // caller must be a program
+    ) -> Future {
+        assert_neq(self.caller, self.signer);
         let secret: field = data_view_key as field;
+
+        // TODO: not all coefficients 0 check ???
 
         let data_address: address = (data_view_key * group::GEN) as address;
         let custodied_data: Custody = Custody {
@@ -118,162 +60,150 @@ program secret_custody_protocol.aleo {
         let custody_hash: field = hash_custody(custodied_data);
 
         let index_0: field = 1field;
-        let validator_share_0: ValidatorShare = ValidatorShare {
-            owner: validators[0u8],
+        let validator_share_0: ValidatorShareData = ValidatorShareData {
+            validator: validators[0u8],
             share: Share {
                 share_val: evaluate_polynomial(coefficients, threshold, index_0, secret),
                 index: index_0
-            },
-            custody: custodied_data
+            }
         };
 
         let index_1: field = 2field;
-        let validator_share_1: ValidatorShare = ValidatorShare {
-            owner: validators[1u8],
+        let validator_share_1: ValidatorShareData = ValidatorShareData {
+            validator: validators[1u8],
             share: Share {
                 share_val: evaluate_polynomial(coefficients, threshold, index_1, secret),
                 index: index_1
-            },
-            custody: custodied_data
+            }
         };
 
         let index_2: field = 3field;
-        let validator_share_2: ValidatorShare = ValidatorShare {
-            owner: validators[2u8],
+        let validator_share_2: ValidatorShareData = ValidatorShareData {
+            validator: validators[2u8],
             share: Share {
                 share_val: evaluate_polynomial(coefficients, threshold, index_2, secret),
                 index: index_2
-            },
-            custody: custodied_data
+            }
         };
 
         let index_3: field = 4field;
-        let validator_share_3: ValidatorShare = ValidatorShare {
-            owner: validators[3u8],
+        let validator_share_3: ValidatorShareData = ValidatorShareData {
+            validator: validators[3u8],
             share: Share {
                 share_val: evaluate_polynomial(coefficients, threshold, index_3, secret),
                 index: index_3
-            },
-            custody: custodied_data
+            }
         };
         
         let index_4: field = 5field;
-        let validator_share_4: ValidatorShare = ValidatorShare {
-            owner: validators[4u8],
+        let validator_share_4: ValidatorShareData = ValidatorShareData {
+            validator: validators[4u8],
             share: Share {
                 share_val: evaluate_polynomial(coefficients, threshold, index_4, secret),
                 index: index_4
-            },
-            custody: custodied_data
+            }
         };
 
         let index_5: field = 6field;
-        let validator_share_5: ValidatorShare = ValidatorShare {
-            owner: validators[5u8],
+        let validator_share_5: ValidatorShareData = ValidatorShareData {
+            validator: validators[5u8],
             share: Share {
                 share_val: evaluate_polynomial(coefficients, threshold, index_5, secret),
                 index: index_5
-            },
-            custody: custodied_data
+            }
         };
 
         let index_6: field = 7field;
-        let validator_share_6: ValidatorShare = ValidatorShare {
-            owner: validators[6u8],
+        let validator_share_6: ValidatorShareData = ValidatorShareData {
+            validator: validators[6u8],
             share: Share {
                 share_val: evaluate_polynomial(coefficients, threshold, index_6, secret),
                 index: index_6
-            },
-            custody: custodied_data
+            }
         };
 
         let index_7: field = 8field;
-        let validator_share_7: ValidatorShare = ValidatorShare {
-            owner: validators[7u8],
+        let validator_share_7: ValidatorShareData = ValidatorShareData {
+            validator: validators[7u8],
             share: Share {
                 share_val: evaluate_polynomial(coefficients, threshold, index_7, secret),
                 index: index_7
-            },
-            custody: custodied_data
+            }
         };
 
         let index_8: field = 9field;
-        let validator_share_8: ValidatorShare = ValidatorShare {
-            owner: validators[8u8],
+        let validator_share_8: ValidatorShareData = ValidatorShareData {
+            validator: validators[8u8],
             share: Share {
                 share_val: evaluate_polynomial(coefficients, threshold, index_8, secret),
                 index: index_8
-            },
-            custody: custodied_data
+            }
         };
         
         let index_9: field = 10field;
-        let validator_share_9: ValidatorShare = ValidatorShare {
-            owner: validators[9u8],
+        let validator_share_9: ValidatorShareData = ValidatorShareData {
+            validator: validators[9u8],
             share: Share {
                 share_val: evaluate_polynomial(coefficients, threshold, index_9, secret),
                 index: index_9
-            },
-            custody: custodied_data
+            }
         };
 
         let index_10: field = 11field;
-        let validator_share_10: ValidatorShare = ValidatorShare {
-            owner: validators[10u8],
+        let validator_share_10: ValidatorShareData = ValidatorShareData {
+            validator: validators[10u8],
             share: Share {
                 share_val: evaluate_polynomial(coefficients, threshold, index_10, secret),
                 index: index_10
-            },
-            custody: custodied_data
+            }
         };
 
         let index_11: field = 12field;
-        let validator_share_11: ValidatorShare = ValidatorShare {
-            owner: validators[11u8],
+        let validator_share_11: ValidatorShareData = ValidatorShareData {
+            validator: validators[11u8],
             share: Share {
                 share_val: evaluate_polynomial(coefficients, threshold, index_11, secret),
                 index: index_11
-            },
-            custody: custodied_data
+            }
         };
 
         let index_12: field = 13field;
-        let validator_share_12: ValidatorShare = ValidatorShare {
-            owner: validators[12u8],
+        let validator_share_12: ValidatorShareData = ValidatorShareData {
+            validator: validators[12u8],
             share: Share {
                 share_val: evaluate_polynomial(coefficients, threshold, index_12, secret),
                 index: index_12
-            },
-            custody: custodied_data
+            }
         };
 
         let index_13: field = 14field;
-        let validator_share_13: ValidatorShare = ValidatorShare {
-            owner: validators[13u8],
+        let validator_share_13: ValidatorShareData = ValidatorShareData {
+            validator: validators[13u8],
             share: Share {
                 share_val: evaluate_polynomial(coefficients, threshold, index_13, secret),
                 index: index_13
-            },
-            custody: custodied_data
+            }
         };
         
         let index_14: field = 15field;
-        let validator_share_14: ValidatorShare = ValidatorShare {
-            owner: validators[14u8],
+        let validator_share_14: ValidatorShareData = ValidatorShareData {
+            validator: validators[14u8],
             share: Share {
                 share_val: evaluate_polynomial(coefficients, threshold, index_14, secret),
                 index: index_14
-            },
-            custody: custodied_data
+            }
         };
 
+        let index_15: field = 16field;
+        let validator_share_15: ValidatorShareData = ValidatorShareData {
+            validator: validators[15u8],
+            share: Share {
+                share_val: evaluate_polynomial(coefficients, threshold, index_15, secret),
+                index: index_15
+            }
+        };
 
-        let custody_data_as_program_future: Future = finalize_custody_data_as_program(
-            custody_hash,
-            validators
-        );
-
-        return (
+        let validator_shares: [ValidatorShareData; 16] = [
             validator_share_0,
             validator_share_1,
             validator_share_2,
@@ -289,27 +219,26 @@ program secret_custody_protocol.aleo {
             validator_share_12,
             validator_share_13,
             validator_share_14,
-            custody_data_as_program_future
+            validator_share_15,
+        ];
+        protocol_transfers.aleo/submit_shares_to_validators(
+            validator_shares,
+            custodied_data
+        );
+
+        let protocol_core_future: Future = protocol_core.aleo/custody_data_as_program(
+            custody_hash,
+            validators
+        );
+
+        return finalize_custody_data_as_program(
+            protocol_core_future
         );
     }
     async function finalize_custody_data_as_program(
-        custody_hash: field,
-        validators: [address; 15],
+        protocol_core_future: Future
     ){
-        assert(custodies.contains(custody_hash).not());
-
-        let validator_sets_len: u64 = 
-            protocol_validators.aleo/validator_sets_length.get(true);
-        let validator_set_index: u64 = validator_sets_len - 1u64;
-        let validator_set: [address; 15] =
-            protocol_validators.aleo/validator_sets.get(validator_set_index);
-        assert_eq(validators, validator_set);
-
-        let custody_state: CustodyState = CustodyState {
-            validator_set_index: validator_set_index,
-            requested: false
-        };
-        custodies.set(custody_hash, custody_state);
+        protocol_core_future.await();
     }
 
 
@@ -317,26 +246,11 @@ program secret_custody_protocol.aleo {
         private data_address: address,
         private to: address,
         private threshold: u8,
-        public validators: [address; 15],
-    ) -> (
-        WithdrawRequest,
-        WithdrawRequest,
-        WithdrawRequest,
-        WithdrawRequest,
-        WithdrawRequest,
-        WithdrawRequest,
-        WithdrawRequest,
-        WithdrawRequest,
-        WithdrawRequest,
-        WithdrawRequest,
-        WithdrawRequest,
-        WithdrawRequest,
-        WithdrawRequest,
-        WithdrawRequest,
-        WithdrawRequest,
-        Future
-    ){
-        assert_neq(self.caller, self.signer); // caller must be a program
+        public validators: [address; 16],
+        public validator_fee: u64,
+        private protocol_fee_record: credits.aleo/credits,
+    ) -> (credits.aleo/credits, Future) {
+        assert_neq(self.caller, self.signer);
         let custodied_data: Custody = Custody {
             initiator: self.caller,
             data_address: data_address,
@@ -344,153 +258,56 @@ program secret_custody_protocol.aleo {
         };
         let custody_hash: field = hash_custody(custodied_data);
 
-        let withdraw_request_0: WithdrawRequest = WithdrawRequest {
-            owner: validators[0u8],
-            custody_hash: custody_hash,
-            to: to
-        };
-        let withdraw_request_1: WithdrawRequest = WithdrawRequest {
-            owner: validators[1u8],
-            custody_hash: custody_hash,
-            to: to
-        };
-        let withdraw_request_2: WithdrawRequest = WithdrawRequest {
-            owner: validators[2u8],
-            custody_hash: custody_hash,
-            to: to
-        };
-        let withdraw_request_3: WithdrawRequest = WithdrawRequest {
-            owner: validators[3u8],
-            custody_hash: custody_hash,
-            to: to
-        };
-        let withdraw_request_4: WithdrawRequest = WithdrawRequest {
-            owner: validators[4u8],
-            custody_hash: custody_hash,
-            to: to
-        };
-        let withdraw_request_5: WithdrawRequest = WithdrawRequest {
-            owner: validators[5u8],
-            custody_hash: custody_hash,
-            to: to
-        };
-        let withdraw_request_6: WithdrawRequest = WithdrawRequest {
-            owner: validators[6u8],
-            custody_hash: custody_hash,
-            to: to
-        };
-        let withdraw_request_7: WithdrawRequest = WithdrawRequest {
-            owner: validators[7u8],
-            custody_hash: custody_hash,
-            to: to
-        };
-        let withdraw_request_8: WithdrawRequest = WithdrawRequest {
-            owner: validators[8u8],
-            custody_hash: custody_hash,
-            to: to
-        };
-        let withdraw_request_9: WithdrawRequest = WithdrawRequest {
-            owner: validators[9u8],
-            custody_hash: custody_hash,
-            to: to
-        };
-        let withdraw_request_10: WithdrawRequest = WithdrawRequest {
-            owner: validators[10u8],
-            custody_hash: custody_hash,
-            to: to
-        };
-        let withdraw_request_11: WithdrawRequest = WithdrawRequest {
-            owner: validators[11u8],
-            custody_hash: custody_hash,
-            to: to
-        };
-        let withdraw_request_12: WithdrawRequest = WithdrawRequest {
-            owner: validators[12u8],
-            custody_hash: custody_hash,
-            to: to
-        };
-        let withdraw_request_13: WithdrawRequest = WithdrawRequest {
-            owner: validators[13u8],
-            custody_hash: custody_hash,
-            to: to
-        };
-        let withdraw_request_14: WithdrawRequest = WithdrawRequest {
-            owner: validators[14u8],
-            custody_hash: custody_hash,
-            to: to
-        };
+        let validators_0: [address; 16] = [
+            validators[0u8],
+            validators[1u8],
+            validators[2u8],
+            validators[3u8],
+            validators[4u8],
+            validators[5u8],
+            validators[6u8],
+            validators[7u8],
+            validators[8u8],
+            validators[9u8],
+            validators[10u8],
+            validators[11u8],
+            validators[12u8],
+            validators[13u8],
+            validators[14u8],
+            validators[15u8]
+        ];
+        protocol_transfers.aleo/submit_requests_to_validators(
+            validators_0,
+            custody_hash,
+            to
+        );
+
+        let protocol_fee_amount: u64 = (threshold as u64) * validator_fee;
+        let (protocol_fee_change, lock_fee_future): (credits.aleo/credits, Future) =
+            credits.aleo/transfer_private_to_public(
+                protocol_fee_record,
+                self.address,
+                protocol_fee_amount,
+            );
+
+        let protocol_core_future: Future = protocol_core.aleo/request_data_as_program(
+            custody_hash,
+            validators,
+            validator_fee
+        );
 
         let request_data_as_program_future: Future = finalize_request_data_as_program(
-            custody_hash,
-            validators
+            protocol_core_future,
+            lock_fee_future
         );
-
-        return (
-            withdraw_request_0,
-            withdraw_request_1,
-            withdraw_request_2,
-            withdraw_request_3,
-            withdraw_request_4,
-            withdraw_request_5,
-            withdraw_request_6,
-            withdraw_request_7,
-            withdraw_request_8,
-            withdraw_request_9,
-            withdraw_request_10,
-            withdraw_request_11,
-            withdraw_request_12,
-            withdraw_request_13,
-            withdraw_request_14,
-            request_data_as_program_future
-        );
+        return (protocol_fee_change, request_data_as_program_future);
     }
     async function finalize_request_data_as_program(
-        custody_hash: field,
-        validators: [address; 15],
+        protocol_core_future: Future,
+        lock_fee_future: Future
     ){
-        let custody_state: CustodyState = custodies.get(custody_hash);
-
-        assert(custody_state.requested.not());
-
-        let validator_set: [address; 15] =
-            protocol_validators.aleo/validator_sets.get(custody_state.validator_set_index);
-        assert_eq(validators, validator_set);
-
-        let new_custody_state: CustodyState = CustodyState {
-            validator_set_index: custody_state.validator_set_index,
-            requested: true
-        };
-        custodies.set(custody_hash, new_custody_state);
-    }
-
-
-    async transition process_request_as_validator(
-        private validator_share: ValidatorShare,
-        private withdraw_request: WithdrawRequest,
-    ) -> (DestinationShare, Future) {
-        let custody_hash: field = hash_custody(validator_share.custody);
-        assert_eq(withdraw_request.custody_hash, custody_hash);
-
-        let destination_share: DestinationShare = DestinationShare {
-            owner: withdraw_request.to,
-            share: validator_share.share
-        };
-
-        let process_request_as_validator_future: Future = 
-            finalize_process_request_as_validator(
-                custody_hash
-            );
-        
-        return (
-            destination_share,
-            process_request_as_validator_future
-        );
-    }
-    async function finalize_process_request_as_validator(
-        custody_hash: field
-    ) {
-        let submitted: u8 = submitted_shares.get_or_use(custody_hash, 0u8);
-        submitted_shares.set(custody_hash, submitted + 1u8);
+        protocol_core_future.await();
+        lock_fee_future.await();
     }
 
 
@@ -501,7 +318,7 @@ program secret_custody_protocol.aleo {
     ) -> (
         Future
     ){
-        assert_neq(self.caller, self.signer); // caller must be a program
+        assert_neq(self.caller, self.signer);
         let custody: Custody = Custody {
             initiator: self.caller,
             data_address: data_address,
@@ -520,7 +337,7 @@ program secret_custody_protocol.aleo {
         custody_hash: field,
         threshold: u8
     ) {
-        let submitted: u8 = submitted_shares.get_or_use(custody_hash, 0u8);
+        let submitted: u8 = protocol_core.aleo/custodies.get(custody_hash).submitted_shares;
         assert(submitted >= threshold);
     }
 }

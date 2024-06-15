@@ -4,9 +4,9 @@
 
     External usage example:
         async function needs_validators() {
-            let validators: [address; 15] 
-                = protocol_validators.aleo/validator_sets.get(
-                    protocol_validators.aleo/validator_sets_length.get(true) - 1u64
+            let validators: [address; 16] 
+                = protocol_core.aleo/validator_sets.get(
+                    protocol_core.aleo/validator_sets_length.get(true) - 1u64
                 );
             ...
         }
@@ -14,31 +14,62 @@
     contact@aleo.store - Pierre-André LONG
 */
 
-program protocol_validators.aleo {
+program protocol_core.aleo {
     const default_authority: address = aleo1rupdxnwys2qktts6dqy7l4pjvng0ruapjxsht6ftsjlcmupl6c8sezw5n3; // APrivateKey1zkpGLq4y2tb8f54kkc1hKN3SWtcGDBikqWoHdx5xw2iLoLd
 
-    mapping validator_sets: u64 => [address; 15]; // validator set index => validator addresses
-    mapping validator_sets_length: bool => u64; // true => validator_sets length
-
-    mapping vote_approval_threshold: bool => u8; // true => required votes for approval 
-
-    mapping proposals: field => Proposal; // proposal hash => validator addresses
-    mapping votes: field => [bool; 15]; // proposal hash => validator addresses
-
-
     struct Proposal {
-        validators: [address; 15],
+        validators: [address; 16],
         threshold: u8,
         current_validator_set_index: u64
     }
 
+    struct CustodyState {
+        validator_set_index: u64,
+        validator_fee: u64,
+        requested: bool,
+        submitted_shares: u8
+    }
+
+    struct Custody {
+        initiator: address,
+        data_address: address,
+        threshold: u8,
+    }
+
+    struct Share {
+        share_val: field,
+        index: field,
+    }
+
+    struct ValidatorShareData {
+        validator: address,
+        share: Share
+    }
+
+    mapping validator_sets: u64 => [address; 16]; 
+    // validator set index => validator addresses
+
+    mapping validator_sets_length: bool => u64;
+    // true => validator_sets length
+
+    mapping vote_approval_threshold: bool => u8;
+    // true => required votes for approval 
+
+    mapping proposals: field => Proposal;
+    // proposal hash => validator addresses
+
+    mapping votes: field => [bool; 15];
+    // proposal hash => validator addresses
+
+    mapping custodies: field => CustodyState;
+    // hash(Custody) => CustodyState
 
     inline hash_proposal(proposal: Proposal) -> field {
         return BHP256::hash_to_field(proposal);
     }
 
 
-    inline is_address_in_array(element: address, array: [address; 15]) -> bool{
+    inline is_address_in_array(element: address, array: [address; 16]) -> bool{
         return (
             element == array[0u8]
             || element == array[1u8]
@@ -81,7 +112,7 @@ program protocol_validators.aleo {
     }
 
     inline get_address_in_array(
-        array: [address; 15], index: u8
+        array: [address; 16], index: u8
     ) -> address {
         return (
             (index == 0u8) ? array[0u8]
@@ -134,7 +165,7 @@ program protocol_validators.aleo {
 
 
     async transition initiate_validators(
-        public validators: [address; 15],
+        public validators: [address; 16],
         public threshold: u8
     ) -> Future {
         assert_eq(self.caller, default_authority);
@@ -144,7 +175,7 @@ program protocol_validators.aleo {
         );
     }
     async function finalize_initiate_validators(
-        validators: [address; 15],
+        validators: [address; 16],
         threshold: u8
     ) {
         assert(validator_sets_length.contains(true).not());
@@ -166,7 +197,7 @@ program protocol_validators.aleo {
     }
     async function finalize_initiate_proposal(
         caller: address,
-        validators: [address; 15],
+        validators: [address; 16],
         threshold: u8,
         current_validator_set_index: u64
     ) {
@@ -180,7 +211,7 @@ program protocol_validators.aleo {
         assert_eq(
             proposal.current_validator_set_index, length - 1u64
         );
-        let current_validators: [address; 15] = validator_sets.get(
+        let current_validators: [address; 16] = validator_sets.get(
             proposal.current_validator_set_index
         );
 
@@ -205,7 +236,7 @@ program protocol_validators.aleo {
     }
     async function finalize_vote(
         caller: address,
-        validators: [address; 15],
+        validators: [address; 16],
         threshold: u8,
         current_validator_set_index: u64,
         caller_index: u8,
@@ -221,7 +252,7 @@ program protocol_validators.aleo {
         assert_eq(
             proposal.current_validator_set_index, length - 1u64
         );
-        let current_validators: [address; 15] = validator_sets.get(
+        let current_validators: [address; 16] = validator_sets.get(
             proposal.current_validator_set_index
         );
         assert_eq(
@@ -256,7 +287,7 @@ program protocol_validators.aleo {
     }
     async function finalize_accept_proposal(
         caller: address,
-        validators: [address; 15],
+        validators: [address; 16],
         threshold: u8,
         current_validator_set_index: u64,
         value: bool
@@ -271,7 +302,7 @@ program protocol_validators.aleo {
         assert_eq(
             proposal.current_validator_set_index, length - 1u64
         );
-        let current_validators: [address; 15] = validator_sets.get(
+        let current_validators: [address; 16] = validator_sets.get(
             proposal.current_validator_set_index
         );
         is_address_in_array(caller, current_validators);
@@ -287,5 +318,103 @@ program protocol_validators.aleo {
         validator_sets.set(length, proposal.validators);
 
         vote_approval_threshold.set(true, proposal.threshold);
+    }
+
+
+    async transition custody_data_as_program(
+        public custody_hash: field,
+        public validators: [address; 16],
+    ) -> Future {
+        assert_eq(self.caller, secret_custody_protocol.aleo);
+        return finalize_custody_data_as_program(
+            custody_hash,
+            validators
+        );
+    }
+    async function finalize_custody_data_as_program(
+        custody_hash: field,
+        validators: [address; 16],
+    ){
+        assert(custodies.contains(custody_hash).not());
+
+        let validator_sets_len: u64 = validator_sets_length.get(true);
+        let validator_set_index: u64 = validator_sets_len - 1u64;
+        let validator_set: [address; 16] = validator_sets.get(validator_set_index);
+        assert_eq(validators, validator_set);
+
+        let custody_state: CustodyState = CustodyState {
+            validator_set_index: validator_set_index,
+            validator_fee: 0u64,
+            requested: false,
+            submitted_shares: 0u8
+        };
+        custodies.set(custody_hash, custody_state);
+    }
+
+
+    async transition request_data_as_program(
+        public custody_hash: field,
+        public validators: [address; 16],
+        public validator_fee: u64
+    ) -> Future {
+        assert_eq(self.caller, secret_custody_protocol.aleo);
+        return finalize_request_data_as_program(
+            custody_hash,
+            validators,
+            validator_fee
+        );
+    }
+    async function finalize_request_data_as_program(
+        custody_hash: field,
+        validators: [address; 16],
+        validator_fee: u64
+    ){
+        let custody_state: CustodyState = custodies.get(custody_hash);
+
+        assert(custody_state.requested.not());
+
+        let validator_set: [address; 16] = validator_sets.get(custody_state.validator_set_index);
+        assert_eq(validators, validator_set);
+
+        let new_custody_state: CustodyState = CustodyState {
+            validator_set_index: custody_state.validator_set_index,
+            validator_fee: validator_fee,
+            requested: true,
+            submitted_shares: 0u8
+        };
+        custodies.set(custody_hash, new_custody_state);
+    }
+
+
+    async transition process_request_as_validator(
+        public custody_hash: field,
+        public validator_fee: u64,
+        public threshold: u8
+    ) -> Future {
+        assert_eq(self.caller, protocol_transfers.aleo);
+        return finalize_process_request_as_validator(
+            custody_hash,
+            validator_fee,
+            threshold
+        );
+    }
+    async function finalize_process_request_as_validator(
+        custody_hash: field,
+        validator_fee: u64,
+        threshold: u8
+    ) {
+        let custody_state: CustodyState = custodies.get(custody_hash);
+
+        assert(custody_state.requested);
+        assert_eq(validator_fee, custody_state.validator_fee);
+        assert(custody_state.submitted_shares < threshold);
+
+        let new_custody_state: CustodyState = CustodyState {
+            validator_set_index: custody_state.validator_set_index,
+            validator_fee: custody_state.validator_fee,
+            requested: true,
+            submitted_shares: custody_state.submitted_shares + 1u8
+        };
+        custodies.set(custody_hash, new_custody_state);
     }
 }
