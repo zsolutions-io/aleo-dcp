@@ -1,4 +1,5 @@
 outputs/
 build/
+**/leo.lock
 **/.DS_Store
 **/.env
