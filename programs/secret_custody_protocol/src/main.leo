@@ -47,6 +47,23 @@ program secret_custody_protocol.aleo {
         private threshold: u8  // <= 15
     ) -> Future {
         assert_neq(self.caller, self.signer);
+        assert(
+            coefficients[0u8] != 0field
+            && coefficients[1u8] != 0field
+            && coefficients[2u8] != 0field
+            && coefficients[3u8] != 0field
+            && coefficients[4u8] != 0field
+            && coefficients[5u8] != 0field
+            && coefficients[6u8] != 0field
+            && coefficients[7u8] != 0field
+            && coefficients[8u8] != 0field
+            && coefficients[9u8] != 0field
+            && coefficients[10u8] != 0field
+            && coefficients[11u8] != 0field
+            && coefficients[12u8] != 0field
+            && coefficients[13u8] != 0field
+            && coefficients[14u8] != 0field
+        );
         let secret: field = data_view_key as field;
 
         let data_address: address = (data_view_key * group::GEN) as address;

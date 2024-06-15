@@ -2,7 +2,7 @@
 
 A MPC protocol built on Aleo to **allow any Aleo program to custody arbitrary private data** that can be programatically withdrawn. It enables use cases such as private data NFT marketplace with one click buy or private orders DEXs on Aleo.
 
-It currently supports unlimited amount of validators that can be dynamically updated through a voting mechanism.
+It currently supports unlimited amount of validators that can be dynamically updated through a voting mechanism. Validators are incentivized by requester of cusodied data in aleo credits.
 
 ## How it works?
 
@@ -26,8 +26,8 @@ For a program to custody private data, it must import `secret_custody_protocol.a
     - Call `secret_custody_protocol.aleo/custody_data_as_program(data_view_key, threshold, ...)`
     - Send any records to `(data_view_key * group::GEN) as address`
 2. It can then call `secret_custody_protocol.aleo/request_data_as_program` to initiate a data request.
-3. Validator bots automatically call `process_request_as_validator` to accept the data request.
-4. `secret_custody_protocol.aleo/assert_request_completed_as_program` can then be used by the program to check if data was effectively transmitted.
+3. Validator bots automatically call `process_request_as_validator.aleo/process_request_as_validator` to accept the data request.
+4. `secret_custody_protocol.aleo/assert_completed_as_program` can then be used by the program to check if data was effectively transmitted.
 
 ### Example
 
@@ -35,10 +35,10 @@ Marketplace program for NFTs with secret data:
 
 ```rust
 import secret_custody_protocol.aleo;
-import arc721.aleo;
+import arc721_example.aleo;
 import credits.aleo;
 
-program marketplace.aleo {
+program marketplace_example.aleo {
     const mpc_threshold: u8 = 8u8;
 
     struct ListingData {
@@ -74,14 +74,14 @@ program marketplace.aleo {
 
 
     async transition list(
-        private nft: arc721.aleo/NFT,   // private nft record to list
+        private nft: arc721_example.aleo/NFT,   // private nft record to list
         public price: u64,              // total price paid by seller
         private secret_random_viewkey: scalar,
         private privacy_random_coefficients: [field; 15],
         private validators: [address; 16],
     ) -> (NFTView, Future) {
-        let (nft_view, transfer_future): (arc721.aleo/NFTView, Future) 
-            = arc721.aleo/transfer_private_to_public(
+        let (nft_view, transfer_future): (arc721_example.aleo/NFTView, Future) 
+            = arc721_example.aleo/transfer_private_to_public(
                 nft, self.address
             );
         let nft_data_address: address = (secret_random_viewkey * group::GEN) as address;
@@ -219,13 +219,13 @@ program marketplace.aleo {
                     )
                 )
         */
-    ) -> (arc721.aleo/NFT, Future) {
+    ) -> (arc721_example.aleo/NFT, Future) {
         let nft_commit: field = commit_nft(nft_data, nft_edition);
         
         let (
             purshased_nft,
             transfer_nft_to_buyer_future
-        ): (arc721.aleo/NFT, Future) = arc721.aleo/transfer_public_to_private(
+        ): (arc721_example.aleo/NFT, Future) = arc721_example.aleo/transfer_public_to_private(
             nft_data,
             nft_edition,
             self.caller,

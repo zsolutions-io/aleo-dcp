@@ -5,7 +5,7 @@
 */
 
 
-program arc721.aleo {
+program arc721_example.aleo {
     struct approval {
         approver: address,
         spender: address,
