@@ -8,19 +8,13 @@
       "name": "secret_custody_protocol.aleo",
       "location": "local",
       "network": null,
-      "path": "../../../../programs/secret_custody_protocol"
-    },
-    {
-      "name": "credits.aleo",
-      "location": "network",
-      "network": "testnet",
-      "path": null
+      "path": "../../../../programs/secret_custody_protocol/"
     },
     {
       "name": "arc721.aleo",
       "location": "local",
       "network": null,
-      "path": "../arc721/"
+      "path": "../arc721"
     }
   ]
 }
