@@ -1,4 +1,3 @@
-// The 'test' program.
 import secret_custody_protocol.aleo;
 import arc721.aleo;
 import credits.aleo;
