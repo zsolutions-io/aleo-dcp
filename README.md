@@ -8,19 +8,16 @@ Validators that can be dynamically updated through a voting gouvernance mechanis
 
 ## Use Cases
 
-It enables use cases such as private data NFT marketplace with one click buy or private orders DEXs on Aleo, decentralised data broker.
+It enables use cases such as private data NFT marketplace with one click buy or decentralised data broker.
 
 ## How it works?
 
-An arbitrary Aleo record (from any program) containing the private data is transferred to a random address, whose View Key is simultaneously split among n validators using the Shamir secret sharing algorithm. This is the **custody** step.
+1. An arbitrary Aleo record (from any program) containing the private data is transferred to an address, which random View Key is splitted in shares among N validators using the Shamir Secret Sharing algorithm. This is the **Custody** step.
+2. This view key can later be requested to be sent privately to any destination address, by initial program. This is the **Request** step.
+3. A decentralized network of [validators](#validators) can then process the query immediatly. It consists of peers running bot JS script, that provide their respective share to the destination address. This is the **Submit** step.
+4. The requestor can then reconstruct the View Key offchain using k of n shares and decipher the private data from the original record. This is the **Reconstruct** step.
 
-This view key can later be requested to be sent privately to any destination address, by initial program. This is the **request** step.
-
-Immediately after, a decentralized network of [validators](#validators) handle the query. It consists of peer running bot JS script, that provide their respective share to the destination address. This is the **submit** step.
-
-The requester can then reconstruct the View Key offchain using k of n shares and decipher the private data from the original record. This is the **reconstruct** step.
-
-**reconstruct** steps can all happen without awaiting validation from the original signer of **custody** step transaction.
+**Request**, **Execute**, and **Submit** stepd can all happen without awaiting validation from the original caller of **Custody** step transaction.
 
 ![alt text](aleo-dcp-schema.png)
 
