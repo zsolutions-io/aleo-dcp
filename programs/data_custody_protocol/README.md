@@ -1,4 +1,4 @@
-# secret_custody_protocol.aleo
+# data_custody_protocol.aleo
 
 ## Build Guide
 

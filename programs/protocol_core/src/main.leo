@@ -330,7 +330,7 @@ program protocol_core.aleo {
         public custody_hash: field,
         public validators: [address; 16],
     ) -> Future {
-        assert_eq(self.caller, secret_custody_protocol.aleo);
+        assert_eq(self.caller, data_custody_protocol.aleo);
         return finalize_custody_data_as_program(
             custody_hash,
             validators
@@ -362,7 +362,7 @@ program protocol_core.aleo {
         public validators: [address; 16],
         public validator_fee: u64
     ) -> Future {
-        assert_eq(self.caller, secret_custody_protocol.aleo);
+        assert_eq(self.caller, data_custody_protocol.aleo);
         return finalize_request_data_as_program(
             custody_hash,
             validators,

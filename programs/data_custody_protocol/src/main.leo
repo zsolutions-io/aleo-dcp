@@ -14,7 +14,7 @@
 import protocol_core.aleo;
 import protocol_transfers.aleo;
 
-program secret_custody_protocol.aleo {
+program data_custody_protocol.aleo {
     inline hash_custody(custody: Custody) -> field {
         return BHP256::hash_to_field(custody);
     }
