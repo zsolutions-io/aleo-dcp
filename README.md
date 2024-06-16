@@ -24,19 +24,6 @@ The requester can then reconstruct the View Key offchain using k of n shares and
 
 ![alt text](aleo-dcp-schema.png)
 
-## Usage
-
-### How to call it from any other program?
-
-For a program to custody private data, it must import **`data_custody_protocol.aleo`**.
-
-1. To custody data, it must:
-    - Call `data_custody_protocol.aleo/custody_data_as_program(data_view_key, threshold, ...)`
-    - Send any records to `(data_view_key * group::GEN) as address`
-2. It can then call `data_custody_protocol.aleo/request_data_as_program` to initiate a data request.
-3. Validator bots automatically call `protocol_transfers.aleo/process_request_as_validator` to accept the data request.
-4. `data_custody_protocol.aleo/assert_completed_as_program` can then be used by the program to check if data was effectively transmitted.
-
 ## Protocol Governance
 
 ### Validators
@@ -50,6 +37,19 @@ Validators vote for Proposals: a new set of Validators and next vote threshold.
 ### Run validator
 
 Incoming js implementation.
+
+## Usage
+
+### How to call it from any other program?
+
+For a program to custody private data, it must import **`data_custody_protocol.aleo`**.
+
+1. To custody data, it must:
+    - Call `data_custody_protocol.aleo/custody_data_as_program(data_view_key, threshold, ...)`
+    - Send any records to `(data_view_key * group::GEN) as address`
+2. It can then call `data_custody_protocol.aleo/request_data_as_program` to initiate a data request.
+3. Validator bots automatically call `protocol_transfers.aleo/process_request_as_validator` to accept the data request.
+4. `data_custody_protocol.aleo/assert_completed_as_program` can then be used by the program to check if data was effectively transmitted.
 
 ### Example
 
