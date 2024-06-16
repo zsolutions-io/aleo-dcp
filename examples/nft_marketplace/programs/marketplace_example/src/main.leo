@@ -1,4 +1,4 @@
-import secret_custody_protocol.aleo;
+import data_custody_protocol.aleo;
 import arc721_example.aleo;
 import credits.aleo;
 
@@ -65,7 +65,7 @@ program marketplace_example.aleo {
         let data_custody_hash: field = BHP256::hash_to_field(data_custody);
 
         let custody_data_as_program_future: Future =
-            secret_custody_protocol.aleo/custody_data_as_program(
+            data_custody_protocol.aleo/custody_data_as_program(
                 secret_random_viewkey, // private data_view_key: scalar,
                 privacy_random_coefficients, // private coefficients: [field; 15],
                 validators, // private validators: [address; 16],
@@ -117,7 +117,7 @@ program marketplace_example.aleo {
         /*
             Validators associated with the listing can be retrieved using: 
                 protocol_validators.aleo/validator_sets.get(
-                    secret_custody_protocol.aleo/custodies.get(
+                    data_custody_protocol.aleo/custodies.get(
                         listing_data.data_custody_hash
                     )
                 )
@@ -136,7 +136,7 @@ program marketplace_example.aleo {
             credits.aleo/credits,
             Future
         ) =
-            secret_custody_protocol.aleo/request_data_as_program(
+            data_custody_protocol.aleo/request_data_as_program(
                 listing_data.nft_data_address, // private data_address: address,
                 self.signer, // private to: address,
                 mpc_threshold, // private threshold: u8,
@@ -178,7 +178,7 @@ program marketplace_example.aleo {
         /*
             Validators associated with the listing can be retrieved using: 
                 protocol_validators.aleo/validator_sets.get(
-                    secret_custody_protocol.aleo/custodies.get(
+                    data_custody_protocol.aleo/custodies.get(
                         listing_data.data_custody_hash
                     )
                 )
