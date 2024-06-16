@@ -67,7 +67,7 @@ program protocol_transfers.aleo {
         ValidatorShare,
         ValidatorShare,
     ){
-        assert_eq(self.caller, secret_custody_protocol.aleo);
+        assert_eq(self.caller, data_custody_protocol.aleo);
 
         let validator_share_0: ValidatorShare = ValidatorShare {
             owner: validator_shares[0u8].validator,
@@ -193,7 +193,7 @@ program protocol_transfers.aleo {
         WithdrawRequest,
         WithdrawRequest
     ){
-        assert_eq(self.caller, secret_custody_protocol.aleo);
+        assert_eq(self.caller, data_custody_protocol.aleo);
 
         let withdraw_request_0: WithdrawRequest = WithdrawRequest {
             owner: validators[0u8],
