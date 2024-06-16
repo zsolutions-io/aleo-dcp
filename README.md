@@ -12,15 +12,15 @@ It enables use cases such as private data NFT marketplace with one click buy or 
 
 ## How it works?
 
-An arbitrary Aleo record (from any program) containing the private data is transferred to a random address, whose View Key is simultaneously split among n validators using the Shamir secret sharing algorithm. This is the `custody` step.
+An arbitrary Aleo record (from any program) containing the private data is transferred to a random address, whose View Key is simultaneously split among n validators using the Shamir secret sharing algorithm. This is the **custody** step.
 
-This view key can later be requested to be sent privately to any destination address, by initial program. This is the `request` step.
+This view key can later be requested to be sent privately to any destination address, by initial program. This is the **request** step.
 
-Immediately after, a decentralized network of [validators](#validators) handle the request. It's consists of bots running a script, that provide their respective share to the destination address. This is the `submit` step.
+Immediately after, a decentralized network of [validators](#validators) handle the query. It consists of peer running bot JS script, that provide their respective share to the destination address. This is the **submit** step.
 
-The requester can then reconstruct the View Key offchain using k of n shares and decipher the private data from the original record. This is the `reconstruct` step.
+The requester can then reconstruct the View Key offchain using k of n shares and decipher the private data from the original record. This is the **reconstruct** step.
 
-The idea is that `request`, `submit` and `reconstruct` steps can all happen "", without the need of any validation from the signer of `custody` step transaction.
+**reconstruct** steps can all happen without awaiting validation from the original signer of **custody** step transaction.
 
 ![alt text](aleo-dcp-schema.png)
 
@@ -34,7 +34,7 @@ For a program to custody private data, it must import **`data_custody_protocol.a
     - Call `data_custody_protocol.aleo/custody_data_as_program(data_view_key, threshold, ...)`
     - Send any records to `(data_view_key * group::GEN) as address`
 2. It can then call `data_custody_protocol.aleo/request_data_as_program` to initiate a data request.
-3. Validator bots automatically call `process_request_as_validator.aleo/process_request_as_validator` to accept the data request.
+3. Validator bots automatically call `protocol_transfers.aleo/process_request_as_validator` to accept the data request.
 4. `data_custody_protocol.aleo/assert_completed_as_program` can then be used by the program to check if data was effectively transmitted.
 
 ## Protocol Governance
@@ -279,8 +279,8 @@ program marketplace_example.aleo {
 }
 ```
 
-*This is a very simplified marketplace to focus on the `data_custody_protocol.aleo` program usage. This is why private seller/buyer and offers are not shown here.*
+*This is a very simplified marketplace to focus on the `data_custody_protocol.aleo` program usage. This is why seller/buyer privacy as well as offers are not implemented here.*
 
 ## Future Improvements
 
-- **Multiple access**
+- **Allow any amount of *request* steps, amount defined at `custody` step**
