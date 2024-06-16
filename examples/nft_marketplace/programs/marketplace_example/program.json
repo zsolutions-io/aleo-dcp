@@ -5,10 +5,10 @@
   "license": "MIT",
   "dependencies": [
     {
-      "name": "secret_custody_protocol.aleo",
+      "name": "data_custody_protocol.aleo",
       "location": "local",
       "network": null,
-      "path": "../../../../programs/secret_custody_protocol/"
+      "path": "../../../../programs/data_custody_protocol/"
     },
     {
       "name": "arc721_example.aleo",

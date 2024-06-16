@@ -1,8 +1,8 @@
-# Secret Custody Protocol
+# Aleo DCP: Data Custody Protocol
 
 A MPC protocol built on Aleo to **allow any Aleo program to custody arbitrary private data** that can be programatically withdrawn. It enables use cases such as private data NFT marketplace with one click buy or private orders DEXs on Aleo.
 
-It currently supports unlimited amount of validators that can be dynamically updated through a voting mechanism. Validators are incentivized by requester of cusodied data in aleo credits.
+It currently supports unlimited amount of validators that can be dynamically updated through a voting mechanism. Validators are incentivized with aleo credits fees paid by requester of cusodied data.
 
 ## How it works?
 
@@ -20,21 +20,21 @@ The idea is that `request`, `submission` and `reconstruction` steps can all happ
 
 ### How to use it from any program?
 
-For a program to custody private data, it must import `secret_custody_protocol.aleo`.
+For a program to custody private data, it must import `data_custody_protocol.aleo`.
 
 1. To custody data, it must:
-    - Call `secret_custody_protocol.aleo/custody_data_as_program(data_view_key, threshold, ...)`
+    - Call `data_custody_protocol.aleo/custody_data_as_program(data_view_key, threshold, ...)`
     - Send any records to `(data_view_key * group::GEN) as address`
-2. It can then call `secret_custody_protocol.aleo/request_data_as_program` to initiate a data request.
+2. It can then call `data_custody_protocol.aleo/request_data_as_program` to initiate a data request.
 3. Validator bots automatically call `process_request_as_validator.aleo/process_request_as_validator` to accept the data request.
-4. `secret_custody_protocol.aleo/assert_completed_as_program` can then be used by the program to check if data was effectively transmitted.
+4. `data_custody_protocol.aleo/assert_completed_as_program` can then be used by the program to check if data was effectively transmitted.
 
 ### Example
 
 Marketplace program for NFTs with secret data:
 
 ```rust
-import secret_custody_protocol.aleo;
+import data_custody_protocol.aleo;
 import arc721_example.aleo;
 import credits.aleo;
 
@@ -72,7 +72,6 @@ program marketplace_example.aleo {
     }
 
 
-
     async transition list(
         private nft: arc721_example.aleo/NFT,   // private nft record to list
         public price: u64,              // total price paid by seller
@@ -101,7 +100,7 @@ program marketplace_example.aleo {
         let data_custody_hash: field = BHP256::hash_to_field(data_custody);
 
         let custody_data_as_program_future: Future =
-            secret_custody_protocol.aleo/custody_data_as_program(
+            data_custody_protocol.aleo/custody_data_as_program(
                 secret_random_viewkey, // private data_view_key: scalar,
                 privacy_random_coefficients, // private coefficients: [field; 15],
                 validators, // private validators: [address; 16],
@@ -172,7 +171,7 @@ program marketplace_example.aleo {
             credits.aleo/credits,
             Future
         ) =
-            secret_custody_protocol.aleo/request_data_as_program(
+            data_custody_protocol.aleo/request_data_as_program(
                 listing_data.nft_data_address, // private data_address: address,
                 self.signer, // private to: address,
                 mpc_threshold, // private threshold: u8,
@@ -214,7 +213,7 @@ program marketplace_example.aleo {
         /*
             Validators associated with the listing can be retrieved using: 
                 protocol_validators.aleo/validator_sets.get(
-                    secret_custody_protocol.aleo/custodies.get(
+                    data_custody_protocol.aleo/custodies.get(
                         listing_data.data_custody_hash
                     )
                 )
@@ -258,4 +257,4 @@ program marketplace_example.aleo {
 }
 ```
 
-*This is a very simplified marketplace to focus on the `secret_custody_protocol.aleo` program usage. This is why private seller/buyer and offers are not shown here.*
+*This is a very simplified marketplace to focus on the `data_custody_protocol.aleo` program usage. This is why private seller/buyer and offers are not shown here.*
