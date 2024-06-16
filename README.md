@@ -10,11 +10,13 @@ An arbitrary Aleo record (from any program) containing the private data is trans
 
 This view key can later be requested to be sent privately to any destination address, by initial program. This is the `request` step.
 
-Immediately after, a decentralized network of validators handle the request. It's consists of bots running a script, that provide their respective share to the destination address. This is the `submission` step.
+Immediately after, a decentralized network of validators handle the request. It's consists of bots running a script, that provide their respective share to the destination address. This is the `submit` step.
 
-The requester can then reconstruct the View Key offchain using k of n shares and decipher the private data from the original record. This is the `reconstruction` step.
+The requester can then reconstruct the View Key offchain using k of n shares and decipher the private data from the original record. This is the `reconstruct` step.
 
-The idea is that `request`, `submission` and `reconstruction` steps can all happen "at once", without the need of any validation from the signer of `custody` step transaction.
+The idea is that `request`, `submit` and `reconstruct` steps can all happen "", without the need of any validation from the signer of `custody` step transaction.
+
+![alt text](aleo-dcp-schema.png)
 
 ## Usage
 
@@ -28,6 +30,10 @@ For a program to custody private data, it must import `data_custody_protocol.ale
 2. It can then call `data_custody_protocol.aleo/request_data_as_program` to initiate a data request.
 3. Validator bots automatically call `process_request_as_validator.aleo/process_request_as_validator` to accept the data request.
 4. `data_custody_protocol.aleo/assert_completed_as_program` can then be used by the program to check if data was effectively transmitted.
+
+## Governance
+
+##
 
 ### Example
 
