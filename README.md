@@ -2,7 +2,9 @@
 
 A MPC protocol built on Aleo to **allow any program to custody arbitrary private data** that can be programatically withdrawn.
 
-It supports unlimited amount of validators decided on deployment of programs. Validators that can be dynamically updated through a voting mechanism, are incentivized with aleo credits fees paid by requester of cusodied data.
+It supports any maximum amount of validators decided on deployment of protocol program.
+
+Validators that can be dynamically updated through a voting gouvernance mechanism. They are incentivized with aleo credits fees paid by requester of cusodied data.
 
 ## Use Cases
 
