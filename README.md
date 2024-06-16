@@ -1,8 +1,12 @@
 # Aleo DCP: Data Custody Protocol
 
-A MPC protocol built on Aleo to **allow any program to custody arbitrary private data** that can be programatically withdrawn. It enables use cases such as private data NFT marketplace with one click buy or private orders DEXs on Aleo.
+A MPC protocol built on Aleo to **allow any program to custody arbitrary private data** that can be programatically withdrawn.
 
-It currently supports unlimited amount of validators that can be dynamically updated through a voting mechanism. Validators are incentivized with aleo credits fees paid by requester of cusodied data.
+It supports unlimited amount of validators decided on deployment of programs. Validators that can be dynamically updated through a voting mechanism, are incentivized with aleo credits fees paid by requester of cusodied data.
+
+## Use Cases
+
+It enables use cases such as private data NFT marketplace with one click buy or private orders DEXs on Aleo, decentralised data broker.
 
 ## How it works?
 
@@ -10,7 +14,7 @@ An arbitrary Aleo record (from any program) containing the private data is trans
 
 This view key can later be requested to be sent privately to any destination address, by initial program. This is the `request` step.
 
-Immediately after, a decentralized network of validators handle the request. It's consists of bots running a script, that provide their respective share to the destination address. This is the `submit` step.
+Immediately after, a decentralized network of [validators](#validators) handle the request. It's consists of bots running a script, that provide their respective share to the destination address. This is the `submit` step.
 
 The requester can then reconstruct the View Key offchain using k of n shares and decipher the private data from the original record. This is the `reconstruct` step.
 
@@ -20,9 +24,9 @@ The idea is that `request`, `submit` and `reconstruct` steps can all happen "", 
 
 ## Usage
 
-### How to use it from any program?
+### How to call it from any other program?
 
-For a program to custody private data, it must import `data_custody_protocol.aleo`.
+For a program to custody private data, it must import **`data_custody_protocol.aleo`**.
 
 1. To custody data, it must:
     - Call `data_custody_protocol.aleo/custody_data_as_program(data_view_key, threshold, ...)`
@@ -31,9 +35,19 @@ For a program to custody private data, it must import `data_custody_protocol.ale
 3. Validator bots automatically call `process_request_as_validator.aleo/process_request_as_validator` to accept the data request.
 4. `data_custody_protocol.aleo/assert_completed_as_program` can then be used by the program to check if data was effectively transmitted.
 
-## Governance
+## Protocol Governance
 
-##
+### Validators
+
+Protocol has **N Validators** and a **vote threshold**, initiated by deployer.
+
+Validators vote for Proposals: a new set of Validators and next vote threshold.
+
+[Check implementation of **`protocol_core.leo`**.](programs/protocol_core/src/main.leo)
+
+### Run validator
+
+Incoming js implementation.
 
 ### Example
 
@@ -264,3 +278,7 @@ program marketplace_example.aleo {
 ```
 
 *This is a very simplified marketplace to focus on the `data_custody_protocol.aleo` program usage. This is why private seller/buyer and offers are not shown here.*
+
+## Future Improvements
+
+- **Multiple access**
