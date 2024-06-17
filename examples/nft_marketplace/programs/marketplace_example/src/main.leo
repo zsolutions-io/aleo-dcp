@@ -175,14 +175,6 @@ program marketplace_example.aleo {
         nft_data: data,
         nft_edition: scalar,
         listing_data: ListingData
-        /*
-            Validators associated with the listing can be retrieved using: 
-                protocol_validators.aleo/validator_sets.get(
-                    data_custody_protocol.aleo/custodies.get(
-                        listing_data.data_custody_hash
-                    )
-                )
-        */
     ) -> (arc721_example.aleo/NFT, Future) {
         let nft_commit: field = commit_nft(nft_data, nft_edition);
         
