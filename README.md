@@ -27,7 +27,7 @@ It enables use cases such as private data NFT marketplace with one click buy or 
 
 Protocol has **N Validators** and a **vote threshold**, initiated by deployer.
 
-Validators vote for Proposals: a new set of Validators and next vote threshold.
+Validators propose and vote for **Proposals**, consisting of a new set of Validators and next vote threshold.
 
 [Check implementation of **`protocol_core.leo`**.](programs/protocol_core/src/main.leo)
 
