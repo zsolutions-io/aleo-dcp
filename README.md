@@ -167,15 +167,7 @@ program marketplace_example.aleo {
         private listing_data: ListingData,
         public validators: [address; 16],
         public validator_fee: u64,
-        private protocol_fee_record: credits.aleo/credits,
-        /*
-            Validators associated with the listing can be retrieved using: 
-                protocol_core.aleo/validator_sets.get(
-                    protocol_core.aleo/custodies.get(
-                        listing_data.data_custody_hash
-                    )
-                )
-        */
+        private protocol_fee_record: credits.aleo/credits
     ) -> (credits.aleo/credits, Future) {
         let pay_marketplace_future: Future =
             credits.aleo/transfer_public(
