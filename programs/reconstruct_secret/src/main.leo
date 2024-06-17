@@ -29,7 +29,6 @@ program reconstruct_secret.aleo {
     struct Share {
         share_val: field,
         index: field,
-        amount: u64
     }
 
     // Inverse field but will invert 0field to 1field to avoid constraint error when building

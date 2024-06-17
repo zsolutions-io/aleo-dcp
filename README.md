@@ -10,8 +10,6 @@ Data is splitted into Shamir shares which are custidied by Validators, that can 
 
 ## How it works?
 
-There are protocol has two main
-
 ### For custodying arbitrary record data
 
 Protocol enables to hold data stored in any arbitrary record
@@ -25,11 +23,9 @@ Protocol enables to hold data stored in any arbitrary record
 
 ![alt text](aleo-dcp-schema.png)
 
-### For custodying data in homomorphic
+### For custodying data with homomorphic operation support
 
-1. Data must be encoded as a single `scalar`, which is splitted in shares among N validators using the Shamir Secret Sharing algorithm. This is the **Custody** step.
-
-Leverage Shamir Secret Sharing additive homorphic property in protocol.
+Leverage Shamir Secret Sharing additive homorphic property in protocol... TODO
 
 ## Protocol Governance
 

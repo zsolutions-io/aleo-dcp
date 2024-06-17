@@ -16,7 +16,6 @@ program protocol_transfers.aleo {
     struct Share {
         share_val: field,
         index: field,
-        amount: u64
     }
 
     struct ValidatorShareData {
