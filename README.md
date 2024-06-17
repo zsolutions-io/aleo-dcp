@@ -58,7 +58,11 @@ For a program to custody private data, it must import **`data_custody_protocol.a
 
 ### Example
 
-Marketplace program for exchanging NFTs with secret data, which standard is detailed at [**`arc721_example.leo`**](/examples/nft_marketplace/programs/arc721_example/src/main.leo):
+An obvious use case for the protocol is a Marketplace Program for exchanging NFTs with secret data. A standard proposal for such NFTs is detailed at [**`arc721_example.leo`**](/examples/nft_marketplace/programs/arc721_example/src/main.leo).
+
+[The implementation of such a marketplace is available at: **`marketplace_example.leo`**](/examples/nft_marketplace/programs/marketplace_example/src/main.leo)
+
+Here are interactions with the protocol snippets:
 
 ```rust
 import data_custody_protocol.aleo;
@@ -68,56 +72,15 @@ import credits.aleo;
 program marketplace_example.aleo {
     const mpc_threshold: u8 = 8u8;
 
-    struct ListingData {
-        price: u64,
-        seller: address,
-        data_custody_hash: field,
-        nft_data_address: address
-    }
-    
-    record NFTView{
-        owner: address,
-        data: data,
-        edition: scalar
-    }
-
-
-    mapping listings: field => ListingData; 
-    // nft_commit => listing_data;
-
-    mapping listings_buyer: field => address;
-    // nft_commit => buyer;
-
-
-    inline commit_nft(
-        nft_data: data,
-        nft_edition: scalar
-    ) -> field {
-        let data_hash: field = BHP256::hash_to_field(nft_data);
-        let commitment: field = BHP256::commit_to_field(data_hash, nft_edition);
-        return commitment;
-    }
-
+    ...
 
     async transition list(
-        private nft: arc721_example.aleo/NFT,   // private nft record to list
-        public price: u64,              // total price paid by seller
+        ...
         private secret_random_viewkey: scalar,
         private privacy_random_coefficients: [field; 15],
         private validators: [address; 16],
     ) -> (NFTView, Future) {
-        let (nft_view, transfer_future): (arc721_example.aleo/NFTView, Future) 
-            = arc721_example.aleo/transfer_private_to_public(
-                nft, self.address
-            );
-        let nft_data_address: address = (secret_random_viewkey * group::GEN) as address;
-        let out_nft_view: NFTView = NFTView {
-            owner: nft_data_address,
-            data: nft.data,
-            edition: nft.edition
-        };
-        let nft_commit: field = commit_nft(nft.data, nft.edition);
-
+        ...
         let data_custody: Custody = Custody {
             initiator: self.caller,
             data_address: nft_data_address,
@@ -135,38 +98,17 @@ program marketplace_example.aleo {
             );
 
         let list_future: Future = finalize_list(
-            nft_commit,
-            price,
-            self.caller,
-            data_custody_hash,
-            nft_data_address,
-            transfer_future,
+            ...
             custody_data_as_program_future
         );
-        return (
-            out_nft_view, 
-            list_future,
-        );
+        ...
     }
     async function finalize_list(
-        nft_commit: field,
-        price: u64,
-        seller: address,
-        custody_hash: field,
-        nft_data_address: address,
-        transfer_future: Future,
+        ...
         custody_data_as_program_future: Future
     ) {
-        transfer_future.await();
         custody_data_as_program_future.await();
-
-        let listing_data: ListingData = ListingData{
-            price: price,
-            seller: seller,
-            data_custody_hash: custody_hash,
-            nft_data_address: nft_data_address
-        };
-        listings.set(nft_commit, listing_data);
+        ...
     }
 
 
