@@ -1,37 +1,47 @@
 # Aleo DCP: Data Custody Protocol
 
-A MPC protocol built on Aleo to **allow any program to custody arbitrary private data** that can be programatically withdrawn.
+A decentralised MPC protocol built on Aleo to **allow any program to custody arbitrary private data** that can be transactionally withdrawn.
 
-It supports any maximum amount of validators decided on deployment of protocol programs.
-
-Validators that can be dynamically updated through a voting gouvernance mechanism. They are incentivized with aleo credits fees paid by requester of cusodied data.
+Data is splitted into Shamir shares which are custidied by Validators, that can be dynamically updated through a voting gouvernance mechanism. They are incentivized with **Aleo credits fees** paid by requester of custodied data.
 
 ## Use Cases
 
-It enables use cases such as private data NFT marketplace with one click buy or decentralised data broker.
+**Aleo DCP** enables use cases such as decentralised data broker or private data NFT marketplace with one click buy.
 
 ## How it works?
 
-1. An arbitrary Aleo record (from any program) containing the private data is transferred to an address, which random View Key is splitted in shares among N validators using the Shamir Secret Sharing algorithm. This is the **Custody** step.
+### For custodying arbitrary record data
+
+Protocol enables to hold data stored in any arbitrary record
+
+1. Record from any program containing the private data is transferred to an address, which View Key (generated randomly) is splitted in shares among N validators using Shamir Secret Sharing algorithm. This is the **Custody** step.
 2. This view key can later be requested to be sent privately to any destination address, by initial program. This is the **Request** step.
 3. A decentralized network of [validators](#validators) can then process the query immediatly. It consists of peers running bot JS script, that provide their respective share to the destination address. This is the **Submit** step.
 4. The requestor can then reconstruct the View Key offchain using k of n shares and decipher the private data from the original record. This is the **Reconstruct** step.
 
-**Request**, **Execute**, and **Submit** stepd can all happen without awaiting validation from the original caller of **Custody** step transaction.
+**Request**, **Execute**, and **Submit** step can all happen without awaiting validation from the original caller of **Custody** step transaction.
 
 ![alt text](aleo-dcp-schema.png)
+
+### For custodying data with homomorphic operation support
+
+Leverage Shamir Secret Sharing additive homorphic property in protocol... TODO
 
 ## Protocol Governance
 
 ### Validators
 
-Protocol has **N Validators** and a **vote threshold**, initiated by deployer.
+Protocol has **a set of Validators** and a **vote threshold**, initiated by deployer, which can be updated through a voting mechanism.
+
+Validors role is to custody data shares and process queries.
+
+It supports any maximum amount of validators decided on deployment of protocol programs.
 
 Validators propose and vote for **Proposals**, consisting of a new set of Validators and next vote threshold.
 
-[Check implementation of **`protocol_core.leo`**.](programs/protocol_core/src/main.leo)
+[Check implementation of gouvernance in **`protocol_core.leo`**.](programs/protocol_core/src/main.leo)
 
-### Run a Calidator
+### Run a Validator
 
 Incoming Javascript implementation.
 
@@ -65,7 +75,7 @@ For a program to custody private data, it must import **`data_custody_protocol.a
 
 An obvious use case for the protocol is a Marketplace Program for exchanging NFTs with secret data. A standard proposal for such NFTs is detailed at [**`arc721_example.leo`**](/examples/nft_marketplace/programs/arc721_example/src/main.leo).
 
-[The implementation of such a marketplace is available at: **`marketplace_example.leo`**](/examples/nft_marketplace/programs/marketplace_example/src/main.leo)
+[Check implementation of marketplace in **`marketplace_example.leo`**](/examples/nft_marketplace/programs/marketplace_example/src/main.leo)
 
 Here are interactions with the protocol snippets:
 
@@ -86,9 +96,15 @@ program marketplace_example.aleo {
         private validators: [address; 16],
     ) -> (NFTView, Future) {
         ...
+
+        let secret: field = secret_random_viewkey as field;
+        let nft_data_address: address = (data_view_key * group::GEN) as address;
+
+        let custody_id: field = BHP256::hash_to_field(nft_data_address);
+
         let data_custody: Custody = Custody {
             initiator: self.caller,
-            data_address: nft_data_address,
+            custody_id: custody_id,
             threshold: mpc_threshold,
         };
 
@@ -96,7 +112,8 @@ program marketplace_example.aleo {
 
         let custody_data_as_program_future: Future =
             data_custody_protocol.aleo/custody_data_as_program(
-                secret_random_viewkey, // private data_view_key: scalar,
+                secret, // private secret : field,
+                custody_id, // private custody_id: field,
                 privacy_random_coefficients, // private coefficients: [field; 15],
                 validators, // private validators: [address; 16],
                 mpc_threshold // private threshold: u8 <= 16
@@ -131,6 +148,7 @@ program marketplace_example.aleo {
         private protocol_fee_record: credits.aleo/credits
     ) -> (credits.aleo/credits, Future) {
         ...
+        let custody_id: field = BHP256::hash_to_field(listing_data.nft_data_address);
         let (
             change,
             request_data_as_program_future
@@ -139,7 +157,7 @@ program marketplace_example.aleo {
             Future
         ) =
             data_custody_protocol.aleo/request_data_as_program(
-                listing_data.nft_data_address, // private data_address: address,
+                custody_id, // private custody_id: field,
                 self.signer, // private to: address,
                 mpc_threshold, // private threshold: u8,
                 validators,// public validators: [address; 15],
@@ -199,5 +217,6 @@ program marketplace_example.aleo {
 
 ## Future Improvements
 
-- **Improvement 1:** Allow any amount of data requests. The amount is set as an input of **Custody** step, and is reduced by one on **Request** step.
-- **Improvement 2:** Allow multiple **Destinator** for the data
+- **Idea 1:** Allow any amount of data requests. The amount is set as an input of **Custody** step, and is reduced by one on **Request** step.
+- **Idea 2:** Allow an array **Destinator** for the data (reduce by array length on **Request** step).
+- **Idea 3:** Leverage Shamir Secret Sharing additive homorphic property in protocol

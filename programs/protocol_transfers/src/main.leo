@@ -9,7 +9,7 @@ import protocol_core.aleo;
 program protocol_transfers.aleo {
     struct Custody {
         initiator: address,
-        data_address: address,
+        custody_id: field,
         threshold: u8,
     }
 

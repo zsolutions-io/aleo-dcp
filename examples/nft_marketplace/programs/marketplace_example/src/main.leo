@@ -48,7 +48,11 @@ program marketplace_example.aleo {
             = arc721_example.aleo/transfer_private_to_public(
                 nft, self.address
             );
+        let secret: field = secret_random_viewkey as field;
         let nft_data_address: address = (secret_random_viewkey * group::GEN) as address;
+        let custody_id: field = BHP256::hash_to_field(nft_data_address);
+
+
         let out_nft_view: NFTView = NFTView {
             owner: nft_data_address,
             data: nft.data,
@@ -58,7 +62,7 @@ program marketplace_example.aleo {
 
         let data_custody: Custody = Custody {
             initiator: self.caller,
-            data_address: nft_data_address,
+            custody_id: custody_id,
             threshold: mpc_threshold,
         };
 
@@ -66,7 +70,8 @@ program marketplace_example.aleo {
 
         let custody_data_as_program_future: Future =
             data_custody_protocol.aleo/custody_data_as_program(
-                secret_random_viewkey, // private data_view_key: scalar,
+                secret, // private data_view_key: scalar,
+                custody_id, // private custody_id: field,
                 privacy_random_coefficients, // private coefficients: [field; 15],
                 validators, // private validators: [address; 16],
                 mpc_threshold // private threshold: u8 <= 15
@@ -128,6 +133,7 @@ program marketplace_example.aleo {
                 listing_data.seller,
                 listing_data.price
             );
+        let custody_id: field = BHP256::hash_to_field(listing_data.nft_data_address);
 
         let (
             change,
@@ -137,7 +143,7 @@ program marketplace_example.aleo {
             Future
         ) =
             data_custody_protocol.aleo/request_data_as_program(
-                listing_data.nft_data_address, // private data_address: address,
+                custody_id, // private data_address: address,
                 self.signer, // private to: address,
                 mpc_threshold, // private threshold: u8,
                 validators,// public validators: [address; 16],

@@ -1,9 +1,6 @@
 /*
     Protocol to allow programs to custody and distribute private data.
 
-    Next Step:
-        - Multiple aleo credits
-
     Limit:
     15 validators maximum limit (16 max transition outputs - 1 future).
     Solvable by using multiple transactions...
@@ -34,42 +31,43 @@ program data_custody_protocol.aleo {
         return y;
     }
 
-    /*
-        Child program simultanuously (in same transaction):
-            - calls receive_precord_as_program(data_view_key)
-            - sends any record to ((data_view_key * group::GEN) as address)
-        /!\ record becomes read only
-    */
+    inline is_non_ending_coefficient_zero(coefficients: [field; 15]) -> bool {
+        let result: bool = false;
+        for i: u8 in 0u8..14u8 {
+            let are_all_after_zero: bool = true;
+            for j: u8 in 0u8..14u8 {
+                are_all_after_zero = are_all_after_zero && (
+                    j <= i || coefficients[j] == 0field
+                );
+            }
+            let is_this_coefficient_zero: bool = (coefficients[i] == 0field);
+            result = result || (
+                is_this_coefficient_zero && are_all_after_zero.not()
+            );
+        }
+        return result;
+    }
+
+
+/*
+    let secret: field = data_view_key as field;
+    let data_address: address = (data_view_key * group::GEN) as address;
+    let custody_id: field = BHP256::commit_to_field(data_address, data_address_obfuscator);
+*/
+
     async transition custody_data_as_program(
-        private data_view_key: scalar,
+        private secret: field,
+        private custody_id: field,
         private coefficients: [field; 15],
         public validators: [address; 16],
-        private threshold: u8  // <= 15
+        private threshold: u8,  // <= 15
     ) -> Future {
         assert_neq(self.caller, self.signer);
-        assert(
-            coefficients[0u8] != 0field
-            && coefficients[1u8] != 0field
-            && coefficients[2u8] != 0field
-            && coefficients[3u8] != 0field
-            && coefficients[4u8] != 0field
-            && coefficients[5u8] != 0field
-            && coefficients[6u8] != 0field
-            && coefficients[7u8] != 0field
-            && coefficients[8u8] != 0field
-            && coefficients[9u8] != 0field
-            && coefficients[10u8] != 0field
-            && coefficients[11u8] != 0field
-            && coefficients[12u8] != 0field
-            && coefficients[13u8] != 0field
-            && coefficients[14u8] != 0field
-        );
-        let secret: field = data_view_key as field;
+        assert(is_non_ending_coefficient_zero(coefficients).not());
 
-        let data_address: address = (data_view_key * group::GEN) as address;
         let custodied_data: Custody = Custody {
             initiator: self.caller,
-            data_address: data_address,
+            custody_id: custody_id,
             threshold: threshold
         };
         let custody_hash: field = hash_custody(custodied_data);
@@ -258,7 +256,7 @@ program data_custody_protocol.aleo {
 
 
     async transition request_data_as_program(
-        private data_address: address,
+        private custody_id: field,
         private to: address,
         private threshold: u8,
         public validators: [address; 16],
@@ -268,7 +266,7 @@ program data_custody_protocol.aleo {
         assert_neq(self.caller, self.signer);
         let custodied_data: Custody = Custody {
             initiator: self.caller,
-            data_address: data_address,
+            custody_id: custody_id,
             threshold: threshold
         };
         let custody_hash: field = hash_custody(custodied_data);
@@ -328,7 +326,7 @@ program data_custody_protocol.aleo {
 
     // Assert at least k of n shares processed
     async transition assert_completed_as_program(
-        private data_address: address,
+        private custody_id: field,
         public threshold: u8,
     ) -> (
         Future
@@ -336,7 +334,7 @@ program data_custody_protocol.aleo {
         assert_neq(self.caller, self.signer);
         let custody: Custody = Custody {
             initiator: self.caller,
-            data_address: data_address,
+            custody_id: custody_id,
             threshold: threshold
         };
         let custody_hash: field = hash_custody(custody);
