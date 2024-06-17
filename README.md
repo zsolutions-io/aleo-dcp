@@ -39,7 +39,7 @@ Incoming Javascript implementation.
 
 ### Governance DApp UI
 
-Incoming React frontend application built with aleo-wallet-adapter.
+Incoming React frontend application built with `aleo-wallet-adapter` package, for validators.
 
 **`validator/ui`**: TODO.
 
