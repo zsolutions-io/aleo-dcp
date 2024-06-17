@@ -50,7 +50,7 @@ For a program to custody private data, it must import **`data_custody_protocol.a
 
 ### Example
 
-Marketplace program for NFTs with secret data, which standard is detailed at [**`arc721_example.leo`**](/examples/nft_marketplace/programs/arc721_example/src/main.leo):
+Marketplace program for exchanging NFTs with secret data, which standard is detailed at [**`arc721_example.leo`**](/examples/nft_marketplace/programs/arc721_example/src/main.leo):
 
 ```rust
 import data_custody_protocol.aleo;
