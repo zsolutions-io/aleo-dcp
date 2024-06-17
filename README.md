@@ -201,7 +201,7 @@ program marketplace_example.aleo {
 }
 ```
 
-*This is a very simplified marketplace to focus on the `data_custody_protocol.aleo` program usage. This is why seller/buyer privacy as well as offers are not implemented here.*
+*This is a very simplified marketplace to focus on the **`data_custody_protocol.aleo`** program usage. This is why seller/buyer privacy as well as offers are not implemented here.*
 
 ## Future Improvements
 
