@@ -113,18 +113,12 @@ program marketplace_example.aleo {
 
 
     async transition accept_listing(
-        public nft_commit: field,
-        private listing_data: ListingData,
+        ...
         public validators: [address; 16],
         public validator_fee: u64,
         private protocol_fee_record: credits.aleo/credits
     ) -> (credits.aleo/credits, Future) {
-        let pay_marketplace_future: Future =
-            credits.aleo/transfer_public(
-                listing_data.seller,
-                listing_data.price
-            );
-
+        ...
         let (
             change,
             request_data_as_program_future
@@ -141,27 +135,16 @@ program marketplace_example.aleo {
                 protocol_fee_record,
             );
         let accept_listing_future: Future = finalize_accept_listing(
-            self.caller,
-            nft_commit,
-            listing_data,
-            pay_marketplace_future,
+            ...
             request_data_as_program_future,
         );
-        return (change, accept_listing_future);
+        ...
     }
     async function finalize_accept_listing(
-        caller: address,
-        nft_commit: field,
-        listing_data: ListingData,
-        pay_marketplace_future: Future,
+        ...
         request_data_as_program_future: Future
     ) {
-        let retrieved_listing_data: ListingData = listings.get(nft_commit);
-        assert_eq(retrieved_listing_data, listing_data);
-        assert(listings_buyer.contains(nft_commit).not());
-        listings_buyer.set(nft_commit, caller);
-        
-        pay_marketplace_future.await();
+        ...
         request_data_as_program_future.await();
     }
 
