@@ -32,7 +32,7 @@ program protocol_core.aleo {
 
     struct Custody {
         initiator: address,
-        data_address: address,
+        custody_id: field,
         threshold: u8,
     }
 
