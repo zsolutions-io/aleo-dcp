@@ -33,7 +33,15 @@ Validators propose and vote for **Proposals**, consisting of a new set of Valida
 
 ### Run validator
 
-Incoming js implementation.
+Incoming Javascript implementation:
+
+**`validator/run.js`**
+
+### Governance DApp UI
+
+Incoming React app built with aleo-wallet-adapter:
+
+**`validator/ui`**
 
 ## Usage
 
