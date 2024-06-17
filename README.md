@@ -111,7 +111,14 @@ program marketplace_example.aleo {
         ...
     }
 
-
+    /*
+        Validators associated with the listing can be retrieved offchain using: 
+            protocol_core.aleo/validator_sets.get(
+                protocol_core.aleo/custodies.get(
+                    listing_data.data_custody_hash
+                )
+            )
+    */
     async transition accept_listing(
         ...
         public validators: [address; 16],
@@ -153,18 +160,9 @@ program marketplace_example.aleo {
     async transition withdraw_nft(
         nft_data: data,
         nft_edition: scalar,
-        listing_data: ListingData
-        /*
-            Validators associated with the listing can be retrieved using: 
-                protocol_validators.aleo/validator_sets.get(
-                    data_custody_protocol.aleo/custodies.get(
-                        listing_data.data_custody_hash
-                    )
-                )
-        */
+        ...
     ) -> (arc721_example.aleo/NFT, Future) {
-        let nft_commit: field = commit_nft(nft_data, nft_edition);
-        
+        ...
         let (
             purshased_nft,
             transfer_nft_to_buyer_future
@@ -173,11 +171,8 @@ program marketplace_example.aleo {
             nft_edition,
             self.caller,
         );
-
         let accept_listing_future: Future = finalize_withdraw_nft(
-            self.caller,
-            nft_commit,
-            listing_data,
+            ...
             transfer_nft_to_buyer_future,
         );
         return (
@@ -186,16 +181,10 @@ program marketplace_example.aleo {
         );
     }
     async function finalize_withdraw_nft(
-        caller: address,
-        nft_commit: field,
-        listing_data: ListingData,
+        ...
         transfer_nft_to_buyer_future: Future,
     ) {
-        let retrieved_listing_data: ListingData = listings.get(nft_commit);
-        assert_eq(retrieved_listing_data, listing_data);
-        assert_eq(listings_buyer.get(nft_commit), caller);
-        listings_buyer.remove(nft_commit);
-        listings.remove(nft_commit);
+        ...
         transfer_nft_to_buyer_future.await();
     }
 }
