@@ -39,7 +39,7 @@ Incoming Javascript implementation.
 
 ### Governance DApp UI
 
-Incoming React frontend application built with `aleo-wallet-adapter` package, for validators.
+Incoming React frontend application built with `aleo-wallet-adapter` package. It is made for validators to manage Governance of the protocol.
 
 **`validator/ui`**: TODO.
 
@@ -199,4 +199,5 @@ program marketplace_example.aleo {
 
 ## Future Improvements
 
-- **Allow any amount of *request* steps, amount defined at `custody` step**
+- **Improvement 1:** Allow any amount of data requests. The amount is set as an input of **Custody** step, and is reduced by one on **Request** step.
+- **Improvement 2:** Allow multiple **Destinator** for the data
