@@ -31,17 +31,22 @@ Validators propose and vote for **Proposals**, consisting of a new set of Valida
 
 [Check implementation of **`protocol_core.leo`**.](programs/protocol_core/src/main.leo)
 
-### Run validator
+### Run a Calidator
 
-Incoming Javascript implementation:
+Incoming Javascript implementation.
 
 **`validator/run.js`**: TODO.
 
 ### Governance DApp UI
 
-Incoming React app built with aleo-wallet-adapter:
+Incoming React frontend application built with aleo-wallet-adapter.
 
 **`validator/ui`**: TODO.
+
+#### Features
+
+- Initiate a new **Proposal**.
+- Vote for any exisiting **Proposal**.
 
 ## Usage
 
