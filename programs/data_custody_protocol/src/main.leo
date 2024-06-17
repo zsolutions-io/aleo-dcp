@@ -36,7 +36,7 @@ program data_custody_protocol.aleo {
         for i: u8 in 0u8..14u8 {
             let are_all_after_zero: bool = true;
             for j: u8 in 0u8..14u8 {
-                are_all_after_zero: are_all_after_zero && (
+                are_all_after_zero = are_all_after_zero && (
                     j <= i || coefficients[j] == 0field
                 );
             }
