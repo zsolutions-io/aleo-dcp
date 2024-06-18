@@ -2,7 +2,7 @@
 
 A decentralised MPC protocol built on Aleo to **allow any program to custody arbitrary private data** that can be transactionally withdrawn.
 
-Data is splitted into Shamir shares which are custidied by Validators, that can be dynamically updated through a voting gouvernance mechanism. They are incentivized with **Aleo credits fees** paid by requester of custodied data.
+Data is splitted following **Shamir Secret Sharing (SSS)** algorithm. Shares are custidied by Validators, that can be dynamically updated through a voting gouvernance mechanism. They are incentivized with **Aleo credits fees** paid by requester of custodied data.
 
 ## Use Cases
 
@@ -10,9 +10,16 @@ Data is splitted into Shamir shares which are custidied by Validators, that can 
 
 ## How it works?
 
-### For custodying arbitrary record data
+### Base idea
 
-Protocol enables to hold data stored in any arbitrary record
+The protocol allows any program to privately hold a `field` element and distribute it transactionally. It can be used to store:
+
+- A View Key protecting record(s) hence storing arbitrary data.
+- A `field` directly, allowing addition updates on stored data by leveraging additive homomorphic properties of SSS.
+
+### Custodying arbitrary record data
+
+Protocol enables programs to hold and distribute data stored in any arbitrary record:
 
 1. Record from any program containing the private data is transferred to an address, which View Key (generated randomly) is splitted in shares among N validators using Shamir Secret Sharing algorithm. This is the **Custody** step.
 2. This view key can later be requested to be sent privately to any destination address, by initial program. This is the **Request** step.
@@ -23,9 +30,9 @@ Protocol enables to hold data stored in any arbitrary record
 
 ![alt text](aleo-dcp-schema.png)
 
-### For custodying data with homomorphic operation support
+### Additive homomorphic operations support
 
-Leverage Shamir Secret Sharing additive homorphic property in protocol... TODO
+**Custody** step can be call multiple times, with the same `custody_id`, by a program that imports DCP. In that case, shares associated with custodied `field` elements must simply be added by validators before being submitted to destinator.
 
 ## Protocol Governance
 
@@ -60,16 +67,24 @@ Incoming React frontend application built with `aleo-wallet-adapter` package. It
 
 ## Usage
 
-### How to call it from any other program?
+### How to call it from any Aleo program?
+
+#### For arbitrary record data
 
 For a program to custody private data, it must import **`data_custody_protocol.aleo`**.
 
 1. To custody data, it must:
-    - Call `data_custody_protocol.aleo/custody_data_as_program(data_view_key, threshold, ...)`
+    - Call `data_custody_protocol.aleo/custody_data_as_program((data_view_key as field), threshold, ...)`
     - Send any records to `(data_view_key * group::GEN) as address`
 2. It can then call `data_custody_protocol.aleo/request_data_as_program` to initiate a data request.
 3. Validator bots automatically call `protocol_transfers.aleo/process_request_as_validator` to accept the data request.
 4. `data_custody_protocol.aleo/assert_completed_as_program` can then be used by the program to check if data was effectively transmitted.
+
+#### Multiple Custody steps
+
+In case **Custody** step was called more than once for a single `request_id`:
+
+Between step 3 and step 4, validator bots must call `protocol_transfers.aleo/join_shares_as_validator` as many time as there are additional **Custody** step.
 
 ### Example
 
@@ -218,5 +233,4 @@ program marketplace_example.aleo {
 ## Future Improvements
 
 - **Idea 1:** Allow any amount of data requests. The amount is set as an input of **Custody** step, and is reduced by one on **Request** step.
-- **Idea 2:** Allow an array **Destinator** for the data (reduce by array length on **Request** step).
-- **Idea 3:** Leverage Shamir Secret Sharing additive homorphic property in protocol
+- **Idea 2:** Allow an array **Destinator** for the data (reduce by array length on **Request** step)
