@@ -73,7 +73,7 @@ Incoming React frontend application built with `aleo-wallet-adapter` package. It
 
 For a program to custody private data, it must import **`data_custody_protocol.aleo`**.
 
-1. To custody data, it must:
+1. To custody data, it can:
     - Call `data_custody_protocol.aleo/custody_data_as_program((data_view_key as field), threshold, ...)`
     - Send any records to `(data_view_key * group::GEN) as address`
 2. It can then call `data_custody_protocol.aleo/request_data_as_program` to initiate a data request.
@@ -84,7 +84,7 @@ For a program to custody private data, it must import **`data_custody_protocol.a
 
 In case **Custody** step was called more than once for a single `request_id`:
 
-Between step 3 and step 4, validator bots must call `protocol_transfers.aleo/join_shares_as_validator` as many time as there are additional **Custody** step.
+- Between step 3 and step 4, validator bots must call `protocol_transfers.aleo/join_shares_as_validator` as many time as there are additional **Custody** step.
 
 ### Example
 
