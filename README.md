@@ -34,6 +34,8 @@ Protocol enables programs to hold and distribute data stored in any arbitrary re
 
 **Custody** step can be call multiple times, with the same `custody_id`, by a program that imports DCP. In that case, shares associated with custodied `field` elements must simply be added by validators before being submitted to destinator.
 
+![alt text](aleo-dcp-schema-homomorphic.png)
+
 ## Protocol Governance
 
 ### Validators
