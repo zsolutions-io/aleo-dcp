@@ -14,7 +14,7 @@ Data is splitted following **Shamir Secret Sharing (SSS)** algorithm. Shares are
 
 The protocol allows any program to privately hold a `field` element and distribute it transactionally. It can be used to store:
 
-- A View Key protecting record(s) hence storing arbitrary data.
+- A View Key protecting record(s), enabling arbitrary data storage.
 - A `field` directly, allowing addition updates on stored data by leveraging additive homomorphic properties of SSS.
 
 ### Custodying arbitrary record data
