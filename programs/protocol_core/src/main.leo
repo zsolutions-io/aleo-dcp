@@ -27,7 +27,8 @@ program protocol_core.aleo {
         validator_set_index: u64,
         validator_fee: u64,
         requested: bool,
-        submitted_shares: u8
+        submitted_shares: u8,
+        expected_weight: u64
     }
 
     struct Custody {
@@ -39,6 +40,7 @@ program protocol_core.aleo {
     struct Share {
         share_val: field,
         index: field,
+        weight: u64
     }
 
     struct ValidatorShareData {
@@ -340,20 +342,37 @@ program protocol_core.aleo {
         custody_hash: field,
         validators: [address; 16],
     ){
-        assert(custodies.contains(custody_hash).not());
+        let default_custody_state: CustodyState = CustodyState {
+            validator_set_index: 0u64,
+            validator_fee: 0u64,
+            requested: false,
+            submitted_shares: 0u8,
+            expected_weight: 0u64
+        };
+        let custody_state: CustodyState = custodies.get_or_use(
+            custody_hash, default_custody_state
+        );
 
         let validator_sets_len: u64 = validator_sets_length.get(true);
-        let validator_set_index: u64 = validator_sets_len - 1u64;
+        let validator_set_index: u64 = (custody_state.expected_weight == 0u64) ?
+            (validator_sets_len - 1u64) :
+            custody_state.validator_set_index;
         let validator_set: [address; 16] = validator_sets.get(validator_set_index);
-        assert_eq(validators, validator_set);
 
-        let custody_state: CustodyState = CustodyState {
+        assert(
+            custody_state.submitted_shares==0u8 
+            && custody_state.requested.not()
+            && validators == validator_set
+        );
+
+        let new_custody_state: CustodyState = CustodyState {
             validator_set_index: validator_set_index,
             validator_fee: 0u64,
             requested: false,
-            submitted_shares: 0u8
+            submitted_shares: 0u8,
+            expected_weight: custody_state.expected_weight + 1u64
         };
-        custodies.set(custody_hash, custody_state);
+        custodies.set(custody_hash, new_custody_state);
     }
 
 
@@ -385,7 +404,8 @@ program protocol_core.aleo {
             validator_set_index: custody_state.validator_set_index,
             validator_fee: validator_fee,
             requested: true,
-            submitted_shares: 0u8
+            submitted_shares: 0u8,
+            expected_weight: custody_state.expected_weight
         };
         custodies.set(custody_hash, new_custody_state);
     }
@@ -394,31 +414,36 @@ program protocol_core.aleo {
     async transition process_request_as_validator(
         public custody_hash: field,
         public validator_fee: u64,
-        public threshold: u8
+        public threshold: u8,
+        public weight: u64
     ) -> Future {
         assert_eq(self.caller, protocol_transfers.aleo);
         return finalize_process_request_as_validator(
             custody_hash,
             validator_fee,
-            threshold
+            threshold,
+            weight
         );
     }
     async function finalize_process_request_as_validator(
         custody_hash: field,
         validator_fee: u64,
-        threshold: u8
+        threshold: u8,
+        weight: u64
     ) {
         let custody_state: CustodyState = custodies.get(custody_hash);
 
         assert(custody_state.requested);
         assert_eq(validator_fee, custody_state.validator_fee);
         assert(custody_state.submitted_shares < threshold);
+        assert_eq(weight, custody_state.expected_weight);
 
         let new_custody_state: CustodyState = CustodyState {
             validator_set_index: custody_state.validator_set_index,
             validator_fee: custody_state.validator_fee,
             requested: true,
-            submitted_shares: custody_state.submitted_shares + 1u8
+            submitted_shares: custody_state.submitted_shares + 1u8,
+            expected_weight: custody_state.expected_weight
         };
         custodies.set(custody_hash, new_custody_state);
     }

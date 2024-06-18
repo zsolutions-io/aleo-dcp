@@ -16,6 +16,7 @@ program protocol_transfers.aleo {
     struct Share {
         share_val: field,
         index: field,
+        weight: u64
     }
 
     struct ValidatorShareData {
@@ -319,7 +320,8 @@ program protocol_transfers.aleo {
             protocol_core.aleo/process_request_as_validator(
                 custody_hash,
                 validator_fee,
-                validator_share.custody.threshold
+                validator_share.custody.threshold,
+                validator_share.share.weight
             );
         let process_request_as_validator_future: Future =
             finalize_process_request_as_validator(
@@ -340,4 +342,26 @@ program protocol_transfers.aleo {
         unlock_fee_future.await();
     }
 
+
+    transition join_shares_as_validator(
+        private validator_share_1: ValidatorShare,
+        private validator_share_2: ValidatorShare,
+    ) -> ValidatorShare {
+        assert(
+            validator_share_1.custody == validator_share_2.custody
+            && validator_share_1.share.index == validator_share_2.share.index
+        );
+
+        let out_share: Share = Share {
+            share_val: validator_share_1.share.share_val + validator_share_2.share.share_val,
+            index: validator_share_1.share.index,
+            weight: validator_share_1.share.weight + validator_share_2.share.weight
+        };
+
+        return ValidatorShare {
+            owner: self.signer,
+            share: out_share,
+            custody: validator_share_1.custody,
+        };
+    }
 }
