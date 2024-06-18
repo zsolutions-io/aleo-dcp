@@ -10,7 +10,7 @@ Data is splitted following **Shamir Secret Sharing (SSS)** algorithm. Shares are
 
 ## How it works?
 
-### Base idea
+### General idea
 
 The protocol allows any program to privately hold a `field` element and distribute it transactionally. It can be used to store:
 
