@@ -15,19 +15,20 @@ program protocol_transfers.aleo {
 
     struct Share {
         share_val: field,
-        index: field,
-        weight: u64
+        index: field
     }
 
     struct ValidatorShareData {
         validator: address,
-        share: Share
+        share: Share,
+        weight: u64
     }
 
     record ValidatorShare {
         owner: address,
         share: Share,
         custody: Custody,
+        weight: u64
     }
 
     record WithdrawRequest {
@@ -74,81 +75,97 @@ program protocol_transfers.aleo {
             owner: validator_shares[0u8].validator,
             share: validator_shares[0u8].share,
             custody: custodied_data,
+            weight: validator_shares[0u8].weight
         };
         let validator_share_1: ValidatorShare = ValidatorShare {
             owner: validator_shares[1u8].validator,
             share: validator_shares[1u8].share,
             custody: custodied_data,
+            weight: validator_shares[1u8].weight
         };
         let validator_share_2: ValidatorShare = ValidatorShare {
             owner: validator_shares[2u8].validator,
             share: validator_shares[2u8].share,
             custody: custodied_data,
+            weight: validator_shares[2u8].weight
         };
         let validator_share_3: ValidatorShare = ValidatorShare {
             owner: validator_shares[3u8].validator,
             share: validator_shares[3u8].share,
             custody: custodied_data,
+            weight: validator_shares[3u8].weight
         };
         let validator_share_4: ValidatorShare = ValidatorShare {
             owner: validator_shares[4u8].validator,
             share: validator_shares[4u8].share,
             custody: custodied_data,
+            weight: validator_shares[4u8].weight
         };
         let validator_share_5: ValidatorShare = ValidatorShare {
             owner: validator_shares[5u8].validator,
             share: validator_shares[5u8].share,
             custody: custodied_data,
+            weight: validator_shares[5u8].weight
         };
         let validator_share_6: ValidatorShare = ValidatorShare {
             owner: validator_shares[6u8].validator,
             share: validator_shares[6u8].share,
             custody: custodied_data,
+            weight: validator_shares[6u8].weight
         };
         let validator_share_7: ValidatorShare = ValidatorShare {
             owner: validator_shares[7u8].validator,
             share: validator_shares[7u8].share,
             custody: custodied_data,
+            weight: validator_shares[7u8].weight
         };
         let validator_share_8: ValidatorShare = ValidatorShare {
             owner: validator_shares[8u8].validator,
             share: validator_shares[8u8].share,
             custody: custodied_data,
+            weight: validator_shares[8u8].weight
         };
         let validator_share_9: ValidatorShare = ValidatorShare {
             owner: validator_shares[9u8].validator,
             share: validator_shares[9u8].share,
             custody: custodied_data,
+            weight: validator_shares[9u8].weight
         };
         let validator_share_10: ValidatorShare = ValidatorShare {
             owner: validator_shares[10u8].validator,
             share: validator_shares[10u8].share,
             custody: custodied_data,
+            weight: validator_shares[10u8].weight
         };
         let validator_share_11: ValidatorShare = ValidatorShare {
             owner: validator_shares[11u8].validator,
             share: validator_shares[11u8].share,
             custody: custodied_data,
+            weight: validator_shares[11u8].weight
         };
         let validator_share_12: ValidatorShare = ValidatorShare {
             owner: validator_shares[12u8].validator,
             share: validator_shares[12u8].share,
             custody: custodied_data,
+            weight: validator_shares[12u8].weight
         };
         let validator_share_13: ValidatorShare = ValidatorShare {
             owner: validator_shares[13u8].validator,
             share: validator_shares[13u8].share,
             custody: custodied_data,
+            weight: validator_shares[13u8].weight
         };
         let validator_share_14: ValidatorShare = ValidatorShare {
             owner: validator_shares[14u8].validator,
             share: validator_shares[14u8].share,
             custody: custodied_data,
+            weight: validator_shares[14u8].weight
         };
         let validator_share_15: ValidatorShare = ValidatorShare {
             owner: validator_shares[15u8].validator,
             share: validator_shares[15u8].share,
             custody: custodied_data,
+            weight: validator_shares[15u8].weight
         };
 
         return (
@@ -321,7 +338,7 @@ program protocol_transfers.aleo {
                 custody_hash,
                 validator_fee,
                 validator_share.custody.threshold,
-                validator_share.share.weight
+                validator_share.weight
             );
         let process_request_as_validator_future: Future =
             finalize_process_request_as_validator(
@@ -355,13 +372,13 @@ program protocol_transfers.aleo {
         let out_share: Share = Share {
             share_val: validator_share_1.share.share_val + validator_share_2.share.share_val,
             index: validator_share_1.share.index,
-            weight: validator_share_1.share.weight + validator_share_2.share.weight
         };
 
         return ValidatorShare {
             owner: self.signer,
             share: out_share,
             custody: validator_share_1.custody,
+            weight: validator_share_1.weight + validator_share_2.weight
         };
     }
 }

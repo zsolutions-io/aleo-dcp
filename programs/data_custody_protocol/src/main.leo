@@ -77,9 +77,9 @@ program data_custody_protocol.aleo {
             validator: validators[0u8],
             share: Share {
                 share_val: evaluate_polynomial(coefficients, threshold, index_0, secret),
-                index: index_0,
-                weight: 1u64
-            }
+                index: index_0
+            },
+            weight: 1u64
         };
 
         let index_1: field = 2field;
@@ -87,9 +87,9 @@ program data_custody_protocol.aleo {
             validator: validators[1u8],
             share: Share {
                 share_val: evaluate_polynomial(coefficients, threshold, index_1, secret),
-                index: index_1,
-                weight: 1u64
-            }
+                index: index_1
+            },
+            weight: 1u64
         };
 
         let index_2: field = 3field;
@@ -97,9 +97,9 @@ program data_custody_protocol.aleo {
             validator: validators[2u8],
             share: Share {
                 share_val: evaluate_polynomial(coefficients, threshold, index_2, secret),
-                index: index_2,
-                weight: 1u64
-            }
+                index: index_2
+            },
+            weight: 1u64
         };
 
         let index_3: field = 4field;
@@ -107,9 +107,9 @@ program data_custody_protocol.aleo {
             validator: validators[3u8],
             share: Share {
                 share_val: evaluate_polynomial(coefficients, threshold, index_3, secret),
-                index: index_3,
-                weight: 1u64
-            }
+                index: index_3
+            },
+            weight: 1u64
         };
         
         let index_4: field = 5field;
@@ -117,9 +117,9 @@ program data_custody_protocol.aleo {
             validator: validators[4u8],
             share: Share {
                 share_val: evaluate_polynomial(coefficients, threshold, index_4, secret),
-                index: index_4,
-                weight: 1u64
-            }
+                index: index_4
+            },
+            weight: 1u64
         };
 
         let index_5: field = 6field;
@@ -127,9 +127,9 @@ program data_custody_protocol.aleo {
             validator: validators[5u8],
             share: Share {
                 share_val: evaluate_polynomial(coefficients, threshold, index_5, secret),
-                index: index_5,
-                weight: 1u64
-            }
+                index: index_5
+            },
+            weight: 1u64
         };
 
         let index_6: field = 7field;
@@ -137,9 +137,9 @@ program data_custody_protocol.aleo {
             validator: validators[6u8],
             share: Share {
                 share_val: evaluate_polynomial(coefficients, threshold, index_6, secret),
-                index: index_6,
-                weight: 1u64
-            }
+                index: index_6
+            },
+            weight: 1u64
         };
 
         let index_7: field = 8field;
@@ -147,9 +147,9 @@ program data_custody_protocol.aleo {
             validator: validators[7u8],
             share: Share {
                 share_val: evaluate_polynomial(coefficients, threshold, index_7, secret),
-                index: index_7,
-                weight: 1u64
-            }
+                index: index_7
+            },
+            weight: 1u64
         };
 
         let index_8: field = 9field;
@@ -157,9 +157,9 @@ program data_custody_protocol.aleo {
             validator: validators[8u8],
             share: Share {
                 share_val: evaluate_polynomial(coefficients, threshold, index_8, secret),
-                index: index_8,
-                weight: 1u64
-            }
+                index: index_8
+            },
+            weight: 1u64
         };
         
         let index_9: field = 10field;
@@ -167,9 +167,9 @@ program data_custody_protocol.aleo {
             validator: validators[9u8],
             share: Share {
                 share_val: evaluate_polynomial(coefficients, threshold, index_9, secret),
-                index: index_9,
-                weight: 1u64
-            }
+                index: index_9
+            },
+            weight: 1u64
         };
 
         let index_10: field = 11field;
@@ -177,9 +177,9 @@ program data_custody_protocol.aleo {
             validator: validators[10u8],
             share: Share {
                 share_val: evaluate_polynomial(coefficients, threshold, index_10, secret),
-                index: index_10,
-                weight: 1u64
-            }
+                index: index_10
+            },
+            weight: 1u64
         };
 
         let index_11: field = 12field;
@@ -187,9 +187,9 @@ program data_custody_protocol.aleo {
             validator: validators[11u8],
             share: Share {
                 share_val: evaluate_polynomial(coefficients, threshold, index_11, secret),
-                index: index_11,
-                weight: 1u64
-            }
+                index: index_11
+            },
+            weight: 1u64
         };
 
         let index_12: field = 13field;
@@ -197,9 +197,9 @@ program data_custody_protocol.aleo {
             validator: validators[12u8],
             share: Share {
                 share_val: evaluate_polynomial(coefficients, threshold, index_12, secret),
-                index: index_12,
-                weight: 1u64
-            }
+                index: index_12
+            },
+            weight: 1u64
         };
 
         let index_13: field = 14field;
@@ -207,9 +207,9 @@ program data_custody_protocol.aleo {
             validator: validators[13u8],
             share: Share {
                 share_val: evaluate_polynomial(coefficients, threshold, index_13, secret),
-                index: index_13,
-                weight: 1u64
-            }
+                index: index_13
+            },
+            weight: 1u64
         };
         
         let index_14: field = 15field;
@@ -217,9 +217,9 @@ program data_custody_protocol.aleo {
             validator: validators[14u8],
             share: Share {
                 share_val: evaluate_polynomial(coefficients, threshold, index_14, secret),
-                index: index_14,
-                weight: 1u64
-            }
+                index: index_14
+            },
+            weight: 1u64
         };
 
         let index_15: field = 16field;
@@ -227,9 +227,9 @@ program data_custody_protocol.aleo {
             validator: validators[15u8],
             share: Share {
                 share_val: evaluate_polynomial(coefficients, threshold, index_15, secret),
-                index: index_15,
-                weight: 1u64
-            }
+                index: index_15
+            },
+            weight: 1u64
         };
 
         let validator_shares: [ValidatorShareData; 16] = [

@@ -39,13 +39,13 @@ program protocol_core.aleo {
 
     struct Share {
         share_val: field,
-        index: field,
-        weight: u64
+        index: field
     }
 
     struct ValidatorShareData {
         validator: address,
-        share: Share
+        share: Share,
+        weight: u64
     }
 
     mapping validator_sets: u64 => [address; 16]; 
