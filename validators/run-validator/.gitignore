@@ -1,2 +1,4 @@
 **/data/**
 **/.env
+data
+node_modules
