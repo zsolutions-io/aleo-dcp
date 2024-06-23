@@ -58,6 +58,7 @@ program data_custody_protocol.aleo {
     async transition custody_data_as_program(
         private secret: field,
         private custody_id: field,
+        public maximum_requests: u128,
         private coefficients: [field; 15],
         public validators: [address; 16],
         private threshold: u8,  // <= 15
@@ -257,7 +258,8 @@ program data_custody_protocol.aleo {
 
         let protocol_core_future: Future = protocol_core.aleo/custody_data_as_program(
             custody_hash,
-            validators
+            validators,
+            maximum_requests
         );
 
         return finalize_custody_data_as_program(
@@ -273,10 +275,11 @@ program data_custody_protocol.aleo {
 
     async transition request_data_as_program(
         private custody_id: field,
+        private request_id: field,
         private to: address,
         private threshold: u8,
         public validators: [address; 16],
-        public validator_fee: u64,
+        private validator_fee: u64,
         private protocol_fee_record: credits.aleo/credits,
     ) -> (credits.aleo/credits, Future) {
         assert_neq(self.caller, self.signer);
@@ -308,21 +311,23 @@ program data_custody_protocol.aleo {
         protocol_transfers.aleo/submit_requests_to_validators(
             validators_0,
             custody_hash,
-            to
+            request_id,
+            to,
+            validator_fee,
         );
 
         let protocol_fee_amount: u64 = (threshold as u64) * validator_fee;
         let (protocol_fee_change, lock_fee_future): (credits.aleo/credits, Future) =
             credits.aleo/transfer_private_to_public(
                 protocol_fee_record,
-                self.address,
+                protocol_transfers.aleo,
                 protocol_fee_amount,
             );
 
         let protocol_core_future: Future = protocol_core.aleo/request_data_as_program(
             custody_hash,
-            validators,
-            validator_fee
+            request_id,
+            validators
         );
 
         let request_data_as_program_future: Future = finalize_request_data_as_program(
@@ -343,6 +348,7 @@ program data_custody_protocol.aleo {
     // Assert at least k of n shares processed
     async transition assert_completed_as_program(
         private custody_id: field,
+        public request_id: field,
         public threshold: u8,
     ) -> (
         Future
@@ -357,6 +363,7 @@ program data_custody_protocol.aleo {
         let assert_completed_as_program_future: Future
             = finalize_assert_completed_as_program(
                 custody_hash,
+                request_id,
                 threshold
             );
 
@@ -364,9 +371,10 @@ program data_custody_protocol.aleo {
     }
     async function finalize_assert_completed_as_program(
         custody_hash: field,
+        request_id: field,
         threshold: u8
     ) {
-        let submitted: u8 = protocol_core.aleo/custodies.get(custody_hash).submitted_shares;
+        let submitted: u8 = protocol_core.aleo/requests.get(request_id);
         assert(submitted >= threshold);
     }
 }

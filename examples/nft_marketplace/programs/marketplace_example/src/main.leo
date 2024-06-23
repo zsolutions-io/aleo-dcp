@@ -36,7 +36,6 @@ program marketplace_example.aleo {
     }
 
 
-
     async transition list(
         private nft: arc721_example.aleo/NFT,   // private nft record to list
         public price: u64,              // total price paid by seller
@@ -51,7 +50,6 @@ program marketplace_example.aleo {
         let secret: field = secret_random_viewkey as field;
         let nft_data_address: address = (secret_random_viewkey * group::GEN) as address;
         let custody_id: field = BHP256::hash_to_field(nft_data_address);
-
 
         let out_nft_view: NFTView = NFTView {
             owner: nft_data_address,
@@ -72,6 +70,7 @@ program marketplace_example.aleo {
             data_custody_protocol.aleo/custody_data_as_program(
                 secret, // private data_view_key: scalar,
                 custody_id, // private custody_id: field,
+                1u128, // public maximum_requests: u128,
                 privacy_random_coefficients, // private coefficients: [field; 15],
                 validators, // private validators: [address; 16],
                 mpc_threshold // private threshold: u8 <= 15
@@ -115,6 +114,7 @@ program marketplace_example.aleo {
 
     async transition accept_listing(
         public nft_commit: field,
+        public data_request_id: field, // Random field
         private listing_data: ListingData,
         public validators: [address; 16],
         public validator_fee: u64,
@@ -144,11 +144,12 @@ program marketplace_example.aleo {
         ) =
             data_custody_protocol.aleo/request_data_as_program(
                 custody_id, // private data_address: address,
+                data_request_id, // private request_id: field,
                 self.signer, // private to: address,
                 mpc_threshold, // private threshold: u8,
-                validators,// public validators: [address; 16],
-                validator_fee,
-                protocol_fee_record,
+                validators, // public validators: [address; 16],
+                validator_fee, // private validator_fee: u64,
+                protocol_fee_record, // private protocol_fee_record: credits.aleo/credits,
             );
         let accept_listing_future: Future = finalize_accept_listing(
             self.caller,

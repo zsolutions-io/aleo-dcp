@@ -52,15 +52,14 @@ Validators propose and vote for **Proposals**, consisting of a new set of Valida
 
 ### Run a Validator
 
-Incoming Javascript implementation.
-
-**`validator/run.js`**: TODO.
+**`validators/run-validator`**: Javascript implementation of validator program.
+*Under developement...*
 
 ### Governance DApp UI
 
 Incoming React frontend application built with `aleo-wallet-adapter` package. It is made for validators to manage Governance of the protocol.
 
-**`validator/ui`**: TODO.
+**`validators/ui`**: TODO.
 
 #### Features
 
@@ -174,12 +173,13 @@ program marketplace_example.aleo {
             Future
         ) =
             data_custody_protocol.aleo/request_data_as_program(
-                custody_id, // private custody_id: field,
+                custody_id, // private data_address: address,
+                data_request_id, // private request_id: field,
                 self.signer, // private to: address,
                 mpc_threshold, // private threshold: u8,
-                validators,// public validators: [address; 15],
-                validator_fee,
-                protocol_fee_record,
+                validators, // public validators: [address; 16],
+                validator_fee, // private validator_fee: u64,
+                protocol_fee_record, // private protocol_fee_record: credits.aleo/credits,
             );
         let accept_listing_future: Future = finalize_accept_listing(
             ...
@@ -234,5 +234,4 @@ program marketplace_example.aleo {
 
 ## Future Improvements
 
-- **Idea 1:** Allow any amount of data requests. The amount is set as an input of **Custody** step, and is reduced by one on **Request** step.
-- **Idea 2:** Allow an array **Destinator** for the data (reduce by array length on **Request** step)
+- **Idea 1:** Allow an array **Destinator** for the data (reduce by array length on **Request** step)?

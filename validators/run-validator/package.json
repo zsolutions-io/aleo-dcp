@@ -1,0 +1,19 @@
+{
+  "name": "aleo-dcp-validator",
+  "version": "1.0.0",
+  "description": "",
+  "main": "run.js",
+  "scripts": {
+    "test": "node test.js",
+    "start": "node start.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@aleohq/sdk": "^0.6.9",
+    "dotenv": "^16.4.5",
+    "fs.promises.exists": "^1.1.4",
+    "sql.js": "^1.10.3"
+  },
+  "type": "module"
+}

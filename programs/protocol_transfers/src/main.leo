@@ -35,6 +35,8 @@ program protocol_transfers.aleo {
         owner: address,
         custody_hash: field,
         to: address,
+        fee_amount: u64,
+        request_id: field
     }
 
     record DestinationShare {
@@ -192,7 +194,9 @@ program protocol_transfers.aleo {
     transition submit_requests_to_validators(
         private validators: [address; 16],
         private custody_hash: field,
+        private request_id: field,
         private to: address,
+        private validator_fee_amount: u64,
     ) -> (
         WithdrawRequest,
         WithdrawRequest,
@@ -216,82 +220,114 @@ program protocol_transfers.aleo {
         let withdraw_request_0: WithdrawRequest = WithdrawRequest {
             owner: validators[0u8],
             custody_hash: custody_hash,
-            to: to
+            to: to,
+            fee_amount: validator_fee_amount,
+            request_id: request_id
         };
         let withdraw_request_1: WithdrawRequest = WithdrawRequest {
             owner: validators[1u8],
             custody_hash: custody_hash,
-            to: to
+            to: to,
+            fee_amount: validator_fee_amount,
+            request_id: request_id
         };
         let withdraw_request_2: WithdrawRequest = WithdrawRequest {
             owner: validators[2u8],
             custody_hash: custody_hash,
-            to: to
+            to: to,
+            fee_amount: validator_fee_amount,
+            request_id: request_id
         };
         let withdraw_request_3: WithdrawRequest = WithdrawRequest {
             owner: validators[3u8],
             custody_hash: custody_hash,
-            to: to
+            to: to,
+            fee_amount: validator_fee_amount,
+            request_id: request_id
         };
         let withdraw_request_4: WithdrawRequest = WithdrawRequest {
             owner: validators[4u8],
             custody_hash: custody_hash,
-            to: to
+            to: to,
+            fee_amount: validator_fee_amount,
+            request_id: request_id
         };
         let withdraw_request_5: WithdrawRequest = WithdrawRequest {
             owner: validators[5u8],
             custody_hash: custody_hash,
-            to: to
+            to: to,
+            fee_amount: validator_fee_amount,
+            request_id: request_id
         };
         let withdraw_request_6: WithdrawRequest = WithdrawRequest {
             owner: validators[6u8],
             custody_hash: custody_hash,
-            to: to
+            to: to,
+            fee_amount: validator_fee_amount,
+            request_id: request_id
         };
         let withdraw_request_7: WithdrawRequest = WithdrawRequest {
             owner: validators[7u8],
             custody_hash: custody_hash,
-            to: to
+            to: to,
+            fee_amount: validator_fee_amount,
+            request_id: request_id
         };
         let withdraw_request_8: WithdrawRequest = WithdrawRequest {
             owner: validators[8u8],
             custody_hash: custody_hash,
-            to: to
+            to: to,
+            fee_amount: validator_fee_amount,
+            request_id: request_id
         };
         let withdraw_request_9: WithdrawRequest = WithdrawRequest {
             owner: validators[9u8],
             custody_hash: custody_hash,
-            to: to
+            to: to,
+            fee_amount: validator_fee_amount,
+            request_id: request_id
         };
         let withdraw_request_10: WithdrawRequest = WithdrawRequest {
             owner: validators[10u8],
             custody_hash: custody_hash,
-            to: to
+            to: to,
+            fee_amount: validator_fee_amount,
+            request_id: request_id
         };
         let withdraw_request_11: WithdrawRequest = WithdrawRequest {
             owner: validators[11u8],
             custody_hash: custody_hash,
-            to: to
+            to: to,
+            fee_amount: validator_fee_amount,
+            request_id: request_id
         };
         let withdraw_request_12: WithdrawRequest = WithdrawRequest {
             owner: validators[12u8],
             custody_hash: custody_hash,
-            to: to
+            to: to,
+            fee_amount: validator_fee_amount,
+            request_id: request_id
         };
         let withdraw_request_13: WithdrawRequest = WithdrawRequest {
             owner: validators[13u8],
             custody_hash: custody_hash,
-            to: to
+            to: to,
+            fee_amount: validator_fee_amount,
+            request_id: request_id
         };
         let withdraw_request_14: WithdrawRequest = WithdrawRequest {
             owner: validators[14u8],
             custody_hash: custody_hash,
-            to: to
+            to: to,
+            fee_amount: validator_fee_amount,
+            request_id: request_id
         };
         let withdraw_request_15: WithdrawRequest = WithdrawRequest {
             owner: validators[15u8],
             custody_hash: custody_hash,
-            to: to
+            to: to,
+            fee_amount: validator_fee_amount,
+            request_id: request_id
         };
 
         return (
@@ -318,7 +354,6 @@ program protocol_transfers.aleo {
     async transition process_request_as_validator(
         private validator_share: ValidatorShare,
         private withdraw_request: WithdrawRequest,
-        public validator_fee: u64,
     ) -> (DestinationShare, Future) {
         let custody_hash: field = hash_custody(validator_share.custody);
         assert_eq(withdraw_request.custody_hash, custody_hash);
@@ -330,13 +365,13 @@ program protocol_transfers.aleo {
 
         let unlock_fee_future: Future = credits.aleo/transfer_public(
             self.caller,
-            validator_fee,
+            withdraw_request.fee_amount,
         );
 
         let protocol_core_future: Future = 
             protocol_core.aleo/process_request_as_validator(
                 custody_hash,
-                validator_fee,
+                withdraw_request.request_id,
                 validator_share.custody.threshold,
                 validator_share.weight
             );

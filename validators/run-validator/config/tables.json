@@ -1,0 +1,14 @@
+[
+  {
+    "name": "checked_transitions",
+    "params": "(function TEXT PRIMARY KEY, page INT)"
+  },
+  {
+    "name": "request_records",
+    "params": "(serial_number TEXT PRIMARY KEY, plaintext TEXT, spent INT)"
+  },
+  {
+    "name": "share_records",
+    "params": "(serial_number TEXT PRIMARY KEY, plaintext TEXT, spent INT)"
+  }
+]

@@ -25,10 +25,9 @@ program protocol_core.aleo {
 
     struct CustodyState {
         validator_set_index: u64,
-        validator_fee: u64,
-        requested: bool,
-        submitted_shares: u8,
-        expected_weight: u64
+        expected_weight: u64,
+        maximum_requests: u128,
+        current_requests: u128,
     }
 
     struct Custody {
@@ -65,6 +64,9 @@ program protocol_core.aleo {
 
     mapping custodies: field => CustodyState;
     // hash(Custody) => CustodyState
+
+    mapping requests: field => u8;
+    // request_id => submitted_shares
 
     inline hash_proposal(proposal: Proposal) -> field {
         return BHP256::hash_to_field(proposal);
@@ -331,23 +333,25 @@ program protocol_core.aleo {
     async transition custody_data_as_program(
         public custody_hash: field,
         public validators: [address; 16],
+        public maximum_requests: u128
     ) -> Future {
         assert_eq(self.caller, data_custody_protocol.aleo);
         return finalize_custody_data_as_program(
             custody_hash,
-            validators
+            validators,
+            maximum_requests
         );
     }
     async function finalize_custody_data_as_program(
         custody_hash: field,
         validators: [address; 16],
+        maximum_requests: u128
     ){
         let default_custody_state: CustodyState = CustodyState {
             validator_set_index: 0u64,
-            validator_fee: 0u64,
-            requested: false,
-            submitted_shares: 0u8,
-            expected_weight: 0u64
+            expected_weight: 0u64,
+            maximum_requests: maximum_requests,
+            current_requests: 0u128
         };
         let custody_state: CustodyState = custodies.get_or_use(
             custody_hash, default_custody_state
@@ -360,17 +364,15 @@ program protocol_core.aleo {
         let validator_set: [address; 16] = validator_sets.get(validator_set_index);
 
         assert(
-            custody_state.submitted_shares==0u8 
-            && custody_state.requested.not()
+            custody_state.current_requests == 0u128
             && validators == validator_set
         );
 
         let new_custody_state: CustodyState = CustodyState {
             validator_set_index: validator_set_index,
-            validator_fee: 0u64,
-            requested: false,
-            submitted_shares: 0u8,
-            expected_weight: custody_state.expected_weight + 1u64
+            expected_weight: custody_state.expected_weight + 1u64,
+            maximum_requests: maximum_requests,
+            current_requests: 0u128
         };
         custodies.set(custody_hash, new_custody_state);
     }
@@ -378,73 +380,63 @@ program protocol_core.aleo {
 
     async transition request_data_as_program(
         public custody_hash: field,
-        public validators: [address; 16],
-        public validator_fee: u64
+        public request_id: field,
+        public validators: [address; 16]
     ) -> Future {
         assert_eq(self.caller, data_custody_protocol.aleo);
         return finalize_request_data_as_program(
             custody_hash,
-            validators,
-            validator_fee
+            request_id,
+            validators
         );
     }
     async function finalize_request_data_as_program(
         custody_hash: field,
-        validators: [address; 16],
-        validator_fee: u64
+        request_id: field,
+        validators: [address; 16]
     ){
         let custody_state: CustodyState = custodies.get(custody_hash);
-
-        assert(custody_state.requested.not());
+        let new_custody_state: CustodyState = CustodyState {
+            validator_set_index: custody_state.validator_set_index,
+            expected_weight: custody_state.expected_weight,
+            maximum_requests: custody_state.maximum_requests,
+            current_requests: custody_state.current_requests - 1u128,
+        };
+        custodies.set(custody_hash, new_custody_state);
 
         let validator_set: [address; 16] = validator_sets.get(custody_state.validator_set_index);
         assert_eq(validators, validator_set);
 
-        let new_custody_state: CustodyState = CustodyState {
-            validator_set_index: custody_state.validator_set_index,
-            validator_fee: validator_fee,
-            requested: true,
-            submitted_shares: 0u8,
-            expected_weight: custody_state.expected_weight
-        };
-        custodies.set(custody_hash, new_custody_state);
+        assert(requests.contains(request_id).not());
+        requests.set(request_id, 0u8);
     }
 
 
     async transition process_request_as_validator(
         public custody_hash: field,
-        public validator_fee: u64,
+        public request_id: field,
         public threshold: u8,
         public weight: u64
     ) -> Future {
         assert_eq(self.caller, protocol_transfers.aleo);
         return finalize_process_request_as_validator(
             custody_hash,
-            validator_fee,
+            request_id,
             threshold,
             weight
         );
     }
     async function finalize_process_request_as_validator(
         custody_hash: field,
-        validator_fee: u64,
+        request_id: field,
         threshold: u8,
         weight: u64
     ) {
         let custody_state: CustodyState = custodies.get(custody_hash);
-
-        assert(custody_state.requested);
-        assert_eq(validator_fee, custody_state.validator_fee);
-        assert(custody_state.submitted_shares < threshold);
         assert_eq(weight, custody_state.expected_weight);
 
-        let new_custody_state: CustodyState = CustodyState {
-            validator_set_index: custody_state.validator_set_index,
-            validator_fee: custody_state.validator_fee,
-            requested: true,
-            submitted_shares: custody_state.submitted_shares + 1u8,
-            expected_weight: custody_state.expected_weight
-        };
-        custodies.set(custody_hash, new_custody_state);
+        let submitted_shares: u8 = requests.get(request_id);
+        assert(submitted_shares < threshold);
+        requests.set(request_id, submitted_shares + 1u8);
     }
 }
