@@ -4,8 +4,9 @@
         <source media="(prefers-color-scheme: light)" srcset="./aleo-dcp-logo.png" width="200">
         <img alt="aleo DCP" src="./aleo-dcp-logo.png" width="200">
     </picture>
-
+    <h1>
     Aleo Data Custody Protocol
+    </h1>
 </h1>
 
 <p align="center">
