@@ -1,8 +1,8 @@
 <h1 align="center">
     <picture>
-        <source media="(prefers-color-scheme: dark)" srcset="./aleo-dcp-logo-dark.png" width="300">
-        <source media="(prefers-color-scheme: light)" srcset="./aleo-dcp-logo.png" width="300">
-        <img alt="aleo DCP" src="./aleo-dcp-logo.png" width="300">
+        <source media="(prefers-color-scheme: dark)" srcset="./aleo-dcp-logo-dark.png" width="200">
+        <source media="(prefers-color-scheme: light)" srcset="./aleo-dcp-logo.png" width="200">
+        <img alt="aleo DCP" src="./aleo-dcp-logo.png" width="200">
     </picture>
 </h1>
 
@@ -10,7 +10,7 @@
 A decentralised MPC protocol built on Aleo to <b>allow any program to custody arbitrary private data</b> that can be transactionally withdrawn.
 </p>
 
-# Aleo DCP: Data Custody Protocol
+# Aleo Data Custody Protocol
 
 Data is splitted following **Shamir Secret Sharing (SSS)** algorithm. Shares are custidied by Validators, that can be dynamically updated through a voting gouvernance mechanism. They are incentivized with **Aleo credits fees** paid by requester of custodied data.
 
