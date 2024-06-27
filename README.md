@@ -1,8 +1,8 @@
 <h1 align="center">
     <picture>
-        <source media="(prefers-color-scheme: dark)" srcset="./aleo-dcp-logo.png" width="350">
-        <source media="(prefers-color-scheme: light)" srcset="./aleo-dcp-logo.png" width="350">
-        <img alt="aleo DCP" src="./aleo-dcp-logo.png" width="350">
+        <source media="(prefers-color-scheme: dark)" srcset="./aleo-dcp-logo-dark.png" width="300">
+        <source media="(prefers-color-scheme: light)" srcset="./aleo-dcp-logo.png" width="300">
+        <img alt="aleo DCP" src="./aleo-dcp-logo.png" width="300">
     </picture>
 </h1>
 
