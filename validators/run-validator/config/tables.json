@@ -1,7 +1,7 @@
 [
   {
-    "name": "checked_transitions",
-    "params": "(function TEXT PRIMARY KEY, page INT)"
+    "name": "processed_transitions",
+    "params": "(function TEXT PRIMARY KEY, amount INT)"
   },
   {
     "name": "request_records",

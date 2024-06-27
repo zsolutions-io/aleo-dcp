@@ -1,10 +1,6 @@
 /*
     Protocol to allow programs to custody and distribute private data.
 
-    Limit:
-    15 validators maximum limit (16 max transition outputs - 1 future).
-    Solvable by using multiple transactions...
-
     contact@aleo.store - Pierre-André LONG
 */
 
