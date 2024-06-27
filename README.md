@@ -1,8 +1,8 @@
 <h1 align="center">
     <picture>
-        <source media="(prefers-color-scheme: dark)" srcset="./aleo-dcp-dark-logo.png" width="200">
-        <source media="(prefers-color-scheme: light)" srcset="./aleo-dcp-logo.png" width="200">
-        <img alt="aleo DCP" src="./aleo-dcp-logo.png" width="200">
+        <source media="(prefers-color-scheme: dark)" srcset="./media/aleo-dcp-dark-logo.png" width="200">
+        <source media="(prefers-color-scheme: light)" srcset="./media/aleo-dcp-logo.png" width="200">
+        <img alt="aleo DCP" src="./media/aleo-dcp-logo.png" width="200">
     </picture><br/>
     <b>
     Data Custody Protocol on Aleo
@@ -41,13 +41,13 @@ Protocol enables programs to hold and distribute data stored in any arbitrary re
 
 **Request**, **Execute**, and **Submit** step can all happen without awaiting validation from the original caller of **Custody** step transaction.
 
-![alt text](aleo-dcp-schema.png)
+![alt text](./media/aleo-dcp-schema.png)
 
 ### Additive homomorphic operations support
 
 **Custody** step can be call multiple times, with the same `custody_id`, by a program that imports DCP. In that case, shares associated with custodied `field` elements must simply be added by validators before being submitted to destinator.
 
-![alt text](aleo-dcp-schema-homomorphic.png)
+![alt text](./media/aleo-dcp-schema-homomorphic.png)
 
 ## Protocol Governance
 
