@@ -4,13 +4,13 @@
         <source media="(prefers-color-scheme: light)" srcset="./aleo-dcp-logo.png" width="200">
         <img alt="aleo DCP" src="./aleo-dcp-logo.png" width="200">
     </picture>
+
+    Aleo Data Custody Protocol
 </h1>
 
 <p align="center">
 A decentralised MPC protocol built on Aleo to <b>allow any program to custody arbitrary private data</b> that can be transactionally withdrawn.
 </p>
-
-# Aleo Data Custody Protocol
 
 Data is splitted following **Shamir Secret Sharing (SSS)** algorithm. Shares are custidied by Validators, that can be dynamically updated through a voting gouvernance mechanism. They are incentivized with **Aleo credits fees** paid by requester of custodied data.
 
