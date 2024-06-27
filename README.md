@@ -6,7 +6,11 @@ Data is splitted following **Shamir Secret Sharing (SSS)** algorithm. Shares are
 
 ## Use Cases
 
-**Aleo DCP** enables use cases such as decentralised data broker or private data NFT marketplace with one click buy.
+**Aleo DCP** enables use cases such as:
+
+- **Private Election** - A voting system that does not disclose results before a specific time to avoid votes being influenced by previous votes.
+- **pNFT Marketplace** - Marketplace for NFTs with private data and owners, with one click buy mechanism as with regular NFTs. Seller doesn't have to come back to transfer NFT data once listing has been accepted by a buyer.
+- **Decentralised data broker** - Marketplace for selling SQL query results. Sell access to large amount of offchain data resulting from a zkSQL query over a RDBMS, with proof of conformity of the result (see [snarkDB](https://snarkdb.com)).
 
 ## How it works?
 
@@ -234,4 +238,4 @@ program marketplace_example.aleo {
 
 ## Future Improvements
 
-- **Idea 1:** Allow an array **Destinator** for the data (reduce by array length on **Request** step)?
+- **Idea** - Allow an array **Destinator** for the data (add array length on **Request** step to requested already amount)?
