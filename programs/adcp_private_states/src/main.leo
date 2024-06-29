@@ -50,304 +50,37 @@ program adcp_private_states.aleo {
     }
 
 
-    transition submit_shares_to_validators(
-        private validator_shares: [ValidatorShareData; 16],
+    transition submit_share_to_validator(
+        private validator_share_data: ValidatorShareData,
         private custodied_data: Custody,
-    ) -> (
-        ValidatorShare,
-        ValidatorShare,
-        ValidatorShare,
-        ValidatorShare,
-        ValidatorShare,
-        ValidatorShare,
-        ValidatorShare,
-        ValidatorShare,
-        ValidatorShare,
-        ValidatorShare,
-        ValidatorShare,
-        ValidatorShare,
-        ValidatorShare,
-        ValidatorShare,
-        ValidatorShare,
-        ValidatorShare,
-    ){
+    ) -> (ValidatorShare){
         assert_eq(self.caller, data_custody_protocol.aleo);
 
-        let validator_share_0: ValidatorShare = ValidatorShare {
-            owner: validator_shares[0u8].validator,
-            share: validator_shares[0u8].share,
+        return ValidatorShare {
+            owner: validator_share_data.validator,
+            share: validator_share_data.share,
             custody: custodied_data,
-            weight: validator_shares[0u8].weight
+            weight: validator_share_data.weight
         };
-        let validator_share_1: ValidatorShare = ValidatorShare {
-            owner: validator_shares[1u8].validator,
-            share: validator_shares[1u8].share,
-            custody: custodied_data,
-            weight: validator_shares[1u8].weight
-        };
-        let validator_share_2: ValidatorShare = ValidatorShare {
-            owner: validator_shares[2u8].validator,
-            share: validator_shares[2u8].share,
-            custody: custodied_data,
-            weight: validator_shares[2u8].weight
-        };
-        let validator_share_3: ValidatorShare = ValidatorShare {
-            owner: validator_shares[3u8].validator,
-            share: validator_shares[3u8].share,
-            custody: custodied_data,
-            weight: validator_shares[3u8].weight
-        };
-        let validator_share_4: ValidatorShare = ValidatorShare {
-            owner: validator_shares[4u8].validator,
-            share: validator_shares[4u8].share,
-            custody: custodied_data,
-            weight: validator_shares[4u8].weight
-        };
-        let validator_share_5: ValidatorShare = ValidatorShare {
-            owner: validator_shares[5u8].validator,
-            share: validator_shares[5u8].share,
-            custody: custodied_data,
-            weight: validator_shares[5u8].weight
-        };
-        let validator_share_6: ValidatorShare = ValidatorShare {
-            owner: validator_shares[6u8].validator,
-            share: validator_shares[6u8].share,
-            custody: custodied_data,
-            weight: validator_shares[6u8].weight
-        };
-        let validator_share_7: ValidatorShare = ValidatorShare {
-            owner: validator_shares[7u8].validator,
-            share: validator_shares[7u8].share,
-            custody: custodied_data,
-            weight: validator_shares[7u8].weight
-        };
-        let validator_share_8: ValidatorShare = ValidatorShare {
-            owner: validator_shares[8u8].validator,
-            share: validator_shares[8u8].share,
-            custody: custodied_data,
-            weight: validator_shares[8u8].weight
-        };
-        let validator_share_9: ValidatorShare = ValidatorShare {
-            owner: validator_shares[9u8].validator,
-            share: validator_shares[9u8].share,
-            custody: custodied_data,
-            weight: validator_shares[9u8].weight
-        };
-        let validator_share_10: ValidatorShare = ValidatorShare {
-            owner: validator_shares[10u8].validator,
-            share: validator_shares[10u8].share,
-            custody: custodied_data,
-            weight: validator_shares[10u8].weight
-        };
-        let validator_share_11: ValidatorShare = ValidatorShare {
-            owner: validator_shares[11u8].validator,
-            share: validator_shares[11u8].share,
-            custody: custodied_data,
-            weight: validator_shares[11u8].weight
-        };
-        let validator_share_12: ValidatorShare = ValidatorShare {
-            owner: validator_shares[12u8].validator,
-            share: validator_shares[12u8].share,
-            custody: custodied_data,
-            weight: validator_shares[12u8].weight
-        };
-        let validator_share_13: ValidatorShare = ValidatorShare {
-            owner: validator_shares[13u8].validator,
-            share: validator_shares[13u8].share,
-            custody: custodied_data,
-            weight: validator_shares[13u8].weight
-        };
-        let validator_share_14: ValidatorShare = ValidatorShare {
-            owner: validator_shares[14u8].validator,
-            share: validator_shares[14u8].share,
-            custody: custodied_data,
-            weight: validator_shares[14u8].weight
-        };
-        let validator_share_15: ValidatorShare = ValidatorShare {
-            owner: validator_shares[15u8].validator,
-            share: validator_shares[15u8].share,
-            custody: custodied_data,
-            weight: validator_shares[15u8].weight
-        };
-
-        return (
-            validator_share_0,
-            validator_share_1,
-            validator_share_2,
-            validator_share_3,
-            validator_share_4,
-            validator_share_5,
-            validator_share_6,
-            validator_share_7,
-            validator_share_8,
-            validator_share_9,
-            validator_share_10,
-            validator_share_11,
-            validator_share_12,
-            validator_share_13,
-            validator_share_14,
-            validator_share_15
-        );
     }
     
 
-    transition submit_requests_to_validators(
-        private validators: [address; 16],
+    transition submit_request_to_validator(
+        private validator: address,
         private custody_hash: field,
         private request_id: field,
         private to: address,
         private validator_fee_amount: u64,
-    ) -> (
-        WithdrawRequest,
-        WithdrawRequest,
-        WithdrawRequest,
-        WithdrawRequest,
-        WithdrawRequest,
-        WithdrawRequest,
-        WithdrawRequest,
-        WithdrawRequest,
-        WithdrawRequest,
-        WithdrawRequest,
-        WithdrawRequest,
-        WithdrawRequest,
-        WithdrawRequest,
-        WithdrawRequest,
-        WithdrawRequest,
-        WithdrawRequest
-    ){
+    ) -> WithdrawRequest {
         assert_eq(self.caller, data_custody_protocol.aleo);
 
-        let withdraw_request_0: WithdrawRequest = WithdrawRequest {
-            owner: validators[0u8],
+        return WithdrawRequest {
+            owner: validator,
             custody_hash: custody_hash,
             to: to,
             fee_amount: validator_fee_amount,
             request_id: request_id
         };
-        let withdraw_request_1: WithdrawRequest = WithdrawRequest {
-            owner: validators[1u8],
-            custody_hash: custody_hash,
-            to: to,
-            fee_amount: validator_fee_amount,
-            request_id: request_id
-        };
-        let withdraw_request_2: WithdrawRequest = WithdrawRequest {
-            owner: validators[2u8],
-            custody_hash: custody_hash,
-            to: to,
-            fee_amount: validator_fee_amount,
-            request_id: request_id
-        };
-        let withdraw_request_3: WithdrawRequest = WithdrawRequest {
-            owner: validators[3u8],
-            custody_hash: custody_hash,
-            to: to,
-            fee_amount: validator_fee_amount,
-            request_id: request_id
-        };
-        let withdraw_request_4: WithdrawRequest = WithdrawRequest {
-            owner: validators[4u8],
-            custody_hash: custody_hash,
-            to: to,
-            fee_amount: validator_fee_amount,
-            request_id: request_id
-        };
-        let withdraw_request_5: WithdrawRequest = WithdrawRequest {
-            owner: validators[5u8],
-            custody_hash: custody_hash,
-            to: to,
-            fee_amount: validator_fee_amount,
-            request_id: request_id
-        };
-        let withdraw_request_6: WithdrawRequest = WithdrawRequest {
-            owner: validators[6u8],
-            custody_hash: custody_hash,
-            to: to,
-            fee_amount: validator_fee_amount,
-            request_id: request_id
-        };
-        let withdraw_request_7: WithdrawRequest = WithdrawRequest {
-            owner: validators[7u8],
-            custody_hash: custody_hash,
-            to: to,
-            fee_amount: validator_fee_amount,
-            request_id: request_id
-        };
-        let withdraw_request_8: WithdrawRequest = WithdrawRequest {
-            owner: validators[8u8],
-            custody_hash: custody_hash,
-            to: to,
-            fee_amount: validator_fee_amount,
-            request_id: request_id
-        };
-        let withdraw_request_9: WithdrawRequest = WithdrawRequest {
-            owner: validators[9u8],
-            custody_hash: custody_hash,
-            to: to,
-            fee_amount: validator_fee_amount,
-            request_id: request_id
-        };
-        let withdraw_request_10: WithdrawRequest = WithdrawRequest {
-            owner: validators[10u8],
-            custody_hash: custody_hash,
-            to: to,
-            fee_amount: validator_fee_amount,
-            request_id: request_id
-        };
-        let withdraw_request_11: WithdrawRequest = WithdrawRequest {
-            owner: validators[11u8],
-            custody_hash: custody_hash,
-            to: to,
-            fee_amount: validator_fee_amount,
-            request_id: request_id
-        };
-        let withdraw_request_12: WithdrawRequest = WithdrawRequest {
-            owner: validators[12u8],
-            custody_hash: custody_hash,
-            to: to,
-            fee_amount: validator_fee_amount,
-            request_id: request_id
-        };
-        let withdraw_request_13: WithdrawRequest = WithdrawRequest {
-            owner: validators[13u8],
-            custody_hash: custody_hash,
-            to: to,
-            fee_amount: validator_fee_amount,
-            request_id: request_id
-        };
-        let withdraw_request_14: WithdrawRequest = WithdrawRequest {
-            owner: validators[14u8],
-            custody_hash: custody_hash,
-            to: to,
-            fee_amount: validator_fee_amount,
-            request_id: request_id
-        };
-        let withdraw_request_15: WithdrawRequest = WithdrawRequest {
-            owner: validators[15u8],
-            custody_hash: custody_hash,
-            to: to,
-            fee_amount: validator_fee_amount,
-            request_id: request_id
-        };
-
-        return (
-            withdraw_request_0,
-            withdraw_request_1,
-            withdraw_request_2,
-            withdraw_request_3,
-            withdraw_request_4,
-            withdraw_request_5,
-            withdraw_request_6,
-            withdraw_request_7,
-            withdraw_request_8,
-            withdraw_request_9,
-            withdraw_request_10,
-            withdraw_request_11,
-            withdraw_request_12,
-            withdraw_request_13,
-            withdraw_request_14,
-            withdraw_request_15,
-        );
     }
 
 
