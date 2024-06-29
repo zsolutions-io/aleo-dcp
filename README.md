@@ -61,7 +61,7 @@ It supports any maximum amount of validators decided on deployment of protocol p
 
 Validators propose and vote for **Proposals**, consisting of a new set of Validators and next vote threshold.
 
-[Check implementation of gouvernance in **`protocol_core.leo`**.](programs/protocol_core/src/main.leo)
+[Check implementation of gouvernance in **`adcp_public_states.leo`**.](programs/adcp_public_states/src/main.leo)
 
 ### Run a Validator
 
@@ -91,14 +91,14 @@ For a program to custody private data, it must import **`data_custody_protocol.a
     - Call `data_custody_protocol.aleo/custody_data_as_program((data_view_key as field), threshold, ...)`
     - Send any records to `(data_view_key * group::GEN) as address`
 2. It can then call `data_custody_protocol.aleo/request_data_as_program` to initiate a data request.
-3. Validator bots automatically call `protocol_transfers.aleo/process_request_as_validator` to accept the data request.
+3. Validator bots automatically call `adcp_private_states.aleo/process_request_as_validator` to accept the data request.
 4. `data_custody_protocol.aleo/assert_completed_as_program` can then be used by the program to check if data was effectively transmitted.
 
 #### Multiple Custody steps
 
 In case **Custody** step was called more than once for a single `request_id`:
 
-- Between step 3 and step 4, validator bots must call `protocol_transfers.aleo/join_shares_as_validator` as many time as there are additional **Custody** step.
+- Between step 3 and step 4, validator bots must call `adcp_private_states.aleo/join_shares_as_validator` as many time as there are additional **Custody** step.
 
 ### Example
 
@@ -164,8 +164,8 @@ program marketplace_example.aleo {
 
     /*
         Validators associated with the listing can be retrieved offchain using: 
-            protocol_core.aleo/validator_sets.get(
-                protocol_core.aleo/custodies.get(
+            adcp_public_states.aleo/validator_sets.get(
+                adcp_public_states.aleo/custodies.get(
                     listing_data.data_custody_hash
                 )
             )

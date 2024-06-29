@@ -1,4 +1,4 @@
-# protocol_core.aleo
+# adcp_public_states.aleo
 
 ## Build Guide
 

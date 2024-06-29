@@ -4,42 +4,37 @@
     contact@aleo.store - Pierre-André LONG
 */
 
-import protocol_core.aleo;
-import protocol_transfers.aleo;
+import adcp_public_states.aleo;
+import adcp_private_states.aleo;
 
 program data_custody_protocol.aleo {
+    const MAX_VALIDATORS: u8 = 16u8;
+    const MAX_VALIDATORS_MINUS_1: u8 = 15u8;
+    const VALIDATORS_PER_BATCH: u8 = 16u8;
+
     inline hash_custody(custody: Custody) -> field {
         return BHP256::hash_to_field(custody);
     }
 
     inline evaluate_polynomial(
-        coefficients: [field; 15],
+        coefficients: [field; 15], // MAX_VALIDATORS_MINUS_1
         threshold: u8,
         eval_point: field,
         secret: field
     ) -> field {
         let y: field = secret;
         let x_pow: field = 1field;
-        for i: u8 in 0u8..14u8 {
+        for i: u8 in 0u8..MAX_VALIDATORS_MINUS_1 {
             x_pow *= eval_point;
             y += (i < threshold-1u8) ? coefficients[i] * x_pow : 0field;
         }
         return y;
     }
 
-    inline is_non_ending_coefficient_zero(coefficients: [field; 15]) -> bool {
+    inline is_some_coefficient_zero(coefficients: [field; 15]) -> bool { // MAX_VALIDATORS_MINUS_1
         let result: bool = false;
-        for i: u8 in 0u8..14u8 {
-            let are_all_after_zero: bool = true;
-            for j: u8 in 0u8..14u8 {
-                are_all_after_zero = are_all_after_zero && (
-                    j <= i || coefficients[j] == 0field
-                );
-            }
-            let is_this_coefficient_zero: bool = (coefficients[i] == 0field);
-            result = result || (
-                is_this_coefficient_zero && are_all_after_zero.not()
-            );
+        for i: u8 in 0u8..MAX_VALIDATORS_MINUS_1 {
+            result ||= coefficients[i] == 0field;
         }
         return result;
     }
@@ -55,12 +50,12 @@ program data_custody_protocol.aleo {
         private secret: field,
         private custody_id: field,
         public maximum_requests: u128,
-        private coefficients: [field; 15],
-        public validators: [address; 16],
-        private threshold: u8,  // <= 15
+        private coefficients: [field; 15], // MAX_VALIDATORS_MINUS_1
+        public validators: [address; 16], // MAX_VALIDATORS
+        private threshold: u8,  // <= MAX_VALIDATORS
     ) -> Future {
         assert_neq(self.caller, self.signer);
-        assert(is_non_ending_coefficient_zero(coefficients).not());
+        assert(is_some_coefficient_zero(coefficients).not());
 
         let custodied_data: Custody = Custody {
             initiator: self.caller,
@@ -229,7 +224,7 @@ program data_custody_protocol.aleo {
             weight: 1u64
         };
 
-        let validator_shares: [ValidatorShareData; 16] = [
+        let validator_shares: [ValidatorShareData; 16] = [ // VALIDATORS_PER_BATCH
             validator_share_0,
             validator_share_1,
             validator_share_2,
@@ -247,12 +242,12 @@ program data_custody_protocol.aleo {
             validator_share_14,
             validator_share_15,
         ];
-        protocol_transfers.aleo/submit_shares_to_validators(
+        adcp_private_states.aleo/submit_shares_to_validators(
             validator_shares,
             custodied_data
         );
 
-        let protocol_core_future: Future = protocol_core.aleo/custody_data_as_program(
+        let protocol_core_future: Future = adcp_public_states.aleo/custody_data_as_program(
             custody_hash,
             validators,
             maximum_requests
@@ -274,7 +269,7 @@ program data_custody_protocol.aleo {
         private request_id: field,
         private to: address,
         private threshold: u8,
-        public validators: [address; 16],
+        public validators: [address; 16], // MAX_VALIDATORS
         private validator_fee: u64,
         private protocol_fee_record: credits.aleo/credits,
     ) -> (credits.aleo/credits, Future) {
@@ -286,7 +281,7 @@ program data_custody_protocol.aleo {
         };
         let custody_hash: field = hash_custody(custodied_data);
 
-        let validators_0: [address; 16] = [
+        let validators_0: [address; 16] = [  // VALIDATORS_PER_BATCH
             validators[0u8],
             validators[1u8],
             validators[2u8],
@@ -304,7 +299,8 @@ program data_custody_protocol.aleo {
             validators[14u8],
             validators[15u8]
         ];
-        protocol_transfers.aleo/submit_requests_to_validators(
+        // Submit batch 1
+        adcp_private_states.aleo/submit_requests_to_validators(
             validators_0,
             custody_hash,
             request_id,
@@ -316,11 +312,11 @@ program data_custody_protocol.aleo {
         let (protocol_fee_change, lock_fee_future): (credits.aleo/credits, Future) =
             credits.aleo/transfer_private_to_public(
                 protocol_fee_record,
-                protocol_transfers.aleo,
+                adcp_private_states.aleo,
                 protocol_fee_amount,
             );
 
-        let protocol_core_future: Future = protocol_core.aleo/request_data_as_program(
+        let protocol_core_future: Future = adcp_public_states.aleo/request_data_as_program(
             custody_hash,
             request_id,
             validators
@@ -370,7 +366,7 @@ program data_custody_protocol.aleo {
         request_id: field,
         threshold: u8
     ) {
-        let submitted: u8 = protocol_core.aleo/requests.get(request_id);
+        let submitted: u8 = adcp_public_states.aleo/requests.get(request_id);
         assert(submitted >= threshold);
     }
 }

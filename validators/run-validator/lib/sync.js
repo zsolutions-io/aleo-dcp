@@ -8,7 +8,7 @@ import { sql_string } from "./string.js";
 
 
 // Programs variable names
-const protocol_transfers_program = "protocol_transfers.aleo";
+const protocol_transfers_program = "adcp_private_states.aleo";
 const share_record = "ValidatorShare";
 const request_record = "WithdrawRequest";
 
@@ -251,24 +251,24 @@ const sync_prav_transitions = async (db, account, processed_transitions) => {
   Inputs/Outputs of Interest
   ----------
 
-  (protocol_transfers.aleo, submit_shares_to_validators)
+  (adcp_private_states.aleo, submit_shares_to_validators)
     - outputs[0]: ValidatorShare
     - outputs[1]: ValidatorShare
     ...
     - outputs[15]: ValidatorShare
 
-  (protocol_transfers.aleo, join_shares_as_validator)
+  (adcp_private_states.aleo, join_shares_as_validator)
     - inputs[0]: ValidatorShare
     - inputs[1]: ValidatorShare
     - outputs[0]: ValidatorShare
 
-  (protocol_transfers.aleo, submit_requests_to_validators)
+  (adcp_private_states.aleo, submit_requests_to_validators)
     - outputs[0]: WithdrawRequest
     - outputs[1]: WithdrawRequest
     ...
     - outputs[15]: WithdrawRequest
 
-  (protocol_transfers.aleo, process_request_as_validator)
+  (adcp_private_states.aleo, process_request_as_validator)
     - inputs[0]: ValidatorShare
     - inputs[1]: WithdrawRequest
 

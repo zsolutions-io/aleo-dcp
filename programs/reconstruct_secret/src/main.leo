@@ -26,22 +26,24 @@
 */
 
 program reconstruct_secret.aleo {
+    const MAX_SHARES: u8 = 16u8;
+
     struct Share {
         share_val: field,
         index: field
     }
 
-    // Inverse field but will invert 0field to 1field to avoid constraint error when building
+    // Inverse field but will invert 0field to 1field to avoid constraint error
     inline safe_inv(f: field) -> field { 
         return ((f == 0field) ? 1field : f).inv();
     }
 
-    function reconstruct(shares: [Share; 16]) -> field {
+    function reconstruct(shares: [Share; 16]) -> field { // MAX_SHARES
         let secret: field = 0field;
-        for i: u8 in 0u8..15u8{
+        for i: u8 in 0u8..MAX_SHARES{
             let lagrange_coeff: field = 1field;
             let x_i: field = shares[i].index;
-            for j: u8 in 0u8..15u8 {
+            for j: u8 in 0u8..MAX_SHARES {
                 let x_j: field = shares[j].index;
                 let to_mul: field = 
                     (i != j && x_j != 0field) ? 

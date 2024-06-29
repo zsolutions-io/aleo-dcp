@@ -5,8 +5,8 @@
     External usage example:
         async function needs_validators() {
             let validators: [address; 16] 
-                = protocol_core.aleo/validator_sets.get(
-                    protocol_core.aleo/validator_sets_length.get(true) - 1u64
+                = adcp_public_states.aleo/validator_sets.get(
+                    adcp_public_states.aleo/validator_sets_length.get(true) - 1u64
                 );
             ...
         }
@@ -14,11 +14,13 @@
     contact@aleo.store - Pierre-André LONG
 */
 
-program protocol_core.aleo {
-    const default_authority: address = aleo1wamjqlka7d0gazlxdys6n8e8zeee3ymedwvw8elvh7529kwd45rq0plgax;
+program adcp_public_states.aleo {
+    const DEFAULT_AUTHORITY: address = aleo1wamjqlka7d0gazlxdys6n8e8zeee3ymedwvw8elvh7529kwd45rq0plgax;
+    const ZERO_ADDRESS: address = aleo1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq3ljyzc;
+    const MAX_VALIDATORS: u8 = 16u8;
 
     struct Proposal {
-        validators: [address; 16],
+        validators: [address; 16], // MAX_VALIDATORS
         threshold: u8,
         current_validator_set_index: u64
     }
@@ -47,7 +49,7 @@ program protocol_core.aleo {
         weight: u64
     }
 
-    mapping validator_sets: u64 => [address; 16]; 
+    mapping validator_sets: u64 => [address; 16]; // MAX_VALIDATORS 
     // validator set index => validator addresses
 
     mapping validator_sets_length: bool => u64;
@@ -59,7 +61,7 @@ program protocol_core.aleo {
     mapping proposals: field => Proposal;
     // proposal hash => validator addresses
 
-    mapping votes: field => [bool; 16];
+    mapping votes: field => [bool; 16]; // MAX_VALIDATORS
     // proposal hash => validator addresses
 
     mapping custodies: field => CustodyState;
@@ -68,35 +70,25 @@ program protocol_core.aleo {
     mapping requests: field => u8;
     // request_id => submitted_shares
 
+
     inline hash_proposal(proposal: Proposal) -> field {
         return BHP256::hash_to_field(proposal);
     }
 
 
-    inline is_address_in_array(element: address, array: [address; 16]) -> bool{
-        return (
-            element == array[0u8]
-            || element == array[1u8]
-            || element == array[2u8]
-            || element == array[3u8]
-            || element == array[4u8]
-            || element == array[5u8]
-            || element == array[6u8]
-            || element == array[7u8]
-            || element == array[8u8]
-            || element == array[9u8]
-            || element == array[10u8]
-            || element == array[11u8]
-            || element == array[12u8]
-            || element == array[13u8]
-            || element == array[14u8]
-            || element == array[15u8]
-        );
+    inline is_address_in_array(
+        element: address, array: [address; 16] // MAX_VALIDATORS
+    ) -> bool{
+        let is_in_array: bool = false;
+        for i: u8 in 0u8..MAX_VALIDATORS {
+            is_in_array ||= (element == array[i]);
+        }
+        return is_in_array;
     }
 
     inline set_bool_in_array(
-        array: [bool; 16], index: u8, value: bool
-    ) -> [bool; 16] {
+        array: [bool; 16], index: u8, value: bool // MAX_VALIDATORS
+    ) -> [bool; 16] { // MAX_VALIDATORS
         return [
             (index == 0u8) ? value : array[0u8],
             (index == 1u8) ? value : array[1u8],
@@ -118,30 +110,16 @@ program protocol_core.aleo {
     }
 
     inline get_address_in_array(
-        array: [address; 16], index: u8
+        array: [address; 16], index: u8 // MAX_VALIDATORS
     ) -> address {
-        return (
-            (index == 0u8) ? array[0u8]
-            : (index == 1u8) ? array[1u8]
-            : (index == 2u8) ? array[2u8]
-            : (index == 3u8) ? array[3u8]
-            : (index == 4u8) ? array[4u8]
-            : (index == 5u8) ? array[5u8]
-            : (index == 6u8) ? array[6u8]
-            : (index == 7u8) ? array[7u8]
-            : (index == 8u8) ? array[8u8]
-            : (index == 9u8) ? array[9u8]
-            : (index == 10u8) ? array[10u8]
-            : (index == 11u8) ? array[11u8]
-            : (index == 12u8) ? array[12u8]
-            : (index == 13u8) ? array[13u8]
-            : (index == 14u8) ? array[14u8]
-            : (index == 15u8) ? array[15u8]
-            : (0group as address)
-        );
+        let ret: address = ZERO_ADDRESS;
+        for i: u8 in 0u8..MAX_VALIDATORS {
+            ret = (i == index) ? array[i] : ret;
+        }
+        return ret;
     }
 
-    inline new_bool_array() -> [bool; 16] {
+    inline new_bool_array() -> [bool; 16] { // MAX_VALIDATORS
         return [
             false, false, false, false,
             false, false, false, false,
@@ -150,41 +128,29 @@ program protocol_core.aleo {
         ];
     }
 
-    inline are_votes_approved(vote_values: [bool; 16], threshold: u8) -> bool {
-        let approval_amounts: u8 = (
-            (vote_values[0u8] as u8)
-            + (vote_values[1u8] as u8)
-            + (vote_values[2u8] as u8)
-            + (vote_values[3u8] as u8)
-            + (vote_values[4u8] as u8)
-            + (vote_values[5u8] as u8)
-            + (vote_values[6u8] as u8)
-            + (vote_values[7u8] as u8)
-            + (vote_values[8u8] as u8)
-            + (vote_values[9u8] as u8)
-            + (vote_values[10u8] as u8)
-            + (vote_values[11u8] as u8)
-            + (vote_values[12u8] as u8)
-            + (vote_values[13u8] as u8)
-            + (vote_values[14u8] as u8)
-            + (vote_values[15u8] as u8)
-        );
+    inline are_votes_approved(
+        vote_values: [bool; 16], threshold: u8 // MAX_VALIDATORS
+    ) -> bool {
+        let approval_amounts: u8 = 0u8;
+        for i: u8 in 0u8..MAX_VALIDATORS {
+            approval_amounts += (vote_values[i] as u8);
+        }
         return (approval_amounts >= threshold);
     }
 
 
     async transition initiate_validators(
-        public validators: [address; 16],
+        public validators: [address; 16], // MAX_VALIDATORS
         public threshold: u8
     ) -> Future {
-        assert_eq(self.caller, default_authority);
+        assert_eq(self.caller, DEFAULT_AUTHORITY);
         return finalize_initiate_validators(
             validators,
             threshold
         );
     }
     async function finalize_initiate_validators(
-        validators: [address; 16],
+        validators: [address; 16], // MAX_VALIDATORS
         threshold: u8
     ) {
         assert(validator_sets_length.contains(true).not());
@@ -206,7 +172,7 @@ program protocol_core.aleo {
     }
     async function finalize_initiate_proposal(
         caller: address,
-        validators: [address; 16],
+        validators: [address; 16], // MAX_VALIDATORS
         threshold: u8,
         current_validator_set_index: u64
     ) {
@@ -220,7 +186,7 @@ program protocol_core.aleo {
         assert_eq(
             proposal.current_validator_set_index, length - 1u64
         );
-        let current_validators: [address; 16] = validator_sets.get(
+        let current_validators: [address; 16] = validator_sets.get( // MAX_VALIDATORS
             proposal.current_validator_set_index
         );
 
@@ -245,7 +211,7 @@ program protocol_core.aleo {
     }
     async function finalize_vote(
         caller: address,
-        validators: [address; 16],
+        validators: [address; 16], // MAX_VALIDATORS
         threshold: u8,
         current_validator_set_index: u64,
         caller_index: u8,
@@ -261,7 +227,7 @@ program protocol_core.aleo {
         assert_eq(
             proposal.current_validator_set_index, length - 1u64
         );
-        let current_validators: [address; 16] = validator_sets.get(
+        let current_validators: [address; 16] = validator_sets.get( // MAX_VALIDATORS
             proposal.current_validator_set_index
         );
         assert_eq(
@@ -269,11 +235,11 @@ program protocol_core.aleo {
             caller
         );
 
-        let current_votes: [bool; 16] = votes.get_or_use(
+        let current_votes: [bool; 16] = votes.get_or_use( // MAX_VALIDATORS
             proposal_hash,
             new_bool_array()
         );
-        let new_votes: [bool; 16] = set_bool_in_array(
+        let new_votes: [bool; 16] = set_bool_in_array( // MAX_VALIDATORS
             current_votes,
             caller_index,
             value
@@ -296,7 +262,7 @@ program protocol_core.aleo {
     }
     async function finalize_accept_proposal(
         caller: address,
-        validators: [address; 16],
+        validators: [address; 16], // MAX_VALIDATORS
         threshold: u8,
         current_validator_set_index: u64,
         value: bool
@@ -311,14 +277,14 @@ program protocol_core.aleo {
         assert_eq(
             proposal.current_validator_set_index, length - 1u64
         );
-        let current_validators: [address; 16] = validator_sets.get(
+        let current_validators: [address; 16] = validator_sets.get( // MAX_VALIDATORS
             proposal.current_validator_set_index
         );
         is_address_in_array(caller, current_validators);
         
         let prev_threshold: u8 = vote_approval_threshold.get(true);
 
-        let current_votes: [bool; 16] = votes.get(proposal_hash);
+        let current_votes: [bool; 16] = votes.get(proposal_hash); // MAX_VALIDATORS
         assert(
             are_votes_approved(current_votes, prev_threshold)
         );
@@ -332,7 +298,7 @@ program protocol_core.aleo {
 
     async transition custody_data_as_program(
         public custody_hash: field,
-        public validators: [address; 16],
+        public validators: [address; 16], // MAX_VALIDATORS
         public maximum_requests: u128
     ) -> Future {
         assert_eq(self.caller, data_custody_protocol.aleo);
@@ -344,7 +310,7 @@ program protocol_core.aleo {
     }
     async function finalize_custody_data_as_program(
         custody_hash: field,
-        validators: [address; 16],
+        validators: [address; 16], // MAX_VALIDATORS
         maximum_requests: u128
     ){
         let default_custody_state: CustodyState = CustodyState {
@@ -361,12 +327,10 @@ program protocol_core.aleo {
         let validator_set_index: u64 = (custody_state.expected_weight == 0u64) ?
             (validator_sets_len - 1u64) :
             custody_state.validator_set_index;
-        let validator_set: [address; 16] = validator_sets.get(validator_set_index);
+        let validator_set: [address; 16] = validator_sets.get(validator_set_index); // MAX_VALIDATORS
+        assert_eq(validators, validator_set);
 
-        assert(
-            custody_state.current_requests == 0u128
-            && validators == validator_set
-        );
+        assert(custody_state.current_requests == 0u128);
 
         let new_custody_state: CustodyState = CustodyState {
             validator_set_index: validator_set_index,
@@ -381,7 +345,7 @@ program protocol_core.aleo {
     async transition request_data_as_program(
         public custody_hash: field,
         public request_id: field,
-        public validators: [address; 16]
+        public validators: [address; 16] // MAX_VALIDATORS
     ) -> Future {
         assert_eq(self.caller, data_custody_protocol.aleo);
         return finalize_request_data_as_program(
@@ -393,7 +357,7 @@ program protocol_core.aleo {
     async function finalize_request_data_as_program(
         custody_hash: field,
         request_id: field,
-        validators: [address; 16]
+        validators: [address; 16] // MAX_VALIDATORS
     ){
         let custody_state: CustodyState = custodies.get(custody_hash);
         let new_custody_state: CustodyState = CustodyState {
@@ -404,7 +368,8 @@ program protocol_core.aleo {
         };
         custodies.set(custody_hash, new_custody_state);
 
-        let validator_set: [address; 16] = validator_sets.get(custody_state.validator_set_index);
+        let validator_set: [address; 16] = validator_sets.get(custody_state.validator_set_index); // MAX_VALIDATORS
+
         assert_eq(validators, validator_set);
 
         assert(requests.contains(request_id).not());
@@ -418,7 +383,7 @@ program protocol_core.aleo {
         public threshold: u8,
         public weight: u64
     ) -> Future {
-        assert_eq(self.caller, protocol_transfers.aleo);
+        assert_eq(self.caller, adcp_private_states.aleo);
         return finalize_process_request_as_validator(
             custody_hash,
             request_id,

@@ -4,9 +4,9 @@
     contact@aleo.store - Pierre-André LONG
 */
 import credits.aleo;
-import protocol_core.aleo;
+import adcp_public_states.aleo;
 
-program protocol_transfers.aleo {
+program adcp_private_states.aleo {
     struct Custody {
         initiator: address,
         custody_id: field,
@@ -369,7 +369,7 @@ program protocol_transfers.aleo {
         );
 
         let protocol_core_future: Future = 
-            protocol_core.aleo/process_request_as_validator(
+            adcp_public_states.aleo/process_request_as_validator(
                 custody_hash,
                 withdraw_request.request_id,
                 validator_share.custody.threshold,

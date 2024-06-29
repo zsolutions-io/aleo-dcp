@@ -1,15 +1,9 @@
 {
-  "program": "protocol_transfers.aleo",
+  "program": "adcp_public_states.aleo",
   "version": "0.0.0",
   "description": "",
   "license": "MIT",
   "dependencies": [
-    {
-      "name": "protocol_core.aleo",
-      "location": "local",
-      "network": null,
-      "path": "../protocol_core"
-    },
     {
       "name": "credits.aleo",
       "location": "network",

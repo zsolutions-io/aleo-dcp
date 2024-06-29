@@ -5,16 +5,16 @@
   "license": "MIT",
   "dependencies": [
     {
-      "name": "protocol_core.aleo",
+      "name": "adcp_public_states.aleo",
       "location": "local",
       "network": null,
-      "path": "../protocol_core"
+      "path": "../adcp_public_states"
     },
     {
-      "name": "protocol_transfers.aleo",
+      "name": "adcp_private_states.aleo",
       "location": "local",
       "network": null,
-      "path": "../protocol_transfers"
+      "path": "../adcp_private_states"
     }
   ]
 }
