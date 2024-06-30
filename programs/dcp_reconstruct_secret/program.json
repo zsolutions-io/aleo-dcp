@@ -1,5 +1,5 @@
 {
-  "program": "reconstruct_secret.aleo",
+  "program": "dcp_reconstruct_secret.aleo",
   "version": "0.0.0",
   "description": "",
   "license": "MIT"

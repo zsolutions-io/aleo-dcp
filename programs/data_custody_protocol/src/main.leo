@@ -4,8 +4,8 @@
     contact@aleo.store - Pierre-André LONG
 */
 
-import adcp_public_states.aleo;
-import adcp_private_states.aleo;
+import dcp_public_states.aleo;
+import dcp_private_states.aleo;
 
 program data_custody_protocol.aleo {
     const MAX_VALIDATORS: u8 = 16u8;
@@ -242,12 +242,12 @@ program data_custody_protocol.aleo {
             validator_share_14,
             validator_share_15,
         ];
-        adcp_private_states.aleo/submit_shares_to_validators(
+        dcp_private_states.aleo/submit_shares_to_validators(
             validator_shares,
             custodied_data
         );
 
-        let protocol_core_future: Future = adcp_public_states.aleo/custody_data_as_program(
+        let protocol_core_future: Future = dcp_public_states.aleo/custody_data_as_program(
             custody_hash,
             validators,
             maximum_requests
@@ -300,7 +300,7 @@ program data_custody_protocol.aleo {
             validators[15u8]
         ];
         // Submit batch 1
-        adcp_private_states.aleo/submit_requests_to_validators(
+        dcp_private_states.aleo/submit_requests_to_validators(
             validators_0,
             custody_hash,
             request_id,
@@ -312,11 +312,11 @@ program data_custody_protocol.aleo {
         let (protocol_fee_change, lock_fee_future): (credits.aleo/credits, Future) =
             credits.aleo/transfer_private_to_public(
                 protocol_fee_record,
-                adcp_private_states.aleo,
+                dcp_private_states.aleo,
                 protocol_fee_amount,
             );
 
-        let protocol_core_future: Future = adcp_public_states.aleo/request_data_as_program(
+        let protocol_core_future: Future = dcp_public_states.aleo/request_data_as_program(
             custody_hash,
             request_id,
             validators
@@ -366,7 +366,7 @@ program data_custody_protocol.aleo {
         request_id: field,
         threshold: u8
     ) {
-        let submitted: u8 = adcp_public_states.aleo/requests.get(request_id);
+        let submitted: u8 = dcp_public_states.aleo/requests.get(request_id);
         assert(submitted >= threshold);
     }
 }

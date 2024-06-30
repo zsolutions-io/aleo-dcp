@@ -1,35 +1,45 @@
-import { aleoTransactionsForProgram } from "./rpc.js"
 import {
   save_db, insert_into_table, select_from_table, update_in_table
 } from "./db.js"
 import { remove_whitespaces } from "./string.js"
-import { serial_number } from "./aleo.js"
+import { serial_number, parse_record_plaintext } from "./aleo.js"
 import { sql_string } from "./string.js";
 
+import {
+  protocol_transfers_program,
+  share_record,
+  request_record,
+  sstv_function,
+  jsav_function,
+  srtv_function,
+  prav_function
+} from "../config/programs.js";
+import { tables } from "../config/db.js"
+import { transaction_per_batch } from "../config/rpc.js"
 
-// Programs variable names
-const protocol_transfers_program = "adcp_private_states.aleo";
-const share_record = "ValidatorShare";
-const request_record = "WithdrawRequest";
 
-const sstv_function = "submit_shares_to_validators";
-const jsav_function = "join_shares_as_validator";
-const srtv_function = "submit_requests_to_validators";
-const prav_function = "process_request_as_validator";
-
-// Tables
 const record_tables = {
-  [share_record]: "share_records",
-  [request_record]: "request_records",
+  [share_record]: tables.share_records.name,
+  [request_record]: tables.request_records.name,
 }
-const processed_transitions_table = "processed_transitions";
-
-// RPC
-const transaction_per_batch = 20;
 
 
-const load_transactions_page = async (functionName, page) => (
-  await aleoTransactionsForProgram(
+export const sync_db_with_blockchain = async (rpc_provider, db, account) => {
+  const processed_transitions = await load_processed_transitions(db);
+  await Promise.all([
+    sync_sstv_transitions(rpc_provider, db, account, processed_transitions),
+    sync_jsav_transitions(rpc_provider, db, account, processed_transitions),
+    sync_srtv_transitions(rpc_provider, db, account, processed_transitions),
+    sync_prav_transitions(rpc_provider, db, account, processed_transitions),
+  ]);
+  await update_processed_transitions(db, processed_transitions);
+
+  await save_db(db);
+}
+
+
+const load_transactions_page = async (rpc_provider, functionName, page) => (
+  await rpc_provider.aleoTransactionsForProgram(
     {
       programId: protocol_transfers_program,
       functionName: functionName,
@@ -50,13 +60,13 @@ const record_table = (record_name) => {
 
 
 export const travel_transaction_pages = async (
-  function_name, apply_to_transition, processed_already
+  rpc_provider, function_name, apply_to_transition, processed_already
 ) => {
   let page = Math.floor(processed_already / transaction_per_batch);
   let starting_index = processed_already % transaction_per_batch;
   while (true) {
     const transactions = await load_transactions_page(
-      function_name, page
+      rpc_provider, function_name, page
     );
     const transitions = transactions.reduce(
       (acc, transaction, index) => {
@@ -86,6 +96,22 @@ export const travel_transaction_pages = async (
 }
 
 
+const get_record_data_columns = (record_name, plaintext) => {
+  const record_object = parse_record_plaintext(plaintext);
+  if (record_name == share_record) {
+    return [record_object.custody_id.slice(0, -"field".length)];
+  }
+  else if (record_name == request_record) {
+    return [
+      record_object.custody_id.slice(0, -"field".length),
+      record_object.request_id.slice(0, -"field".length)
+    ];
+  } else {
+    throw new Error("Unknown record name.")
+  }
+}
+
+
 const owned_records_from_outputs = (account, outputs) => (
   outputs
     .filter((output) => account.ownsRecordCiphertext(output.value))
@@ -110,7 +136,8 @@ const tag_record_received = async (
   );
   const found = await retrieve_record_from_serial(db, record_name, serial);
   if (found == null) {
-    const values = [serial, plaintext, 0];
+    const data_columns = get_record_data_columns(record_name, plaintext);
+    const values = [serial, plaintext, 0, ...data_columns];
     await insert_into_table(db, table_name, values);
   }
 };
@@ -130,7 +157,7 @@ const tag_record_spent = async (db, record_name, serial) => {
 
 
 const retrieve_processed_transitions = async (db) => {
-  const elements = await select_from_table(db, processed_transitions_table);
+  const elements = await select_from_table(db, tables.processed_transitions.name);
   return !found.length ? null : Object.fromEntries(
     elements.map(
       (element) => (
@@ -160,30 +187,19 @@ const update_processed_transitions = async (db, processed_transitions) => {
   ) {
     if (found == null) {
       const values = [function_name, amount];
-      await insert_into_table(db, processed_transitions_table, values);
+      await insert_into_table(db, tables.processed_transitions.name, values);
     } else {
       const where = `function = ${function_name}`;
       const udpate = { amount };
-      await update_in_table(db, processed_transitions_table, udpate, where);
+      await update_in_table(db, tables.processed_transitions.name, udpate, where);
     }
   }
 }
 
 
-export const sync_db_with_blockchain = async (db, account) => {
-  const processed_transitions = await load_processed_transitions(db);
-  await Promise.all([
-    sync_sstv_transitions(db, account, processed_transitions),
-    sync_jsav_transitions(db, account, processed_transitions),
-    sync_srtv_transitions(db, account, processed_transitions),
-    sync_prav_transitions(db, account, processed_transitions),
-  ]);
-  await update_processed_transitions(db, processed_transitions);
-  await save_db(db);
-}
-
-
-const sync_sstv_transitions = async (db, account, processed_transitions) => {
+const sync_sstv_transitions = async (
+  rpc_provider, db, account, processed_transitions
+) => {
   const apply_to_sstv_transition = async ({ inputs, outputs }) => {
     const owned_records = owned_records_from_outputs(account, outputs);
     await Promise.all(owned_records.map(async (record) => (
@@ -191,6 +207,7 @@ const sync_sstv_transitions = async (db, account, processed_transitions) => {
     )));
   };
   processed_transitions[sstv_function] = await travel_transaction_pages(
+    rpc_provider,
     sstv_function,
     apply_to_sstv_transition,
     processed_transitions[sstv_function]
@@ -198,7 +215,9 @@ const sync_sstv_transitions = async (db, account, processed_transitions) => {
 }
 
 
-const sync_jsav_transitions = async (db, account, processed_transitions) => {
+const sync_jsav_transitions = async (
+  rpc_provider, db, account, processed_transitions
+) => {
   const apply_to_jsav_transition = async ({ inputs, outputs }) => {
     const owned_records = owned_records_from_outputs(account, outputs);
     await Promise.all(owned_records.map(async (record) => (
@@ -209,6 +228,7 @@ const sync_jsav_transitions = async (db, account, processed_transitions) => {
     )));
   };
   processed_transitions[jsav_function] = await travel_transaction_pages(
+    rpc_provider,
     jsav_function,
     apply_to_jsav_transition,
     processed_transitions[jsav_function]
@@ -216,7 +236,9 @@ const sync_jsav_transitions = async (db, account, processed_transitions) => {
 }
 
 
-const sync_srtv_transitions = async (db, account, processed_transitions) => {
+const sync_srtv_transitions = async (
+  rpc_provider, db, account, processed_transitions
+) => {
   const apply_to_srtv_transition = async ({ inputs, outputs }) => {
     const owned_records = owned_records_from_outputs(account, outputs);
     await Promise.all(owned_records.map(async (record) => (
@@ -224,6 +246,7 @@ const sync_srtv_transitions = async (db, account, processed_transitions) => {
     )));
   };
   processed_transitions[srtv_function] = await travel_transaction_pages(
+    rpc_provider,
     srtv_function,
     apply_to_srtv_transition,
     processed_transitions[srtv_function]
@@ -231,7 +254,9 @@ const sync_srtv_transitions = async (db, account, processed_transitions) => {
 }
 
 
-const sync_prav_transitions = async (db, account, processed_transitions) => {
+const sync_prav_transitions = async (
+  rpc_provider, db, account, processed_transitions
+) => {
   const apply_to_prav_transition = async ({ inputs, outputs }) => {
     await Promise.all([
       tag_record_spent(db, share_record, inputs[0].id),
@@ -239,6 +264,7 @@ const sync_prav_transitions = async (db, account, processed_transitions) => {
     ]);
   };
   processed_transitions[prav_function] = await travel_transaction_pages(
+    rpc_provider,
     prav_function,
     apply_to_prav_transition,
     processed_transitions[prav_function]
@@ -251,24 +277,24 @@ const sync_prav_transitions = async (db, account, processed_transitions) => {
   Inputs/Outputs of Interest
   ----------
 
-  (adcp_private_states.aleo, submit_shares_to_validators)
+  (dcp_private_states.aleo, submit_shares_to_validators)
     - outputs[0]: ValidatorShare
     - outputs[1]: ValidatorShare
     ...
     - outputs[15]: ValidatorShare
 
-  (adcp_private_states.aleo, join_shares_as_validator)
+  (dcp_private_states.aleo, join_shares_as_validator)
     - inputs[0]: ValidatorShare
     - inputs[1]: ValidatorShare
     - outputs[0]: ValidatorShare
 
-  (adcp_private_states.aleo, submit_requests_to_validators)
+  (dcp_private_states.aleo, submit_requests_to_validators)
     - outputs[0]: WithdrawRequest
     - outputs[1]: WithdrawRequest
     ...
     - outputs[15]: WithdrawRequest
 
-  (adcp_private_states.aleo, process_request_as_validator)
+  (dcp_private_states.aleo, process_request_as_validator)
     - inputs[0]: ValidatorShare
     - inputs[1]: WithdrawRequest
 

@@ -1,18 +1,17 @@
 
 import fs from 'fs/promises';
 import initSqlJs from 'sql.js';
-import { config_dir, data_dir, create_dir_if_not_exists, } from "./path.js";
+import { data_dir, create_dir_if_not_exists, } from "./path.js";
 import { sql_string } from "./string.js";
+import { tables, db_file_name, db_file_name } from "../config/db.js";
 
-const db_path = `${data_dir}/db.sqlite`;
-const tables_desc_path = `${config_dir}/tables.json`;
-const tables = JSON.parse(await fs.readFile(tables_desc_path, "utf-8"));
+const db_path = `${data_dir}/${db_file_name}`;
 
 
 const create_tables_if_not_exists = async (db) => {
   return (
     await Promise.all(
-      tables.map(
+      Object.values(tables).map(
         async (table) => await create_table_if_not_exists(db, table)
       )
     )
@@ -26,7 +25,7 @@ const create_table_if_not_exists = async (db, table) => {
     return false;
   } catch (e) {
     if (e.message.startsWith("no such table:")) {
-      const sql_cmd = `CREATE TABLE ${table.name}${table.params}`;
+      const sql_cmd = `CREATE TABLE ${table.name}${table.columns}`;
       console.log(`Executing: '${sql_cmd}'`)
       db.run(sql_cmd);
       return true;

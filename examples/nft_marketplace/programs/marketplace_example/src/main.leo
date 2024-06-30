@@ -59,7 +59,7 @@ program marketplace_example.aleo {
         let nft_commit: field = commit_nft(nft.data, nft.edition);
 
         let data_custody: Custody = Custody {
-            initiator: self.caller,
+            initiator: self.address,
             custody_id: custody_id,
             threshold: mpc_threshold,
         };
@@ -177,7 +177,7 @@ program marketplace_example.aleo {
     }
 
 
-    // {nft_data, nft_edition} are retrieved by executing 'reconstruct_secret.aleo' offchain on shares sent to buyer by validators
+    // {nft_data, nft_edition} are retrieved by executing 'dcp_reconstruct_secret.aleo' offchain on shares sent to buyer by validators
     async transition withdraw_nft(
         nft_data: data,
         nft_edition: scalar,

@@ -25,7 +25,7 @@
     contact@aleo.store - Pierre-André LONG
 */
 
-program reconstruct_secret.aleo {
+program dcp_reconstruct_secret.aleo {
     const MAX_SHARES: u8 = 16u8;
 
     struct Share {

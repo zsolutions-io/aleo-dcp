@@ -5,16 +5,16 @@
   "license": "MIT",
   "dependencies": [
     {
-      "name": "adcp_public_states.aleo",
+      "name": "dcp_public_states.aleo",
       "location": "local",
       "network": null,
-      "path": "../adcp_public_states"
+      "path": "../dcp_public_states"
     },
     {
-      "name": "adcp_private_states.aleo",
+      "name": "dcp_private_states.aleo",
       "location": "local",
       "network": null,
-      "path": "../adcp_private_states"
+      "path": "../dcp_private_states"
     }
   ]
 }

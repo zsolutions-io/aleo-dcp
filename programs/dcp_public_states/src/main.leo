@@ -5,8 +5,8 @@
     External usage example:
         async function needs_validators() {
             let validators: [address; 16] 
-                = adcp_public_states.aleo/validator_sets.get(
-                    adcp_public_states.aleo/validator_sets_length.get(true) - 1u64
+                = dcp_public_states.aleo/validator_sets.get(
+                    dcp_public_states.aleo/validator_sets_length.get(true) - 1u64
                 );
             ...
         }
@@ -14,7 +14,7 @@
     contact@aleo.store - Pierre-André LONG
 */
 
-program adcp_public_states.aleo {
+program dcp_public_states.aleo {
     const DEFAULT_AUTHORITY: address = aleo1wamjqlka7d0gazlxdys6n8e8zeee3ymedwvw8elvh7529kwd45rq0plgax;
     const ZERO_ADDRESS: address = aleo1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq3ljyzc;
     const MAX_VALIDATORS: u8 = 16u8;
@@ -383,7 +383,7 @@ program adcp_public_states.aleo {
         public threshold: u8,
         public weight: u64
     ) -> Future {
-        assert_eq(self.caller, adcp_private_states.aleo);
+        assert_eq(self.caller, dcp_private_states.aleo);
         return finalize_process_request_as_validator(
             custody_hash,
             request_id,

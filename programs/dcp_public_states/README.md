@@ -1,4 +1,4 @@
-# adcp_public_states.aleo
+# dcp_public_states.aleo
 
 ## Build Guide
 
