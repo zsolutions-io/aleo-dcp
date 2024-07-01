@@ -45,7 +45,7 @@ Protocol enables programs to hold and distribute data stored in any arbitrary re
 
 ### Additive homomorphic operations support
 
-**Custody** step can be call multiple times, with the same `custody_id`, by a program that imports DCP. In that case, shares associated with custodied `field` elements must simply be added by validators before being submitted to destinator.
+**Custody** step can be call multiple times, with the same `custody_key`, by a program that imports DCP. In that case, shares associated with custodied `field` elements must simply be added by validators before being submitted to destinator.
 
 ![alt text](./media/aleo-dcp-schema-homomorphic.png)
 
@@ -129,11 +129,11 @@ program marketplace_example.aleo {
         let secret: field = secret_random_viewkey as field;
         let nft_data_address: address = (data_view_key * group::GEN) as address;
 
-        let custody_id: field = BHP256::hash_to_field(nft_data_address);
+        let custody_key: field = BHP256::hash_to_field(nft_data_address);
 
         let data_custody: Custody = Custody {
-            initiator: self.caller,
-            custody_id: custody_id,
+            origin: self.caller,
+            custody_key: custody_key,
             threshold: mpc_threshold,
         };
 
@@ -142,7 +142,7 @@ program marketplace_example.aleo {
         let custody_data_as_program_future: Future =
             data_custody_protocol.aleo/custody_data_as_program(
                 secret, // private secret : field,
-                custody_id, // private custody_id: field,
+                custody_key, // private custody_key: field,
                 privacy_random_coefficients, // private coefficients: [field; 15],
                 validators, // private validators: [address; 16],
                 mpc_threshold // private threshold: u8 <= 16
@@ -177,7 +177,7 @@ program marketplace_example.aleo {
         private protocol_fee_record: credits.aleo/credits
     ) -> (credits.aleo/credits, Future) {
         ...
-        let custody_id: field = BHP256::hash_to_field(listing_data.nft_data_address);
+        let custody_key: field = BHP256::hash_to_field(listing_data.nft_data_address);
         let (
             change,
             request_data_as_program_future
@@ -186,7 +186,7 @@ program marketplace_example.aleo {
             Future
         ) =
             data_custody_protocol.aleo/request_data_as_program(
-                custody_id, // private data_address: address,
+                custody_key, // private data_address: address,
                 data_request_id, // private request_id: field,
                 self.signer, // private to: address,
                 mpc_threshold, // private threshold: u8,

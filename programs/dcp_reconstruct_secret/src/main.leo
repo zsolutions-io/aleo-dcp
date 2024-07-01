@@ -38,7 +38,7 @@ program dcp_reconstruct_secret.aleo {
         return ((f == 0field) ? 1field : f).inv();
     }
 
-    function reconstruct(shares: [Share; 16]) -> field { // MAX_SHARES
+    inline reconstruct(shares: [Share; 16]) -> field { // MAX_SHARES
         let secret: field = 0field;
         for i: u8 in 0u8..MAX_SHARES{
             let lagrange_coeff: field = 1field;
@@ -58,7 +58,7 @@ program dcp_reconstruct_secret.aleo {
         return secret;
     }
 
-    transition call_reconstruct(shares: [Share; 16]) -> field {
+    transition call_reconstruct(shares: [Share; 16]) -> field { // MAX_SHARES
         let reconstructed_secret: field = reconstruct(shares);
         return reconstructed_secret;
     }

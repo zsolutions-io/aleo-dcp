@@ -1,0 +1,20 @@
+{
+  "program": "dcp_private_states.aleo",
+  "version": "0.0.0",
+  "description": "",
+  "license": "MIT",
+  "dependencies": [
+    {
+      "name": "dcp_public_states.aleo",
+      "location": "local",
+      "network": null,
+      "path": "../dcp_public_states"
+    },
+    {
+      "name": "credits.aleo",
+      "location": "network",
+      "network": "testnet",
+      "path": null
+    }
+  ]
+}

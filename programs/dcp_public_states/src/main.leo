@@ -1,6 +1,7 @@
 
 /*
-    Validators management program.
+    Public state program:
+    Mappings: custodies, requests, governance...
 
     External usage example:
         async function needs_validators() {
@@ -28,13 +29,12 @@ program dcp_public_states.aleo {
     struct CustodyState {
         validator_set_index: u64,
         expected_weight: u64,
-        maximum_requests: u128,
-        current_requests: u128,
+        requested: bool,
     }
 
     struct Custody {
-        initiator: address,
-        custody_id: field,
+        origin: address,
+        custody_key: field,
         threshold: u8,
     }
 
@@ -299,25 +299,21 @@ program dcp_public_states.aleo {
     async transition custody_data_as_program(
         public custody_hash: field,
         public validators: [address; 16], // MAX_VALIDATORS
-        public maximum_requests: u128
     ) -> Future {
         assert_eq(self.caller, data_custody_protocol.aleo);
         return finalize_custody_data_as_program(
             custody_hash,
             validators,
-            maximum_requests
         );
     }
     async function finalize_custody_data_as_program(
         custody_hash: field,
         validators: [address; 16], // MAX_VALIDATORS
-        maximum_requests: u128
     ){
         let default_custody_state: CustodyState = CustodyState {
             validator_set_index: 0u64,
             expected_weight: 0u64,
-            maximum_requests: maximum_requests,
-            current_requests: 0u128
+            requested: false
         };
         let custody_state: CustodyState = custodies.get_or_use(
             custody_hash, default_custody_state
@@ -330,13 +326,12 @@ program dcp_public_states.aleo {
         let validator_set: [address; 16] = validator_sets.get(validator_set_index); // MAX_VALIDATORS
         assert_eq(validators, validator_set);
 
-        assert(custody_state.current_requests == 0u128);
+        assert(custody_state.requested.not());
 
         let new_custody_state: CustodyState = CustodyState {
             validator_set_index: validator_set_index,
             expected_weight: custody_state.expected_weight + 1u64,
-            maximum_requests: maximum_requests,
-            current_requests: 0u128
+            requested: false
         };
         custodies.set(custody_hash, new_custody_state);
     }
@@ -363,8 +358,7 @@ program dcp_public_states.aleo {
         let new_custody_state: CustodyState = CustodyState {
             validator_set_index: custody_state.validator_set_index,
             expected_weight: custody_state.expected_weight,
-            maximum_requests: custody_state.maximum_requests,
-            current_requests: custody_state.current_requests - 1u128,
+            requested: true,
         };
         custodies.set(custody_hash, new_custody_state);
 

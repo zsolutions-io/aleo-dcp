@@ -43,13 +43,12 @@ program data_custody_protocol.aleo {
 /*
     let secret: field = data_view_key as field;
     let data_address: address = (data_view_key * group::GEN) as address;
-    let custody_id: field = BHP256::commit_to_field(data_address, data_address_obfuscator);
+    let custody_key: field = BHP256::commit_to_field(data_address, data_address_obfuscator);
 */
 
     async transition custody_data_as_program(
         private secret: field,
-        private custody_id: field,
-        public maximum_requests: u128,
+        private custody_key: field,
         private coefficients: [field; 15], // MAX_VALIDATORS_MINUS_1
         public validators: [address; 16], // MAX_VALIDATORS
         private threshold: u8,  // <= MAX_VALIDATORS
@@ -58,8 +57,8 @@ program data_custody_protocol.aleo {
         assert(is_some_coefficient_zero(coefficients).not());
 
         let custodied_data: Custody = Custody {
-            initiator: self.caller,
-            custody_id: custody_id,
+            origin: self.caller,
+            custody_key: custody_key,
             threshold: threshold
         };
         let custody_hash: field = hash_custody(custodied_data);
@@ -249,8 +248,7 @@ program data_custody_protocol.aleo {
 
         let protocol_core_future: Future = dcp_public_states.aleo/custody_data_as_program(
             custody_hash,
-            validators,
-            maximum_requests
+            validators
         );
 
         return finalize_custody_data_as_program(
@@ -265,7 +263,7 @@ program data_custody_protocol.aleo {
 
 
     async transition request_data_as_program(
-        private custody_id: field,
+        private custody_key: field,
         private request_id: field,
         private to: address,
         private threshold: u8,
@@ -275,8 +273,8 @@ program data_custody_protocol.aleo {
     ) -> (credits.aleo/credits, Future) {
         assert_neq(self.caller, self.signer);
         let custodied_data: Custody = Custody {
-            initiator: self.caller,
-            custody_id: custody_id,
+            origin: self.caller,
+            custody_key: custody_key,
             threshold: threshold
         };
         let custody_hash: field = hash_custody(custodied_data);
@@ -339,7 +337,7 @@ program data_custody_protocol.aleo {
 
     // Assert at least k of n shares processed
     async transition assert_completed_as_program(
-        private custody_id: field,
+        private custody_key: field,
         public request_id: field,
         public threshold: u8,
     ) -> (
@@ -347,8 +345,8 @@ program data_custody_protocol.aleo {
     ){
         assert_neq(self.caller, self.signer);
         let custody: Custody = Custody {
-            initiator: self.caller,
-            custody_id: custody_id,
+            origin: self.caller,
+            custody_key: custody_key,
             threshold: threshold
         };
         let custody_hash: field = hash_custody(custody);

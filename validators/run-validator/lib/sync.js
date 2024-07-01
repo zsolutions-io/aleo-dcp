@@ -99,11 +99,11 @@ export const travel_transaction_pages = async (
 const get_record_data_columns = (record_name, plaintext) => {
   const record_object = parse_record_plaintext(plaintext);
   if (record_name == share_record) {
-    return [record_object.custody_id.slice(0, -"field".length)];
+    return [record_object.custody_key.slice(0, -"field".length)];
   }
   else if (record_name == request_record) {
     return [
-      record_object.custody_id.slice(0, -"field".length),
+      record_object.custody_key.slice(0, -"field".length),
       record_object.request_id.slice(0, -"field".length)
     ];
   } else {
