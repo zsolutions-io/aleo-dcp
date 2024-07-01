@@ -466,7 +466,7 @@ program dcp_private_states.aleo {
     }
 
 
-    // Due to snarkvm limits,
+    // Due to snarkvm limitations (transition max instructions amount in particular)
     // secret can be reconstructed "on chain" only from 14 shares
 
     // This feature can alternatively be reproduced, for any amount of shares,
