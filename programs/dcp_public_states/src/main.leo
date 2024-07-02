@@ -16,7 +16,7 @@
 */
 
 program dcp_public_states.aleo {
-    const DEFAULT_AUTHORITY: address = aleo1wamjqlka7d0gazlxdys6n8e8zeee3ymedwvw8elvh7529kwd45rq0plgax;
+    const DEFAULT_AUTHORITY: address = aleo1s3ws5tra87fjycnjrwsjcrnw2qxr8jfqqdugnf0xzqqw29q9m5pqem2u4t;
     const ZERO_ADDRESS: address = aleo1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq3ljyzc;
     const MAX_VALIDATORS: u8 = 16u8;
 

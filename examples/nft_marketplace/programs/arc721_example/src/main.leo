@@ -343,7 +343,27 @@ program arc721_example.aleo {
         };
         nft_public_data.set(nft_commit, public_data);
     }
-
     */
 
+
+    /*
+    For testing purposes:
+    */
+    async transition mint(
+        nft_data: data, nft_edition: scalar
+    ) -> (NFT, Future) {
+        let nft_commit: field = commit_nft(nft_data, nft_edition);
+        return (
+            NFT {
+                owner: self.caller,
+                data: nft_data,
+                edition: nft_edition,
+            },
+            finalize_mint(nft_commit)
+        );
+    }
+    async function finalize_mint(nft_commit: field) {
+        assert(nft_commits.contains(nft_commit).not());
+        nft_commits.set(nft_commit, true);
+    }
 }

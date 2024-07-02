@@ -9,7 +9,7 @@ import dcp_public_states.aleo;
 
 program dcp_private_states.aleo {
     const MAX_SHARES: u8 = 16u8;
-    const MAX_ON_CHAIN_RECONSTRUCT_SHARES: u8 = 14u8;
+    const MAX_ON_CHAIN_RECONSTRUCT_SHARES: u8 = 15u8;
     
     struct Custody {
         origin: address,
@@ -50,48 +50,12 @@ program dcp_private_states.aleo {
     }
 
 
-    record ReconstructedSecret{
-        owner: address,
-        secret: field,
-        custody_hash: field
-    }
-
-
     inline hash_custody(custody: Custody) -> field {
         return BHP256::hash_to_field(custody);
     }
 
 
-    // Inverse field but will invert 0field to 1field to avoid constraint error
-    
-    inline reconstruct(shares: [Share; 14]) -> field { // MAX_ON_CHAIN_RECONSTRUCT_SHARES
-        let secret: field = 0field;
-        for i: u8 in 0u8..MAX_ON_CHAIN_RECONSTRUCT_SHARES{
-            let lagrange_coeff: field = 1field;
-            let x_i: field = shares[i].index;
-            for j: u8 in 0u8..MAX_ON_CHAIN_RECONSTRUCT_SHARES{
-                let x_j: field = shares[j].index;
-                let to_mul: field = 
-                    (i != j && x_j != 0field) ? 
-                        (x_j * safe_inv(x_j - x_i)) :
-                        1field;
-                lagrange_coeff *= to_mul;
-            }
-            let y_i: field = shares[i].share_val;
-            secret += (x_i != 0field) ?
-                    (y_i * lagrange_coeff) :
-                    0field;
-        }
-        return secret;
-    }
-
-
-    inline safe_inv(f: field) -> field { 
-        return ((f == 0field) ? 1field : f).inv();
-    }
-
-
-    inline count_relevant_shares(shares: [Share; 14]) -> u8{ // MAX_ON_CHAIN_RECONSTRUCT_SHARES
+    inline count_relevant_shares(shares: [Share; 15]) -> u8{ // MAX_ON_CHAIN_RECONSTRUCT_SHARES
         let non_zero_shares: u8 = 0u8;
         for i: u8 in 0u8..MAX_ON_CHAIN_RECONSTRUCT_SHARES{
             non_zero_shares += (shares[i].index != 0field) as u8;
@@ -99,6 +63,8 @@ program dcp_private_states.aleo {
         return non_zero_shares;
     }
 
+
+    /*
     transition submit_shares_to_validators(
         private validator_shares: [ValidatorShareData; 16],
         private custodied_data: Custody,
@@ -398,6 +364,40 @@ program dcp_private_states.aleo {
             withdraw_request_15,
         );
     }
+    */
+
+    transition submit_share_to_validator(
+        private validator_share_data: ValidatorShareData,
+        private custodied_data: Custody,
+    ) -> (ValidatorShare){
+        assert_eq(self.caller, data_custody_protocol.aleo);
+
+        return ValidatorShare {
+            owner: validator_share_data.validator,
+            share: validator_share_data.share,
+            custody: custodied_data,
+            weight: validator_share_data.weight
+        };
+    }
+    
+
+    transition submit_request_to_validator(
+        private validator: address,
+        private custody_hash: field,
+        private request_id: field,
+        private to: address,
+        private validator_fee_amount: u64,
+    ) -> WithdrawRequest {
+        assert_eq(self.caller, data_custody_protocol.aleo);
+
+        return WithdrawRequest {
+            owner: validator,
+            custody_hash: custody_hash,
+            to: to,
+            fee_amount: validator_fee_amount,
+            request_id: request_id
+        };
+    }
 
 
     async transition process_request_as_validator(
@@ -452,22 +452,7 @@ program dcp_private_states.aleo {
     }
 
 
-    transition mint_null_destination_share(
-        custody_hash: field,
-    ) -> DestinationShare{
-        return DestinationShare{
-            owner: self.signer,
-            share: Share{
-                share_val: 0field,
-                index: 0field,
-            },
-            custody_hash: custody_hash
-        };
-    }
-
-
-    // Due to snarkvm limitations (transition max instructions amount in particular)
-    // secret can be reconstructed "on chain" only from 14 shares
+    // Secret can be reconstructed "on chain", a proof record is given back
 
     // This feature can alternatively be reproduced, for any amount of shares,
     // with a commitment scheme:
@@ -479,6 +464,40 @@ program dcp_private_states.aleo {
     // and blinding factor, they can be used as transition inputs and be proven
     // valid within the transition by checking that commitment matches the one
     // published earlier.
+
+
+    record ReconstructedSecret{
+        owner: address,
+        secret: field,
+        custody_hash: field
+    }
+
+
+    function reconstruct(shares: [Share; 15]) -> field { // MAX_ON_CHAIN_RECONSTRUCT_SHARES
+        let secret: field = 0field;
+        for i: u8 in 0u8..MAX_ON_CHAIN_RECONSTRUCT_SHARES{
+            let lagrange_coeff: field = 1field;
+            let x_i: field = shares[i].index;
+            for j: u8 in 0u8..MAX_ON_CHAIN_RECONSTRUCT_SHARES{
+                let x_j: field = shares[j].index;
+                let to_mul: field = 
+                    (i != j && x_j != 0field) ? 
+                        (x_j * safe_inv(x_j - x_i)) :
+                        1field;
+                lagrange_coeff *= to_mul;
+            }
+            let y_i: field = shares[i].share_val;
+            secret += (x_i != 0field) ?
+                    (y_i * lagrange_coeff) :
+                    0field;
+        }
+        return secret;
+    }
+
+    // Inverse field but will invert 0field to 1field to avoid constraint error
+    inline safe_inv(f: field) -> field { 
+        return ((f == 0field) ? 1field : f).inv();
+    }
 
     transition reconstruct_secret(
         destination_share_0: DestinationShare,
@@ -495,18 +514,13 @@ program dcp_private_states.aleo {
         destination_share_11: DestinationShare,
         destination_share_12: DestinationShare,
         destination_share_13: DestinationShare,
-        custody_key: field,
-        threshold: u8,
+        destination_share_14: DestinationShare,
+        custody: Custody,
     ) -> ReconstructedSecret {
-        let custody: Custody = Custody{
-            origin: self.caller,
-            custody_key: custody_key,
-            threshold: threshold
-        };
         assert_eq(hash_custody(custody), destination_share_0.custody_hash);
         // TODO DETERMINE IF WE SHOULD: only allow origin custodier program to reconstruct the share
-        // assert_eq(self.caller, custody.origin);
-        let shares: [Share; 14] = [ // MAX_ON_CHAIN_RECONSTRUCT_SHARES
+        assert_eq(self.caller, custody.origin);
+        let shares: [Share; 15] = [ // MAX_ON_CHAIN_RECONSTRUCT_SHARES
             destination_share_0.share,
             destination_share_1.share,
             destination_share_2.share,
@@ -521,6 +535,7 @@ program dcp_private_states.aleo {
             destination_share_11.share,
             destination_share_12.share,
             destination_share_13.share,
+            destination_share_14.share,
         ];
         let non_zero_shares: u8 = count_relevant_shares(shares);
         assert(non_zero_shares >= custody.threshold);
@@ -531,6 +546,20 @@ program dcp_private_states.aleo {
             custody_hash: destination_share_0.custody_hash
         };
         return reconstructed_secret;
+    }
+
+
+    transition mint_null_destination_share(
+        custody_hash: field,
+    ) -> DestinationShare{
+        return DestinationShare{
+            owner: self.signer,
+            share: Share{
+                share_val: 0field,
+                index: 0field,
+            },
+            custody_hash: custody_hash
+        };
     }
 
 
@@ -555,106 +584,5 @@ program dcp_private_states.aleo {
             custody: validator_share_0.custody,
             weight: validator_share_0.weight + validator_share_1.weight
         };
-    }
-
-    // ...
-    
-
-    transition join_16_shares_as_validator(
-        private validator_share_0: ValidatorShare,
-        private validator_share_1: ValidatorShare,
-        private validator_share_2: ValidatorShare,
-        private validator_share_3: ValidatorShare,
-        private validator_share_4: ValidatorShare,
-        private validator_share_5: ValidatorShare,
-        private validator_share_6: ValidatorShare,
-        private validator_share_7: ValidatorShare,
-        private validator_share_8: ValidatorShare,
-        private validator_share_9: ValidatorShare,
-        private validator_share_10: ValidatorShare,
-        private validator_share_11: ValidatorShare,
-        private validator_share_12: ValidatorShare,
-        private validator_share_13: ValidatorShare,
-        private validator_share_14: ValidatorShare,
-        private validator_share_15: ValidatorShare,
-    ) -> ValidatorShare {
-        assert(validator_share_0.custody == validator_share_1.custody);
-        assert(validator_share_0.custody == validator_share_2.custody);
-        assert(validator_share_0.custody == validator_share_3.custody);
-        assert(validator_share_0.custody == validator_share_4.custody);
-        assert(validator_share_0.custody == validator_share_5.custody);
-        assert(validator_share_0.custody == validator_share_6.custody);
-        assert(validator_share_0.custody == validator_share_7.custody);
-        assert(validator_share_0.custody == validator_share_8.custody);
-        assert(validator_share_0.custody == validator_share_9.custody);
-        assert(validator_share_0.custody == validator_share_10.custody);
-        assert(validator_share_0.custody == validator_share_11.custody);
-        assert(validator_share_0.custody == validator_share_12.custody);
-        assert(validator_share_0.custody == validator_share_13.custody);
-        assert(validator_share_0.custody == validator_share_14.custody);
-        assert(validator_share_0.custody == validator_share_15.custody);
-
-        assert(validator_share_0.share.index == validator_share_1.share.index);
-        assert(validator_share_0.share.index == validator_share_2.share.index);
-        assert(validator_share_0.share.index == validator_share_3.share.index);
-        assert(validator_share_0.share.index == validator_share_4.share.index);
-        assert(validator_share_0.share.index == validator_share_5.share.index);
-        assert(validator_share_0.share.index == validator_share_6.share.index);
-        assert(validator_share_0.share.index == validator_share_7.share.index);
-        assert(validator_share_0.share.index == validator_share_8.share.index);
-        assert(validator_share_0.share.index == validator_share_9.share.index);
-        assert(validator_share_0.share.index == validator_share_10.share.index);
-        assert(validator_share_0.share.index == validator_share_11.share.index);
-        assert(validator_share_0.share.index == validator_share_12.share.index);
-        assert(validator_share_0.share.index == validator_share_13.share.index);
-        assert(validator_share_0.share.index == validator_share_14.share.index);
-        assert(validator_share_0.share.index == validator_share_15.share.index);
-
-        let share_val: field = (
-            validator_share_0.share.share_val
-            + validator_share_1.share.share_val
-            + validator_share_2.share.share_val
-            + validator_share_3.share.share_val
-            + validator_share_4.share.share_val
-            + validator_share_5.share.share_val
-            + validator_share_6.share.share_val
-            + validator_share_7.share.share_val
-            + validator_share_8.share.share_val
-            + validator_share_9.share.share_val
-            + validator_share_10.share.share_val
-            + validator_share_11.share.share_val
-            + validator_share_12.share.share_val
-            + validator_share_13.share.share_val
-            + validator_share_14.share.share_val
-            + validator_share_15.share.share_val
-        );
-        let out_share: Share = Share {
-            share_val: share_val,
-            index: validator_share_0.share.index,
-        };
-
-        return ValidatorShare {
-            owner: self.signer,
-            share: out_share,
-            custody: validator_share_0.custody,
-            weight: (
-                validator_share_0.weight
-                + validator_share_1.weight
-                + validator_share_2.weight
-                + validator_share_3.weight
-                + validator_share_4.weight
-                + validator_share_5.weight
-                + validator_share_6.weight
-                + validator_share_7.weight
-                + validator_share_8.weight
-                + validator_share_9.weight
-                + validator_share_10.weight
-                + validator_share_11.weight
-                + validator_share_12.weight
-                + validator_share_13.weight
-                + validator_share_14.weight
-                + validator_share_15.weight
-            )
-        };
-    }
+    }    
 }
