@@ -3,6 +3,12 @@ import arc721_example.aleo;
 import credits.aleo;
 
 program marketplace_example.aleo {
+    const address_gen: group = 522678458525321116977504528531602186870683848189190546523208313015552693483group;
+    inline viewkey_to_address(view_key: scalar) -> address {
+         return (view_key * address_gen) as address;
+    }
+
+
     const mpc_threshold: u8 = 8u8;
 
     struct ListingData {
@@ -48,7 +54,7 @@ program marketplace_example.aleo {
                 nft, self.address
             );
         let secret: field = secret_random_viewkey as field;
-        let nft_data_address: address = (secret_random_viewkey * group::GEN) as address;
+        let nft_data_address: address = viewkey_to_address(secret_random_viewkey);
         let custody_key: field = BHP256::hash_to_field(nft_data_address);
 
         let out_nft_view: NFTView = NFTView {
@@ -128,7 +134,7 @@ program marketplace_example.aleo {
         */
     ) -> (credits.aleo/credits, Future) {
         let pay_marketplace_future: Future =
-            credits.aleo/transfer_public(
+            credits.aleo/transfer_public_as_signer(
                 listing_data.seller,
                 listing_data.price
             );
@@ -176,7 +182,7 @@ program marketplace_example.aleo {
     }
 
 
-    // {nft_data, nft_edition} are retrieved by executing 'dcp_reconstruct_secret.aleo' offchain on shares sent to buyer by validators
+    // {nft_data, nft_edition} are retrieved by executing 'dcp_reconstruct_secret_offchain.aleo' offchain on shares sent to buyer by validators
     async transition withdraw_nft(
         nft_data: data,
         nft_edition: scalar,

@@ -1,0 +1,23 @@
+[package]
+name = "snarkvm-scalar-to-viewkey"
+version = "0.0.1"
+edition = "2021"
+
+[dependencies]
+snarkvm-console-network = "0.16.19"
+snarkvm-console-account = "0.16.19"
+snarkvm-console-types-scalar = "0.16.19"
+
+
+# [dependencies.snarkvm-console-network]
+# path = "../snarkvm/console/network"
+# version = "=0.16.19"
+
+# [dependencies.snarkvm-console-account]
+# path = "../snarkvm/console/account"
+# version = "=0.16.19"
+
+# [dependencies.snarkvm-console-types-scalar]
+# path = "../snarkvm/console/types/scalar"
+# version = "=0.16.19"
+

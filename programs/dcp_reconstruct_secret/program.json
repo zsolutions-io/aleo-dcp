@@ -2,5 +2,13 @@
   "program": "dcp_reconstruct_secret.aleo",
   "version": "0.0.0",
   "description": "",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": [
+    {
+      "name": "dcp_core_protocol.aleo",
+      "location": "local",
+      "network": null,
+      "path": "../dcp_core_protocol"
+    }
+  ]
 }

@@ -1,0 +1,26 @@
+{
+  "program": "dcp_core_protocol.aleo",
+  "version": "0.0.0",
+  "description": "",
+  "license": "MIT",
+  "dependencies": [
+    {
+      "name": "credits.aleo",
+      "location": "network",
+      "network": "testnet",
+      "path": null
+    },
+    {
+      "name": "dcp_validator_shares.aleo",
+      "location": "local",
+      "network": null,
+      "path": "../dcp_validator_shares"
+    },
+    {
+      "name": "dcp_withdraw_requests.aleo",
+      "location": "local",
+      "network": null,
+      "path": "../dcp_withdraw_requests"
+    }
+  ]
+}

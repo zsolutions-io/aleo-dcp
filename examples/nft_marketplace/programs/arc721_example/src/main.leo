@@ -128,6 +128,39 @@ program arc721_example.aleo {
         nft_owners.set(nft_commit, to);
     }
 
+    async transition transfer_public_as_signer(
+        private nft_data: data,
+        private nft_edition: scalar,
+        public to: address,
+    ) -> (NFTView, Future) {
+        let nft_commit: field = commit_nft(nft_data, nft_edition);
+        let signer: address = self.signer;
+        let nft_view: NFTView = NFTView {
+            owner: to,
+            data: nft_data,
+            edition: nft_edition,
+        };
+        let transfer_public_as_signer_future: Future = 
+            finalize_transfer_public_as_signer(
+                to, nft_commit, signer,
+            );
+        return (
+            nft_view,
+            transfer_public_as_signer_future
+        );
+    }
+    async function finalize_transfer_public_as_signer(
+        to: address,
+        nft_commit: field,
+        signer: address,
+    ) {
+        let owner: address = nft_owners.get(nft_commit);
+        assert_eq(signer, owner);
+        nft_approvals.remove(nft_commit);
+        nft_owners.set(nft_commit, to);
+    }
+
+
 
     async transition transfer_public_to_private(
         private nft_data: data,

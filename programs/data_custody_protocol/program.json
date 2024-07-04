@@ -5,16 +5,22 @@
   "license": "MIT",
   "dependencies": [
     {
-      "name": "dcp_public_states.aleo",
+      "name": "dcp_core_protocol.aleo",
       "location": "local",
       "network": null,
-      "path": "../dcp_public_states"
+      "path": "../dcp_core_protocol"
     },
     {
-      "name": "dcp_private_states.aleo",
+      "name": "dcp_validator_shares.aleo",
       "location": "local",
       "network": null,
-      "path": "../dcp_private_states"
+      "path": "../dcp_validator_shares"
+    },
+    {
+      "name": "dcp_withdraw_requests.aleo",
+      "location": "local",
+      "network": null,
+      "path": "../dcp_withdraw_requests"
     }
   ]
 }

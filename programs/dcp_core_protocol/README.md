@@ -1,4 +1,4 @@
-# dcp_private_states.aleo
+# dcp_core_protocol.aleo
 
 ## Build Guide
 

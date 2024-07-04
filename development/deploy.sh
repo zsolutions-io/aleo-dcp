@@ -22,10 +22,11 @@ deploy_program () {
     deploy_any "./programs" $1;
 }
 
-deploy_program "dcp_public_states";
-deploy_program "dcp_private_states";
+deploy_program "dcp_withdraw_requests";
+deploy_program "dcp_validator_shares";
+deploy_program "dcp_core_protocol";
 deploy_program "data_custody_protocol";
-# deploy_program "dcp_reconstruct_secret";
+deploy_program "dcp_reconstruct_secret";
 
 deploy_any "./examples/nft_marketplace/programs" "arc721_example";
 deploy_any "./examples/nft_marketplace/programs" "marketplace_example";

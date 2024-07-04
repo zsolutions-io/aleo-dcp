@@ -1,6 +1,6 @@
 // Programs variable names
 
-export const protocol_transfers_program = "dcp_private_states.aleo";
+export const protocol_transfers_program = "dcp_destination_shares.aleo";
 export const share_record = "ValidatorShare";
 export const request_record = "WithdrawRequest";
 

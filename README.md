@@ -61,7 +61,7 @@ It supports any maximum amount of validators decided on deployment of protocol p
 
 Validators propose and vote for **Proposals**, consisting of a new set of Validators and next vote threshold.
 
-[Check implementation of gouvernance in **`dcp_public_states.leo`**.](programs/dcp_public_states/src/main.leo)
+[Check implementation of gouvernance in **`dcp_core_protocol.leo`**.](programs/dcp_core_protocol/src/main.leo)
 
 ### Run a Validator
 
@@ -81,7 +81,7 @@ Incoming React frontend application built with `aleo-wallet-adapter` package. It
 
 ## Usage
 
-### How to call it from any Aleo program?
+### Call Aleo DCP from any program
 
 #### For arbitrary record data
 
@@ -89,162 +89,53 @@ For a program to custody private data, it must import **`data_custody_protocol.a
 
 1. To custody data, it can:
     - Call `data_custody_protocol.aleo/custody_data_as_program((data_view_key as field), threshold, ...)`
-    - Send any records to `(data_view_key * group::GEN) as address`
+    - Send any records to `(data_view_key * 522678458525321116977504528531602186870683848189190546523208313015552693483group) as address`
 2. It can then call `data_custody_protocol.aleo/request_data_as_program` to initiate a data request.
-3. Validator bots automatically call `dcp_private_states.aleo/process_request_as_validator` to accept the data request.
+3. Validator bots automatically call `dcp_core_protocol.aleo/process_request_as_validator` to accept the data request.
 4. `data_custody_protocol.aleo/assert_completed_as_program` can then be used by the program to check if data was effectively transmitted.
 
 #### Multiple Custody steps
 
 In case **Custody** step was called more than once for a single `request_id`:
 
-- Between step 3 and step 4, validator bots must call `dcp_private_states.aleo/join_shares_as_validator` as many time as there are additional **Custody** step.
+- Between step 3 and step 4, validator bots must call `dcp_core_protocol.aleo/join_shares_as_validator` as many time as there are additional **Custody** step.
 
 ### Example
 
 An obvious use case for the protocol is a Marketplace Program for exchanging NFTs with secret data. A standard proposal for such NFTs is detailed at [**`arc721_example.leo`**](/examples/nft_marketplace/programs/arc721_example/src/main.leo).
 
-[Check implementation of marketplace in **`marketplace_example.leo`**](/examples/nft_marketplace/programs/marketplace_example/src/main.leo)
-
-Here are interactions with the protocol snippets:
-
-```rust
-import data_custody_protocol.aleo;
-import arc721_example.aleo;
-import credits.aleo;
-
-program marketplace_example.aleo {
-    const mpc_threshold: u8 = 8u8;
-
-    ...
-
-    async transition list(
-        ...
-        private secret_random_viewkey: scalar,
-        private privacy_random_coefficients: [field; 15],
-        private validators: [address; 16],
-    ) -> (NFTView, Future) {
-        ...
-
-        let secret: field = secret_random_viewkey as field;
-        let nft_data_address: address = (data_view_key * group::GEN) as address;
-
-        let custody_key: field = BHP256::hash_to_field(nft_data_address);
-
-        let data_custody: Custody = Custody {
-            origin: self.caller,
-            custody_key: custody_key,
-            threshold: mpc_threshold,
-        };
-
-        let data_custody_hash: field = BHP256::hash_to_field(data_custody);
-
-        let custody_data_as_program_future: Future =
-            data_custody_protocol.aleo/custody_data_as_program(
-                secret, // private secret : field,
-                custody_key, // private custody_key: field,
-                privacy_random_coefficients, // private coefficients: [field; 15],
-                validators, // private validators: [address; 16],
-                mpc_threshold // private threshold: u8 <= 16
-            );
-
-        let list_future: Future = finalize_list(
-            ...
-            custody_data_as_program_future
-        );
-        ...
-    }
-    async function finalize_list(
-        ...
-        custody_data_as_program_future: Future
-    ) {
-        custody_data_as_program_future.await();
-        ...
-    }
-
-    /*
-        Validators associated with the listing can be retrieved offchain using: 
-            dcp_public_states.aleo/validator_sets.get(
-                dcp_public_states.aleo/custodies.get(
-                    listing_data.data_custody_hash
-                )
-            )
-    */
-    async transition accept_listing(
-        ...
-        public validators: [address; 16],
-        public validator_fee: u64,
-        private protocol_fee_record: credits.aleo/credits
-    ) -> (credits.aleo/credits, Future) {
-        ...
-        let custody_key: field = BHP256::hash_to_field(listing_data.nft_data_address);
-        let (
-            change,
-            request_data_as_program_future
-        ): (
-            credits.aleo/credits,
-            Future
-        ) =
-            data_custody_protocol.aleo/request_data_as_program(
-                custody_key, // private data_address: address,
-                data_request_id, // private request_id: field,
-                self.signer, // private to: address,
-                mpc_threshold, // private threshold: u8,
-                validators, // public validators: [address; 16],
-                validator_fee, // private validator_fee: u64,
-                protocol_fee_record, // private protocol_fee_record: credits.aleo/credits,
-            );
-        let accept_listing_future: Future = finalize_accept_listing(
-            ...
-            request_data_as_program_future,
-        );
-        ...
-    }
-    async function finalize_accept_listing(
-        ...
-        request_data_as_program_future: Future
-    ) {
-        ...
-        request_data_as_program_future.await();
-    }
-
-
-    // {nft_data, nft_edition} are retrieved by executing 'dcp_reconstruct_secret.aleo' offchain on shares sent to buyer by validators
-    async transition withdraw_nft(
-        nft_data: data,
-        nft_edition: scalar,
-        ...
-    ) -> (arc721_example.aleo/NFT, Future) {
-        ...
-        let (
-            purshased_nft,
-            transfer_nft_to_buyer_future
-        ): (arc721_example.aleo/NFT, Future) = arc721_example.aleo/transfer_public_to_private(
-            nft_data,
-            nft_edition,
-            self.caller,
-        );
-        let accept_listing_future: Future = finalize_withdraw_nft(
-            ...
-            transfer_nft_to_buyer_future,
-        );
-        return (
-            purshased_nft,
-            accept_listing_future
-        );
-    }
-    async function finalize_withdraw_nft(
-        ...
-        transfer_nft_to_buyer_future: Future,
-    ) {
-        ...
-        transfer_nft_to_buyer_future.await();
-    }
-}
-```
+[Check implementation of the marketplace in **`marketplace_example.leo`**](/examples/nft_marketplace/programs/marketplace_example/src/main.leo)
 
 *This is a very simplified marketplace to focus on the **`data_custody_protocol.aleo`** program usage. This is why seller/buyer privacy as well as offers are not implemented here.*
 
+## Developement
+
+### Setup developement environement
+
+- Build [Leo](https://github.com/ProvableHQ/leo), [snarkVM](https://github.com/AleoNet/snarkVM), [snarkOS](https://github.com/AleoNet/snarkOS) from source.
+- Run a local devnet, by following [#6.3 of snarkOS official repository](https://github.com/AleoNet/snarkOS?tab=readme-ov-file#633-view-a-local-devnet).
+- *(Optional)* Run [Haruka's open source Explorer](https://github.com/HarukaMa/aleo-explorer).
+- Duplicate `./developement/.env.example`, update it with relevant environment variables, rename it `.env`.
+
+### Build
+
+- Run **`./developement/build.sh`**.
+
+### Deploy
+
+- Run **`./developement/deploy.sh`**.
+
+### Test
+
+- Run **`./developement/test.sh`**.
+
 ## Future Improvements
 
-- **Idea** - Allow an array **Destinator** for the data (add array length on **Request** step to requested already amount)?
+- **Improvement 1** - Update **Destinator** to an array of addresses.
+- **Improvement 2** - Allow requests without weight (without leveraging homomorphic property of SSS) to reduce  `process_request_as_validator` transaction cost.
+
+## Questions
+
+- **Question 1** - Instead of calling external transition `credits.aleo/transfer_public`, should a mapping store the amount of credits due to validators to reduce `process_request_as_validator` cost. A `withdraw_credits_as_validator` transition would be necessary then.
+- **Question 2** - Instead of allowing only validators to process requests before threshold is reached, should we simply allow validators to process any transaction to reduce mapping get/set operations in `process_request_as_validator`.
+- **Question 3** -

@@ -277,24 +277,24 @@ const sync_prav_transitions = async (
   Inputs/Outputs of Interest
   ----------
 
-  (dcp_private_states.aleo, submit_shares_to_validators)
+  (dcp_destination_shares.aleo, submit_shares_to_validators)
     - outputs[0]: ValidatorShare
     - outputs[1]: ValidatorShare
     ...
     - outputs[15]: ValidatorShare
 
-  (dcp_private_states.aleo, join_shares_as_validator)
+  (dcp_destination_shares.aleo, join_shares_as_validator)
     - inputs[0]: ValidatorShare
     - inputs[1]: ValidatorShare
     - outputs[0]: ValidatorShare
 
-  (dcp_private_states.aleo, submit_requests_to_validators)
+  (dcp_destination_shares.aleo, submit_requests_to_validators)
     - outputs[0]: WithdrawRequest
     - outputs[1]: WithdrawRequest
     ...
     - outputs[15]: WithdrawRequest
 
-  (dcp_private_states.aleo, process_request_as_validator)
+  (dcp_destination_shares.aleo, process_request_as_validator)
     - inputs[0]: ValidatorShare
     - inputs[1]: WithdrawRequest
 
