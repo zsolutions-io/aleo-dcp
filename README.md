@@ -131,10 +131,4 @@ An obvious use case for the protocol is a Marketplace Program for exchanging NFT
 
 ## Future Improvements
 
-- **Improvement 1** - Update **Destinator** to an array of addresses.
-- **Improvement 2** - Allow requests without weight (without leveraging homomorphic property of SSS) to reduce  `process_request_as_validator` transaction cost.
-
-## Questions
-
-- **Question 1** - Instead of calling external transition `credits.aleo/transfer_public`, should a mapping store the amount of credits due to validators to reduce `process_request_as_validator` cost. A `withdraw_credits_as_validator` transition would be necessary then.
-- **Question 2** - Instead of allowing only validators to process requests before threshold is reached, should we simply allow validators to process any transaction to reduce mapping get/set operations in `process_request_as_validator`.
+- **Improvement 1** - Update **Destinator** to an array of addresses ?
