@@ -8,14 +8,12 @@ program marketplace_example.aleo {
          return (view_key * address_gen) as address;
     }
 
-
-    const mpc_threshold: u8 = 8u8;
+    const MPC_THRESHOLD: u8 = 8u8;
 
     struct ListingData {
         price: u64,
         seller: address,
-        data_custody_hash: field,
-        nft_data_address: address
+        dcp_key: field
     }
     
     record NFTView{
@@ -31,6 +29,8 @@ program marketplace_example.aleo {
     mapping listings_buyer: field => address;
     // nft_commit => buyer;
 
+    mapping dcp_keys: field => bool;
+
 
     inline commit_nft(
         nft_data: data,
@@ -43,8 +43,9 @@ program marketplace_example.aleo {
 
 
     async transition list(
-        private nft: arc721_example.aleo/NFT,   // private nft record to list
-        public price: u64,              // total price paid by seller
+        private nft: arc721_example.aleo/NFT, // private nft record to list
+        public price: u64, // total price paid by seller
+        public dcp_key: field, // random scalar
         private secret_random_viewkey: scalar,
         private privacy_random_coefficients: [field; 15],
         private validators: [address; 16],
@@ -55,8 +56,6 @@ program marketplace_example.aleo {
             );
         let secret: field = secret_random_viewkey as field;
         let nft_data_address: address = viewkey_to_address(secret_random_viewkey);
-        let custody_key: field = BHP256::hash_to_field(nft_data_address);
-
         let out_nft_view: NFTView = NFTView {
             owner: nft_data_address,
             data: nft.data,
@@ -64,29 +63,20 @@ program marketplace_example.aleo {
         };
         let nft_commit: field = commit_nft(nft.data, nft.edition);
 
-        let data_custody: Custody = Custody {
-            origin: self.address,
-            custody_key: custody_key,
-            threshold: mpc_threshold,
-        };
-
-        let data_custody_hash: field = BHP256::hash_to_field(data_custody);
-
         let custody_data_as_program_future: Future =
             data_custody_protocol.aleo/custody_data_as_program(
                 secret, // private data_view_key: scalar,
-                custody_key, // private custody_key: field,
+                dcp_key, // private custody_key: field,
                 privacy_random_coefficients, // private coefficients: [field; 15],
                 validators, // private validators: [address; 16],
-                mpc_threshold // private threshold: u8 <= 15
+                MPC_THRESHOLD // private threshold: u8 <= 15
             );
 
         let list_future: Future = finalize_list(
             nft_commit,
             price,
             self.caller,
-            data_custody_hash,
-            nft_data_address,
+            dcp_key,
             transfer_future,
             custody_data_as_program_future
         );
@@ -99,8 +89,7 @@ program marketplace_example.aleo {
         nft_commit: field,
         price: u64,
         seller: address,
-        custody_hash: field,
-        nft_data_address: address,
+        dcp_key: field,
         transfer_future: Future,
         custody_data_as_program_future: Future
     ) {
@@ -110,16 +99,18 @@ program marketplace_example.aleo {
         let listing_data: ListingData = ListingData{
             price: price,
             seller: seller,
-            data_custody_hash: custody_hash,
-            nft_data_address: nft_data_address
+            dcp_key: dcp_key
         };
         listings.set(nft_commit, listing_data);
+
+        // IMPORTANT
+        assert(dcp_keys.contains(dcp_key).not());
+        dcp_keys.set(dcp_key, true);
     }
 
 
     async transition accept_listing(
         public nft_commit: field,
-        public data_request_id: field, // Random field
         private listing_data: ListingData,
         public validators: [address; 16],
         public validator_fee: u64,
@@ -128,7 +119,13 @@ program marketplace_example.aleo {
             Validators associated with the listing can be retrieved using: 
                 protocol_validators.aleo/validator_sets.get(
                     data_custody_protocol.aleo/custodies.get(
-                        listing_data.data_custody_hash
+                        hash_custody(
+                            Custody {
+                                origin: marketplace_example.aleo,
+                                custody_key: listing_data.dcp_key,
+                                threshold: MPC_THRESHOLD,
+                            }
+                        )
                     )
                 )
         */
@@ -138,7 +135,6 @@ program marketplace_example.aleo {
                 listing_data.seller,
                 listing_data.price
             );
-        let custody_key: field = BHP256::hash_to_field(listing_data.nft_data_address);
 
         let (
             change,
@@ -148,10 +144,10 @@ program marketplace_example.aleo {
             Future
         ) =
             data_custody_protocol.aleo/request_data_as_program(
-                custody_key, // private data_address: address,
-                data_request_id, // private request_id: field,
+                listing_data.dcp_key, // private data_address: address,
                 self.signer, // private to: address,
-                mpc_threshold, // private threshold: u8,
+                MPC_THRESHOLD, // private threshold: u8,
+                1u64, // public expected_weight: u64,
                 validators, // public validators: [address; 16],
                 validator_fee, // private validator_fee: u64,
                 protocol_fee_record, // private protocol_fee_record: credits.aleo/credits,
@@ -196,7 +192,7 @@ program marketplace_example.aleo {
         ): (arc721_example.aleo/NFT, Future) = arc721_example.aleo/transfer_public_to_private(
             nft_data,
             nft_edition,
-            self.caller,
+            self.signer,
         );
 
         let accept_listing_future: Future = finalize_withdraw_nft(

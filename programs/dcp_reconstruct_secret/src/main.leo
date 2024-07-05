@@ -1,26 +1,6 @@
 
 /*
-    Reconstruct a secret from shares.
-
-    Usage:
-    - Reconstruct 3 shares:
-        leo run reconstruct_secret_offchain "[
-            {share_val:3142197879141985field,index:1field}, \
-            {share_val:28673026215703456field,index:4field}, \
-            {share_val:42551380561059241field,index:5field}, \
-            {share_val:0field,index:0field}, \
-            {share_val:0field,index:0field}, \
-            {share_val:0field,index:0field}, \
-            {share_val:0field,index:0field}, \
-            {share_val:0field,index:0field}, \
-            {share_val:0field,index:0field}, \
-            {share_val:0field,index:0field}, \
-            {share_val:0field,index:0field}, \
-            {share_val:0field,index:0field}, \
-            {share_val:0field,index:0field}, \
-            {share_val:0field,index:0field}, \
-            {share_val:0field,index:0field} \
-        ]"
+    Reconstruct a secret from shares on chain for using it.
 
     contact@aleo.store - Pierre-André LONG
 */
@@ -101,8 +81,7 @@ program dcp_reconstruct_secret.aleo {
         destination_share_11: dcp_core_protocol.aleo/DestinationShare,
         destination_share_12: dcp_core_protocol.aleo/DestinationShare,
         destination_share_13: dcp_core_protocol.aleo/DestinationShare,
-        destination_share_14: dcp_core_protocol.aleo/DestinationShare,
-        custody: Custody,
+        destination_share_14: dcp_core_protocol.aleo/DestinationShare
     ) -> ReconstructedSecret {
         dcp_core_protocol.aleo/spend_destination_shares(
             destination_share_0,
@@ -121,10 +100,8 @@ program dcp_reconstruct_secret.aleo {
             destination_share_13,
             destination_share_14
         );
-
-        assert_eq(hash_custody(custody), destination_share_0.custody_hash);
         // TODO DETERMINE IF WE SHOULD: only allow origin custodier program to reconstruct the share
-        assert_eq(self.caller, custody.origin);
+        assert_eq(self.caller, destination_share_0.custody.origin);
         let shares: [Share; 15] = [ // MAX_ON_CHAIN_RECONSTRUCT_SHARES
             destination_share_0.share,
             destination_share_1.share,
@@ -140,15 +117,15 @@ program dcp_reconstruct_secret.aleo {
             destination_share_11.share,
             destination_share_12.share,
             destination_share_13.share,
-            destination_share_14.share,
+            destination_share_14.share
         ];
         let non_zero_shares: u8 = count_relevant_shares(shares);
-        assert(non_zero_shares == custody.threshold);
+        assert(non_zero_shares == destination_share_0.custody.threshold);
         let secret: field = reconstruct_onchain(shares);
         let reconstructed_secret: ReconstructedSecret = ReconstructedSecret {
             owner: self.caller,
             secret: secret,
-            custody_hash: destination_share_0.custody_hash
+            custody_hash: hash_custody(destination_share_0.custody)
         };
         return reconstructed_secret;
     }

@@ -1,6 +1,7 @@
 import credits.aleo;
 import dcp_validator_shares.aleo;
 import dcp_withdraw_requests.aleo;
+import dcp_fee_management.aleo;
 import dcp_core_protocol.aleo;
 program data_custody_protocol.aleo;
 
@@ -18,6 +19,7 @@ struct ValidatorShareData:
     validator as address;
     share as Share;
     weight as u64;
+
 
 
 
@@ -1563,21 +1565,21 @@ finalize custody_data_as_program:
 
 function request_data_as_program:
     input r0 as field.private;
-    input r1 as field.private;
-    input r2 as address.private;
-    input r3 as u8.private;
+    input r1 as address.private;
+    input r2 as u8.private;
+    input r3 as u64.public;
     input r4 as [address; 16u32].public;
     input r5 as u64.private;
     input r6 as credits.aleo/credits.record;
     assert.neq self.caller self.signer;
-    cast self.caller r0 r3 into r7 as Custody;
+    cast self.caller r0 r2 into r7 as Custody;
     hash.bhp256 r7 into r8 as field;
     cast  r4[0u32] r4[1u32] r4[2u32] r4[3u32] r4[4u32] r4[5u32] r4[6u32] r4[7u32] r4[8u32] r4[9u32] r4[10u32] r4[11u32] r4[12u32] r4[13u32] r4[14u32] r4[15u32] into r9 as [address; 16u32];
-    call dcp_withdraw_requests.aleo/submit_requests_to_validators r9 r8 r1 r2 r5 into r10 r11 r12 r13 r14 r15 r16 r17 r18 r19 r20 r21 r22 r23 r24 r25;
-    cast r3 into r26 as u64;
+    call dcp_withdraw_requests.aleo/submit_requests_to_validators r9 r8 r1 r5 r3 into r10 r11 r12 r13 r14 r15 r16 r17 r18 r19 r20 r21 r22 r23 r24 r25;
+    cast 16u8 into r26 as u64;
     mul r26 r5 into r27;
-    call credits.aleo/transfer_private_to_public r6 dcp_core_protocol.aleo r27 into r28 r29;
-    call dcp_core_protocol.aleo/request_data_as_program r8 r1 r4 into r30;
+    call credits.aleo/transfer_private_to_public r6 dcp_fee_management.aleo r27 into r28 r29;
+    call dcp_core_protocol.aleo/request_data_as_program r8 r4 r3 into r30;
     async request_data_as_program r30 r29 into r31;
     output r28 as credits.aleo/credits.record;
     output r31 as data_custody_protocol.aleo/request_data_as_program.future;
@@ -1587,25 +1589,4 @@ finalize request_data_as_program:
     input r1 as credits.aleo/transfer_private_to_public.future;
     await r0;
     await r1;
-
-
-
-
-function assert_completed_as_program:
-    input r0 as field.private;
-    input r1 as field.public;
-    input r2 as u8.public;
-    assert.neq self.caller self.signer;
-    cast self.caller r0 r2 into r3 as Custody;
-    hash.bhp256 r3 into r4 as field;
-    async assert_completed_as_program r4 r1 r2 into r5;
-    output r5 as data_custody_protocol.aleo/assert_completed_as_program.future;
-
-finalize assert_completed_as_program:
-    input r0 as field.public;
-    input r1 as field.public;
-    input r2 as u8.public;
-    get dcp_core_protocol.aleo/requests[r1] into r3;
-    gte r3 r2 into r4;
-    assert.eq r4 true;
 

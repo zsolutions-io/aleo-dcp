@@ -18,7 +18,6 @@ cd ./programs/dcp_reconstruct_secret_offchain
 leo build
 cd ../..
 
-
 cd examples/nft_marketplace/programs/arc721_example
 leo build
 cd ../../../..
@@ -27,24 +26,24 @@ cd examples/nft_marketplace/programs/marketplace_example
 leo build
 cd ../../../..
 
-# Uncomment
-# async transition process_request_as_validator(
+
+# In './programs/dcp_core_protocol/src/main.leo' Uncomment transition :
+# transition process_request_as_validator(
+# This is due to: https://github.com/ProvableHQ/leo/issues/28192
+
+while true; do
+    read -p "In './programs/dcp_core_protocol/src/main.leo', uncomment transition 'process_request_as_validator'. Is it done (yes/no)?" yn
+    case $yn in
+        [Yy]* ) make install; break;;
+        [Nn]* ) exit;;
+        * ) echo "Please answer yes or no.";;
+    esac
+done
+
 
 cd programs/dcp_core_protocol
 leo build --non-recursive
 cd ../..
-
-
-
-deploy_program "dcp_withdraw_requests";
-deploy_program "dcp_validator_shares";
-deploy_program "dcp_core_protocol";
-deploy_program "data_custody_protocol";
-deploy_program "dcp_reconstruct_secret";
-
-deploy_any "./examples/nft_marketplace/programs" "arc721_example";
-deploy_any "./examples/nft_marketplace/programs" "marketplace_example";
-
 
 cd ./utils/snarkvm-scalar-to-viewkey
 cargo build --release

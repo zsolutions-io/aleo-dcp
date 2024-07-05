@@ -7,6 +7,7 @@
 import dcp_core_protocol.aleo;
 import dcp_validator_shares.aleo;
 import dcp_withdraw_requests.aleo;
+import credits.aleo;
 
 program data_custody_protocol.aleo {
     const MAX_VALIDATORS: u8 = 16u8;
@@ -271,9 +272,9 @@ program data_custody_protocol.aleo {
 
     async transition request_data_as_program(
         private custody_key: field,
-        private request_id: field,
         private to: address,
         private threshold: u8,
+        public expected_weight: u64,
         public validators: [address; 16], // MAX_VALIDATORS
         private validator_fee: u64,
         private protocol_fee_record: credits.aleo/credits,
@@ -308,25 +309,25 @@ program data_custody_protocol.aleo {
         dcp_withdraw_requests.aleo/submit_requests_to_validators(
             validators_0,
             custody_hash,
-            request_id,
             to,
             validator_fee,
+            expected_weight,
         );
 
-        let protocol_fee_amount: u64 = (threshold as u64) * validator_fee;
+        let protocol_fee_amount: u64 = (MAX_VALIDATORS as u64) * validator_fee;
         let (protocol_fee_change, lock_fee_future): (
             credits.aleo/credits, Future
         ) =
             credits.aleo/transfer_private_to_public(
                 protocol_fee_record,
-                dcp_core_protocol.aleo,
+                dcp_fee_management.aleo,
                 protocol_fee_amount,
             );
 
         let protocol_core_future: Future = dcp_core_protocol.aleo/request_data_as_program(
             custody_hash,
-            request_id,
-            validators
+            validators,
+            expected_weight
         );
 
         let request_data_as_program_future: Future = finalize_request_data_as_program(
@@ -341,39 +342,5 @@ program data_custody_protocol.aleo {
     ){
         protocol_core_future.await();
         lock_fee_future.await();
-    }
-
-
-    // Assert at least k of n shares processed
-    async transition assert_completed_as_program(
-        private custody_key: field,
-        public request_id: field,
-        public threshold: u8,
-    ) -> (
-        Future
-    ){
-        assert_neq(self.caller, self.signer);
-        let custody: Custody = Custody {
-            origin: self.caller,
-            custody_key: custody_key,
-            threshold: threshold
-        };
-        let custody_hash: field = hash_custody(custody);
-        let assert_completed_as_program_future: Future
-            = finalize_assert_completed_as_program(
-                custody_hash,
-                request_id,
-                threshold
-            );
-
-        return assert_completed_as_program_future;
-    }
-    async function finalize_assert_completed_as_program(
-        custody_hash: field,
-        request_id: field,
-        threshold: u8
-    ) {
-        let submitted: u8 = dcp_core_protocol.aleo/requests.get(request_id);
-        assert(submitted >= threshold);
     }
 }

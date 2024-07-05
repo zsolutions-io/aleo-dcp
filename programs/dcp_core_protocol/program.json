@@ -21,6 +21,12 @@
       "location": "local",
       "network": null,
       "path": "../dcp_withdraw_requests"
+    },
+    {
+      "name": "dcp_fee_management.aleo",
+      "location": "local",
+      "network": null,
+      "path": "../dcp_fee_management"
     }
   ]
 }

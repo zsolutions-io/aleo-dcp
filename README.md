@@ -5,7 +5,7 @@
         <img alt="aleo DCP" src="./media/aleo-dcp-logo.png" width="200">
     </picture><br/>
     <b>
-    Data Custody Protocol on Aleo
+        Aleo - Data Custody Protocol
     </b>
 </h1>
 

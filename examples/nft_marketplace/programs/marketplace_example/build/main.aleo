@@ -1,6 +1,7 @@
 import credits.aleo;
 import dcp_validator_shares.aleo;
 import dcp_withdraw_requests.aleo;
+import dcp_fee_management.aleo;
 import dcp_core_protocol.aleo;
 import data_custody_protocol.aleo;
 import arc721_example.aleo;
@@ -23,6 +24,7 @@ struct ValidatorShareData:
 
 
 
+
 struct Proposal:
     validators as [address; 16u32];
     threshold as u8;
@@ -41,8 +43,7 @@ record NFTView:
 struct ListingData:
     price as u64;
     seller as address;
-    data_custody_hash as field;
-    nft_data_address as address;
+    dcp_key as field;
 
 
 mapping listings:
@@ -55,6 +56,11 @@ mapping listings_buyer:
 	value as address.public;
 
 
+mapping dcp_keys:
+	key as field.public;
+	value as boolean.public;
+
+
 
 
 
@@ -62,53 +68,52 @@ mapping listings_buyer:
 function list:
     input r0 as arc721_example.aleo/NFT.record;
     input r1 as u64.public;
-    input r2 as scalar.private;
-    input r3 as [field; 15u32].private;
-    input r4 as [address; 16u32].private;
-    call arc721_example.aleo/transfer_private_to_public r0 marketplace_example.aleo into r5 r6;
-    cast r2 into r7 as field;
-    mul r2 522678458525321116977504528531602186870683848189190546523208313015552693483group into r8;
-    cast r8 into r9 as address;
-    hash.bhp256 r9 into r10 as field;
-    cast r9 r0.data r0.edition into r11 as NFTView.record;
+    input r2 as field.public;
+    input r3 as scalar.private;
+    input r4 as [field; 15u32].private;
+    input r5 as [address; 16u32].private;
+    call arc721_example.aleo/transfer_private_to_public r0 marketplace_example.aleo into r6 r7;
+    cast r3 into r8 as field;
+    mul r3 522678458525321116977504528531602186870683848189190546523208313015552693483group into r9;
+    cast r9 into r10 as address;
+    cast r10 r0.data r0.edition into r11 as NFTView.record;
     hash.bhp256 r0.data into r12 as field;
     commit.bhp256 r12 r0.edition into r13 as field;
-    cast marketplace_example.aleo r10 8u8 into r14 as Custody;
-    hash.bhp256 r14 into r15 as field;
-    call data_custody_protocol.aleo/custody_data_as_program r7 r10 r3 r4 8u8 into r16;
-    async list r13 r1 self.caller r15 r9 r6 r16 into r17;
+    call data_custody_protocol.aleo/custody_data_as_program r8 r2 r4 r5 8u8 into r14;
+    async list r13 r1 self.caller r2 r7 r14 into r15;
     output r11 as NFTView.record;
-    output r17 as marketplace_example.aleo/list.future;
+    output r15 as marketplace_example.aleo/list.future;
 
 finalize list:
     input r0 as field.public;
     input r1 as u64.public;
     input r2 as address.public;
     input r3 as field.public;
-    input r4 as address.public;
-    input r5 as arc721_example.aleo/transfer_private_to_public.future;
-    input r6 as data_custody_protocol.aleo/custody_data_as_program.future;
+    input r4 as arc721_example.aleo/transfer_private_to_public.future;
+    input r5 as data_custody_protocol.aleo/custody_data_as_program.future;
+    await r4;
     await r5;
-    await r6;
-    cast r1 r2 r3 r4 into r7 as ListingData;
-    set r7 into listings[r0];
+    cast r1 r2 r3 into r6 as ListingData;
+    set r6 into listings[r0];
+    contains dcp_keys[r3] into r7;
+    not r7 into r8;
+    assert.eq r8 true;
+    set true into dcp_keys[r3];
 
 
 
 
 function accept_listing:
     input r0 as field.public;
-    input r1 as field.public;
-    input r2 as ListingData.private;
-    input r3 as [address; 16u32].public;
-    input r4 as u64.public;
-    input r5 as credits.aleo/credits.record;
-    call credits.aleo/transfer_public_as_signer r2.seller r2.price into r6;
-    hash.bhp256 r2.nft_data_address into r7 as field;
-    call data_custody_protocol.aleo/request_data_as_program r7 r1 self.signer 8u8 r3 r4 r5 into r8 r9;
-    async accept_listing self.caller r0 r2 r6 r9 into r10;
-    output r8 as credits.aleo/credits.record;
-    output r10 as marketplace_example.aleo/accept_listing.future;
+    input r1 as ListingData.private;
+    input r2 as [address; 16u32].public;
+    input r3 as u64.public;
+    input r4 as credits.aleo/credits.record;
+    call credits.aleo/transfer_public_as_signer r1.seller r1.price into r5;
+    call data_custody_protocol.aleo/request_data_as_program r1.dcp_key self.signer 8u8 1u64 r2 r3 r4 into r6 r7;
+    async accept_listing self.caller r0 r1 r5 r7 into r8;
+    output r6 as credits.aleo/credits.record;
+    output r8 as marketplace_example.aleo/accept_listing.future;
 
 finalize accept_listing:
     input r0 as address.public;
@@ -134,7 +139,7 @@ function withdraw_nft:
     input r2 as ListingData.private;
     hash.bhp256 r0 into r3 as field;
     commit.bhp256 r3 r1 into r4 as field;
-    call arc721_example.aleo/transfer_public_to_private r0 r1 self.caller into r5 r6;
+    call arc721_example.aleo/transfer_public_to_private r0 r1 self.signer into r5 r6;
     async withdraw_nft self.caller r4 r2 r6 into r7;
     output r5 as arc721_example.aleo/NFT.record;
     output r7 as marketplace_example.aleo/withdraw_nft.future;

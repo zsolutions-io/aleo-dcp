@@ -96,6 +96,7 @@ SLEEP_BETWEEN_TX=10
 # List NFT
 {
     secret_random_viewkey="$((1 + $RANDOM % 100000))scalar"
+    listing_key="$((1 + $RANDOM % 100000))field"
     list_tx_id=$(
         snarkos developer execute \
             --private-key $PRIVATE_KEY \
@@ -107,6 +108,7 @@ SLEEP_BETWEEN_TX=10
             "list" \
             "$nft_record_plaintext" \
             1000000u64 \
+            "$listing_key" \
             "$secret_random_viewkey" \
             "[
                 $((1 + $RANDOM % 100000))field,
@@ -201,16 +203,10 @@ seller_address=$(
     | awk 'NR==7' \
     | tr -d " \t\r\n," 
 );
-data_custody_hash=$(
+dcp_key=$(
     echo $list_raw_tx \
     | jq --raw-output '.execution.transitions[4].outputs[1].value' \
     | awk 'NR==8' \
-    | tr -d " \t\r\n," 
-);
-nft_data_address=$(
-    echo $list_raw_tx \
-    | jq --raw-output '.execution.transitions[4].outputs[1].value' \
-    | awk 'NR==9' \
     | tr -d " \t\r\n," 
 );
 
@@ -226,12 +222,10 @@ nft_data_address=$(
             "marketplace_example.aleo" \
             "accept_listing" \
             "$nft_commit" \
-            "$((1 + $RANDOM % 100000))field" \
             "{
                 price: $price,
                 seller: $seller_address,
-                data_custody_hash: $data_custody_hash,
-                nft_data_address: $nft_data_address
+                dcp_key: $dcp_key
             }" \
             "$validators" \
             "1000u64" \
@@ -242,10 +236,6 @@ nft_data_address=$(
     accept_listing_raw_tx=$(curl $TRANSACTION_ENDPOINT/$accept_listing_tx_id)
 }
 
-
-
-echo $list_raw_tx \
-    | jq --raw-output ".execution.transitions[1].outputs[$i].value"
 
 share_records=()
 
@@ -372,3 +362,36 @@ nft_view_record_plaintext=$(
         --view-key $nft_data_view_key \
         --ciphertext $nft_view_record_ciphertext
 );
+
+withdraw
+
+
+withdraw_nft(
+    nft_data: data,
+    nft_edition: scalar,
+    listing_data: ListingData
+)
+
+
+{
+    withdraw_nft_tx_id=$(
+        snarkos developer execute \
+            --private-key $BUYER_PRIVATE_KEY \
+            --query $NODE_URL \
+            --priority-fee 0 \
+            --broadcast $BROADCAST_ENDPOINT \
+            --network 1 \
+            "marketplace_example.aleo" \
+            "withdraw_nft" \
+            "{metadata:[0field,1field,2field,3field]}" \
+            1234567890scalar \
+            "{
+                price: $price,
+                seller: $seller_address,
+                dcp_key: $dcp_key
+            }" \
+        | awk 'NR==6'
+    );
+    sleep $SLEEP_BETWEEN_TX;
+    withdraw_nft_tx=$(curl $TRANSACTION_ENDPOINT/$withdraw_nft_tx_id)
+}

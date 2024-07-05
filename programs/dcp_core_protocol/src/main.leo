@@ -17,7 +17,7 @@
 
 import dcp_validator_shares.aleo;
 import dcp_withdraw_requests.aleo;
-import credits.aleo;
+import dcp_fee_management.aleo;
 
 program dcp_core_protocol.aleo {
     const DEFAULT_AUTHORITY: address = aleo1s3ws5tra87fjycnjrwsjcrnw2qxr8jfqqdugnf0xzqqw29q9m5pqem2u4t;
@@ -33,8 +33,7 @@ program dcp_core_protocol.aleo {
 
     struct CustodyState {
         validator_set_index: u64,
-        expected_weight: u64,
-        requested: bool,
+        expected_weight: u64
     }
 
     struct Custody {
@@ -58,7 +57,7 @@ program dcp_core_protocol.aleo {
     record DestinationShare {
         owner: address,
         share: Share,
-        custody_hash: field
+        custody: Custody
     }
 
 
@@ -79,9 +78,6 @@ program dcp_core_protocol.aleo {
 
     mapping custodies: field => CustodyState;
     // hash(Custody) => CustodyState
-
-    mapping requests: field => u8;
-    // request_id => submitted_shares
 
 
     inline hash_proposal(proposal: Proposal) -> field {
@@ -330,8 +326,7 @@ program dcp_core_protocol.aleo {
     ){
         let default_custody_state: CustodyState = CustodyState {
             validator_set_index: 0u64,
-            expected_weight: 0u64,
-            requested: false
+            expected_weight: 0u64
         };
         let custody_state: CustodyState = custodies.get_or_use(
             custody_hash, default_custody_state
@@ -341,15 +336,14 @@ program dcp_core_protocol.aleo {
         let validator_set_index: u64 = (custody_state.expected_weight == 0u64) ?
             (validator_sets_len - 1u64) :
             custody_state.validator_set_index;
-        let validator_set: [address; 16] = validator_sets.get(validator_set_index); // MAX_VALIDATORS
+        let validator_set: [address; 16] = validator_sets.get(
+            validator_set_index
+        ); // MAX_VALIDATORS
         assert_eq(validators, validator_set);
-
-        assert(custody_state.requested.not());
 
         let new_custody_state: CustodyState = CustodyState {
             validator_set_index: validator_set_index,
-            expected_weight: custody_state.expected_weight + 1u64,
-            requested: false
+            expected_weight: custody_state.expected_weight + 1u64
         };
         custodies.set(custody_hash, new_custody_state);
     }
@@ -357,98 +351,57 @@ program dcp_core_protocol.aleo {
 
     async transition request_data_as_program(
         public custody_hash: field,
-        public request_id: field,
-        public validators: [address; 16] // MAX_VALIDATORS
+        public validators: [address; 16], // MAX_VALIDATORS
+        public expected_weight: u64
     ) -> Future {
         assert_eq(self.caller, data_custody_protocol.aleo);
         return finalize_request_data_as_program(
             custody_hash,
-            request_id,
-            validators
+            validators,
+            expected_weight
         );
     }
     async function finalize_request_data_as_program(
         custody_hash: field,
-        request_id: field,
-        validators: [address; 16] // MAX_VALIDATORS
+        validators: [address; 16], // MAX_VALIDATORS
+        expected_weight: u64
     ){
         let custody_state: CustodyState = custodies.get(custody_hash);
-        let new_custody_state: CustodyState = CustodyState {
-            validator_set_index: custody_state.validator_set_index,
-            expected_weight: custody_state.expected_weight,
-            requested: true,
-        };
-        custodies.set(custody_hash, new_custody_state);
+        assert_eq(expected_weight, custody_state.expected_weight);
 
         let validator_set: [address; 16] = validator_sets.get(
             custody_state.validator_set_index
         ); // MAX_VALIDATORS
 
         assert_eq(validators, validator_set);
-
-        assert(requests.contains(request_id).not());
-        requests.set(request_id, 0u8);
     }
 
     /* TODO UNCOMMENT ON LEO BUG FIX :
     https://github.com/ProvableHQ/leo/issues/28192
     
-    async transition process_request_as_validator(
+    transition process_request_as_validator(
         validator_share: dcp_validator_shares.aleo/ValidatorShare,
         withdraw_request: dcp_withdraw_requests.aleo/WithdrawRequest,
-    ) -> (
-        DestinationShare,
-        Future
-    ) {
+    ) -> (DestinationShare, dcp_fee_management.aleo/Fee) {
         let custody_hash: field = hash_custody(validator_share.custody);
         assert_eq(withdraw_request.custody_hash, custody_hash);
 
         let destination_share: DestinationShare = DestinationShare {
             owner: withdraw_request.to,
             share: validator_share.share,
-            custody_hash: custody_hash
+            custody: validator_share.custody
         };
 
         dcp_withdraw_requests.aleo/spend_withdraw_request(withdraw_request);
-
-        let unlock_fee_future: Future = credits.aleo/transfer_public(
-            self.caller,
-            withdraw_request.fee_amount,
-        );
-
-        let process_request_as_validator_future: Future =
-            finalize_process_request_as_validator(
-                custody_hash,
-                withdraw_request.request_id,
-                validator_share.custody.threshold,
-                validator_share.weight,
-                unlock_fee_future
+        let fee: dcp_fee_management.aleo/Fee 
+            = dcp_fee_management.aleo/mint_fee(
+                self.caller, withdraw_request.fee_amount
             );
-        
-        return (
-            destination_share,
-            // out_validator_share,
-            process_request_as_validator_future
-        );
-    }
-    async function finalize_process_request_as_validator(
-        custody_hash: field,
-        request_id: field,
-        threshold: u8,
-        weight: u64,
-        unlock_fee_future: Future,
-    ) {
-        unlock_fee_future.await();
+        assert_eq(withdraw_request.expected_weight, validator_share.weight);
 
-        let custody_state: CustodyState = custodies.get(custody_hash);
-        assert_eq(weight, custody_state.expected_weight);
-
-        let submitted_shares: u8 = requests.get(request_id);
-        assert(submitted_shares < threshold);
-        requests.set(request_id, submitted_shares + 1u8);
+        return (destination_share, fee);
     }
     */
-
 
     transition spend_destination_shares(
         destination_share_0: DestinationShare,
@@ -465,13 +418,13 @@ program dcp_core_protocol.aleo {
         destination_share_11: DestinationShare,
         destination_share_12: DestinationShare,
         destination_share_13: DestinationShare,
-        destination_share_14: DestinationShare,
+        destination_share_14: DestinationShare
     ){
         assert_eq(self.caller, dcp_reconstruct_secret.aleo);
     }
 
     transition mint_null_destination_share(
-        custody_hash: field,
+        custody: Custody,
     ) -> DestinationShare{
         return DestinationShare{
             owner: self.signer,
@@ -479,7 +432,7 @@ program dcp_core_protocol.aleo {
                 share_val: 0field,
                 index: 0field,
             },
-            custody_hash: custody_hash
+            custody: custody
         };
     }
 }

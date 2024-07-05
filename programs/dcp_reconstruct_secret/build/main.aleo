@@ -1,6 +1,7 @@
 import credits.aleo;
 import dcp_validator_shares.aleo;
 import dcp_withdraw_requests.aleo;
+import dcp_fee_management.aleo;
 import dcp_core_protocol.aleo;
 program dcp_reconstruct_secret.aleo;
 
@@ -21,6 +22,7 @@ struct ValidatorShareData:
 
 
 
+
 struct Proposal:
     validators as [address; 16u32];
     threshold as u8;
@@ -31,8 +33,6 @@ record ReconstructedSecret:
     owner as address.private;
     secret as field.private;
     custody_hash as field.private;
-
-
 
 
 
@@ -2354,6 +2354,8 @@ closure reconstruct_onchain:
     output r2310 as field;
 
 
+
+
 function reconstruct_secret_onchain:
     input r0 as dcp_core_protocol.aleo/DestinationShare.record;
     input r1 as dcp_core_protocol.aleo/DestinationShare.record;
@@ -2370,59 +2372,57 @@ function reconstruct_secret_onchain:
     input r12 as dcp_core_protocol.aleo/DestinationShare.record;
     input r13 as dcp_core_protocol.aleo/DestinationShare.record;
     input r14 as dcp_core_protocol.aleo/DestinationShare.record;
-    input r15 as Custody.private;
     call dcp_core_protocol.aleo/spend_destination_shares r0 r1 r2 r3 r4 r5 r6 r7 r8 r9 r10 r11 r12 r13 r14;
-    hash.bhp256 r15 into r16 as field;
-    assert.eq r16 r0.custody_hash;
-    assert.eq self.caller r15.origin;
-    cast  r0.share r1.share r2.share r3.share r4.share r5.share r6.share r7.share r8.share r9.share r10.share r11.share r12.share r13.share r14.share into r17 as [Share; 15u32];
-    is.neq r17[0u32].index 0field into r18;
-    cast r18 into r19 as u8;
-    add 0u8 r19 into r20;
-    is.neq r17[1u32].index 0field into r21;
-    cast r21 into r22 as u8;
-    add r20 r22 into r23;
-    is.neq r17[2u32].index 0field into r24;
-    cast r24 into r25 as u8;
-    add r23 r25 into r26;
-    is.neq r17[3u32].index 0field into r27;
-    cast r27 into r28 as u8;
-    add r26 r28 into r29;
-    is.neq r17[4u32].index 0field into r30;
-    cast r30 into r31 as u8;
-    add r29 r31 into r32;
-    is.neq r17[5u32].index 0field into r33;
-    cast r33 into r34 as u8;
-    add r32 r34 into r35;
-    is.neq r17[6u32].index 0field into r36;
-    cast r36 into r37 as u8;
-    add r35 r37 into r38;
-    is.neq r17[7u32].index 0field into r39;
-    cast r39 into r40 as u8;
-    add r38 r40 into r41;
-    is.neq r17[8u32].index 0field into r42;
-    cast r42 into r43 as u8;
-    add r41 r43 into r44;
-    is.neq r17[9u32].index 0field into r45;
-    cast r45 into r46 as u8;
-    add r44 r46 into r47;
-    is.neq r17[10u32].index 0field into r48;
-    cast r48 into r49 as u8;
-    add r47 r49 into r50;
-    is.neq r17[11u32].index 0field into r51;
-    cast r51 into r52 as u8;
-    add r50 r52 into r53;
-    is.neq r17[12u32].index 0field into r54;
-    cast r54 into r55 as u8;
-    add r53 r55 into r56;
-    is.neq r17[13u32].index 0field into r57;
-    cast r57 into r58 as u8;
-    add r56 r58 into r59;
-    is.neq r17[14u32].index 0field into r60;
-    cast r60 into r61 as u8;
-    add r59 r61 into r62;
-    is.eq r62 r15.threshold into r63;
-    assert.eq r63 true;
-    call reconstruct_onchain r17 into r64;
-    cast self.caller r64 r0.custody_hash into r65 as ReconstructedSecret.record;
-    output r65 as ReconstructedSecret.record;
+    assert.eq self.caller r0.custody.origin;
+    cast  r0.share r1.share r2.share r3.share r4.share r5.share r6.share r7.share r8.share r9.share r10.share r11.share r12.share r13.share r14.share into r15 as [Share; 15u32];
+    is.neq r15[0u32].index 0field into r16;
+    cast r16 into r17 as u8;
+    add 0u8 r17 into r18;
+    is.neq r15[1u32].index 0field into r19;
+    cast r19 into r20 as u8;
+    add r18 r20 into r21;
+    is.neq r15[2u32].index 0field into r22;
+    cast r22 into r23 as u8;
+    add r21 r23 into r24;
+    is.neq r15[3u32].index 0field into r25;
+    cast r25 into r26 as u8;
+    add r24 r26 into r27;
+    is.neq r15[4u32].index 0field into r28;
+    cast r28 into r29 as u8;
+    add r27 r29 into r30;
+    is.neq r15[5u32].index 0field into r31;
+    cast r31 into r32 as u8;
+    add r30 r32 into r33;
+    is.neq r15[6u32].index 0field into r34;
+    cast r34 into r35 as u8;
+    add r33 r35 into r36;
+    is.neq r15[7u32].index 0field into r37;
+    cast r37 into r38 as u8;
+    add r36 r38 into r39;
+    is.neq r15[8u32].index 0field into r40;
+    cast r40 into r41 as u8;
+    add r39 r41 into r42;
+    is.neq r15[9u32].index 0field into r43;
+    cast r43 into r44 as u8;
+    add r42 r44 into r45;
+    is.neq r15[10u32].index 0field into r46;
+    cast r46 into r47 as u8;
+    add r45 r47 into r48;
+    is.neq r15[11u32].index 0field into r49;
+    cast r49 into r50 as u8;
+    add r48 r50 into r51;
+    is.neq r15[12u32].index 0field into r52;
+    cast r52 into r53 as u8;
+    add r51 r53 into r54;
+    is.neq r15[13u32].index 0field into r55;
+    cast r55 into r56 as u8;
+    add r54 r56 into r57;
+    is.neq r15[14u32].index 0field into r58;
+    cast r58 into r59 as u8;
+    add r57 r59 into r60;
+    is.eq r60 r0.custody.threshold into r61;
+    assert.eq r61 true;
+    call reconstruct_onchain r15 into r62;
+    hash.bhp256 r0.custody into r63 as field;
+    cast self.caller r62 r63 into r64 as ReconstructedSecret.record;
+    output r64 as ReconstructedSecret.record;

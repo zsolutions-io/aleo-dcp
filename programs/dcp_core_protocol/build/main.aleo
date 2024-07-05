@@ -1,6 +1,7 @@
 import credits.aleo;
 import dcp_validator_shares.aleo;
 import dcp_withdraw_requests.aleo;
+import dcp_fee_management.aleo;
 program dcp_core_protocol.aleo;
 
 
@@ -20,6 +21,7 @@ struct ValidatorShareData:
 
 
 
+
 struct Proposal:
     validators as [address; 16u32];
     threshold as u8;
@@ -28,12 +30,11 @@ struct Proposal:
 struct CustodyState:
     validator_set_index as u64;
     expected_weight as u64;
-    requested as boolean;
 
 record DestinationShare:
     owner as address.private;
     share as Share.private;
-    custody_hash as field.private;
+    custody as Custody.private;
 
 
 mapping validator_sets:
@@ -64,11 +65,6 @@ mapping votes:
 mapping custodies:
 	key as field.public;
 	value as CustodyState.public;
-
-
-mapping requests:
-	key as field.public;
-	value as u8.public;
 
 
 function initiate_validators:
@@ -353,7 +349,7 @@ function custody_data_as_program:
 finalize custody_data_as_program:
     input r0 as field.public;
     input r1 as [address; 16u32].public;
-    cast 0u64 0u64 false into r2 as CustodyState;
+    cast 0u64 0u64 into r2 as CustodyState;
     get.or_use custodies[r0] r2 into r3;
     get validator_sets_length[true] into r4;
     is.eq r3.expected_weight 0u64 into r5;
@@ -361,37 +357,29 @@ finalize custody_data_as_program:
     ternary r5 r6 r3.validator_set_index into r7;
     get validator_sets[r7] into r8;
     assert.eq r1 r8;
-    not r3.requested into r9;
-    assert.eq r9 true;
-    add r3.expected_weight 1u64 into r10;
-    cast r7 r10 false into r11 as CustodyState;
-    set r11 into custodies[r0];
+    add r3.expected_weight 1u64 into r9;
+    cast r7 r9 into r10 as CustodyState;
+    set r10 into custodies[r0];
 
 
 
 
 function request_data_as_program:
     input r0 as field.public;
-    input r1 as field.public;
-    input r2 as [address; 16u32].public;
+    input r1 as [address; 16u32].public;
+    input r2 as u64.public;
     assert.eq self.caller data_custody_protocol.aleo;
     async request_data_as_program r0 r1 r2 into r3;
     output r3 as dcp_core_protocol.aleo/request_data_as_program.future;
 
 finalize request_data_as_program:
     input r0 as field.public;
-    input r1 as field.public;
-    input r2 as [address; 16u32].public;
+    input r1 as [address; 16u32].public;
+    input r2 as u64.public;
     get custodies[r0] into r3;
-    cast r3.validator_set_index r3.expected_weight true into r4 as CustodyState;
-    set r4 into custodies[r0];
-    get validator_sets[r3.validator_set_index] into r5;
-    assert.eq r2 r5;
-    contains requests[r1] into r6;
-    not r6 into r7;
-    assert.eq r7 true;
-    set 0u8 into requests[r1];
-
+    assert.eq r2 r3.expected_weight;
+    get validator_sets[r3.validator_set_index] into r4;
+    assert.eq r1 r4;
 
 
 
@@ -402,28 +390,12 @@ function process_request_as_validator:
     input r1 as dcp_withdraw_requests.aleo/WithdrawRequest.record;
     hash.bhp256 r0.custody into r2 as field;
     assert.eq r1.custody_hash r2;
-    cast r1.to r0.share r2 into r3 as DestinationShare.record;
+    cast r1.to r0.share r0.custody into r3 as DestinationShare.record;
     call dcp_withdraw_requests.aleo/spend_withdraw_request r1;
-    call credits.aleo/transfer_public self.caller r1.fee_amount into r4;
-    async process_request_as_validator r2 r1.request_id r0.custody.threshold r0.weight r4 into r5;
+    call dcp_fee_management.aleo/mint_fee self.caller r1.fee_amount into r4;
+    assert.eq r1.expected_weight r0.weight;
     output r3 as DestinationShare.record;
-    output r5 as dcp_core_protocol.aleo/process_request_as_validator.future;
-
-finalize process_request_as_validator:
-    input r0 as field.public;
-    input r1 as field.public;
-    input r2 as u8.public;
-    input r3 as u64.public;
-    input r4 as credits.aleo/transfer_public.future;
-    await r4;
-    get custodies[r0] into r5;
-    assert.eq r3 r5.expected_weight;
-    get requests[r1] into r6;
-    lt r6 r2 into r7;
-    assert.eq r7 true;
-    add r6 1u8 into r8;
-    set r8 into requests[r1];
-
+    output r4 as dcp_fee_management.aleo/Fee.record;
 
 
 function spend_destination_shares:
@@ -446,7 +418,7 @@ function spend_destination_shares:
 
 
 function mint_null_destination_share:
-    input r0 as field.private;
+    input r0 as Custody.private;
     cast 0field 0field into r1 as Share;
     cast self.signer r1 r0 into r2 as DestinationShare.record;
     output r2 as DestinationShare.record;
