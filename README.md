@@ -96,7 +96,7 @@ For a program to custody private data, it must import **`data_custody_protocol.a
 
 #### Multiple Custody steps
 
-In case **Custody** step was called more than once for a single `request_id`:
+In case **Custody** step was called more than once for a single `custody_hash`:
 
 - Between step 3 and step 4, validator bots must call `dcp_core_protocol.aleo/join_shares_as_validator` as many time as there are additional **Custody** step.
 

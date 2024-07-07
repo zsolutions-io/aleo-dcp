@@ -3,7 +3,7 @@ import fs from 'fs/promises';
 import initSqlJs from 'sql.js';
 import { data_dir, create_dir_if_not_exists, } from "./path.js";
 import { sql_string } from "./string.js";
-import { tables, db_file_name, db_file_name } from "../config/db.js";
+import { tables, db_file_name } from "../config/db.js";
 
 const db_path = `${data_dir}/${db_file_name}`;
 
@@ -26,7 +26,7 @@ const create_table_if_not_exists = async (db, table) => {
   } catch (e) {
     if (e.message.startsWith("no such table:")) {
       const sql_cmd = `CREATE TABLE ${table.name}${table.columns}`;
-      console.log(`Executing: '${sql_cmd}'`)
+      console.log(`Executing: \`${sql_cmd}\``)
       db.run(sql_cmd);
       return true;
     } else {
@@ -52,7 +52,7 @@ export const insert_into_table = async (db, table, values) => {
     values[i] = convert_js_to_sql(values[i]);
   }
   const sql_cmd = `INSERT INTO ${table} VALUES (${values.join(",")})`;
-  console.log(`Executing: '${sql_cmd}'`)
+  console.log(`Executing: \`${sql_cmd}\``)
   db.run(sql_cmd);
 }
 
@@ -67,7 +67,7 @@ export const update_in_table = async (db, table, updates, where) => {
     .join(",");
   const where_expr = (where == null) ? "" : ` WHERE ${where}`
   const sql_cmd = `UPDATE ${table} SET ${updates_expr}${where_expr}`;
-  console.log(`Executing: '${sql_cmd}'`)
+  console.log(`Executing: \`${sql_cmd}\``)
   db.run(sql_cmd);
 }
 
@@ -75,7 +75,7 @@ export const update_in_table = async (db, table, updates, where) => {
 export const select_from_table = async (db, table, where) => {
   const where_expr = (where == null) ? "" : ` WHERE ${where}`
   const sql_cmd = `SELECT * FROM ${table}${where_expr}`;
-  console.log(`Executing: '${sql_cmd}'`)
+  console.log(`Executing: \`${sql_cmd}\``)
   const result = db.exec(sql_cmd);
   if (result.length === 0) {
     return [];

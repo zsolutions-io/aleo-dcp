@@ -363,7 +363,7 @@ nft_view_record_plaintext=$(
         --ciphertext $nft_view_record_ciphertext
 );
 
-withdraw
+
 
 
 withdraw_nft(

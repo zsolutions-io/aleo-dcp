@@ -7,21 +7,35 @@ export const tables = {
   },
   request_records: {
     name: "request_records",
-    columns: "(serial_number TEXT PRIMARY KEY, plaintext TEXT, spent INT, custody_key TXT, request_id TXT)"
+    columns: "(serial_number TEXT PRIMARY KEY, plaintext TEXT, spent INT, owner TXT, custody_hash TXT, to_address TXT, fee_amount TXT, expected_weight TXT, _nonce TXT)"
   },
   share_records: {
     name: "share_records",
-    columns: "(serial_number TEXT PRIMARY KEY, plaintext TEXT, spent INT, custody_key TXT)"
-  },
-  requests: {
-    name: "requests",
-    columns: "(request_id TEXT PRIMARY KEY, plaintext TEXT, spent INT, custody_key TXT)"
-  },
-  custodies: {
-    name: "custodies",
-    columns: "(custody_hash TEXT PRIMARY KEY, custody_key TEXT, spent INT)"
+    columns: "(serial_number TEXT PRIMARY KEY, plaintext TEXT, custody_hash TXT, spent INT, owner TXT, share TXT, custody TXT, weight TXT, _nonce TXT)"
   }
 };
 
 
 export const db_file_name = "db.sqlite";
+
+/*
+
+
+record ValidatorShare {
+  owner: address,
+  share: Share,
+  custody: Custody,
+  weight: u64
+}
+
+
+record WithdrawRequest {
+    owner: address,
+    custody_hash: field,
+    to: address,
+    fee_amount: u64,
+    expected_weight: u64
+}
+
+
+*/

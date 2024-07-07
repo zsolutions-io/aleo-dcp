@@ -12,19 +12,6 @@ export class LiveRpcProvider {
     this.url = url;
   }
 
-  async from_url(url) {
-    const instance = new LiveRpcProvider(url);
-    const status_res = await instance.chainStatus();
-    if (!status_res?.online) {
-      throw new Error(
-        `RPC unavailable at '${url}'.`,
-        status_res?.statusTitle,
-        status_res?.statusMessage
-      );
-    }
-    return instance;
-  }
-
   async call_rpc(method, params) {
     const rawResponse = await fetch(
       this.url,
@@ -41,7 +28,7 @@ export class LiveRpcProvider {
     );
     const response = await rawResponse.json();
     if (response.error) {
-      throw new Error(`RPC API:\n${response.error.message}`);
+      throw new Error(`RPC API:\n${response.error.message || response.error}`);
     }
     return response?.result;
   }
@@ -62,5 +49,18 @@ export class LiveRpcProvider {
   async chainStatus() {
     return await this.call_rpc("chainStatus");
   }
+}
+
+LiveRpcProvider.from_url = async (url) => {
+  const instance = new LiveRpcProvider(url);
+  const status_res = await instance.chainStatus();
+  if (!status_res?.online) {
+    throw new Error(
+      `RPC unavailable at '${url}'.`,
+      status_res?.statusTitle,
+      status_res?.statusMessage
+    );
+  }
+  return instance;
 }
 

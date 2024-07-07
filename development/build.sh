@@ -18,6 +18,10 @@ cd ./programs/dcp_reconstruct_secret_offchain
 leo build
 cd ../..
 
+cd ./programs/dcp_hash_custody_offchain
+leo build
+cd ../../../..
+
 cd examples/nft_marketplace/programs/arc721_example
 leo build
 cd ../../../..

@@ -2,20 +2,28 @@ import {
   save_db, insert_into_table, select_from_table, update_in_table
 } from "./db.js"
 import { remove_whitespaces } from "./string.js"
-import { serial_number, parse_record_plaintext } from "./aleo.js"
+import {
+  serial_number, parse_record_plaintext, execute_program_offchain,
+  struct_repr, synthetize_program_keys
+} from "./aleo.js"
 import { sql_string } from "./string.js";
 
+
 import {
-  protocol_transfers_program,
   share_record,
   request_record,
   sstv_function,
   jsav_function,
   srtv_function,
-  prav_function
+  swr_function,
+  hash_custody_function,
+  record_data_columns_amounts
 } from "../config/programs.js";
 import { tables } from "../config/db.js"
 import { transaction_per_batch } from "../config/rpc.js"
+
+import { programs_dir } from "./path.js";
+import fs from 'fs.promises';
 
 
 const record_tables = {
@@ -30,7 +38,7 @@ export const sync_db_with_blockchain = async (rpc_provider, db, account) => {
     sync_sstv_transitions(rpc_provider, db, account, processed_transitions),
     sync_jsav_transitions(rpc_provider, db, account, processed_transitions),
     sync_srtv_transitions(rpc_provider, db, account, processed_transitions),
-    sync_prav_transitions(rpc_provider, db, account, processed_transitions),
+    sync_swr_transitions(rpc_provider, db, account, processed_transitions),
   ]);
   await update_processed_transitions(db, processed_transitions);
 
@@ -38,20 +46,20 @@ export const sync_db_with_blockchain = async (rpc_provider, db, account) => {
 }
 
 
-const load_transactions_page = async (rpc_provider, functionName, page) => (
-  await rpc_provider.aleoTransactionsForProgram(
+const load_transactions_page = async (rpc_provider, programId, functionName, page) => {
+  return await rpc_provider.aleoTransactionsForProgram(
     {
-      programId: protocol_transfers_program,
-      functionName: functionName,
+      programId,
+      functionName,
       page,
       maxTransactions: transaction_per_batch
     }
   )
-);
+};
 
 
-const record_table = (record_name) => {
-  const table_name = record_tables?.[record_name];
+const record_table = (record_id) => {
+  const table_name = record_tables?.[record_id];
   if (!table_name) {
     throw new Error("Unknown record name.");
   }
@@ -60,13 +68,14 @@ const record_table = (record_name) => {
 
 
 export const travel_transaction_pages = async (
-  rpc_provider, function_name, apply_to_transition, processed_already
+  rpc_provider, function_id, apply_to_transition, processed_already
 ) => {
   let page = Math.floor(processed_already / transaction_per_batch);
   let starting_index = processed_already % transaction_per_batch;
+  const [program_id, function_name] = function_id.split("/");
   while (true) {
     const transactions = await load_transactions_page(
-      rpc_provider, function_name, page
+      rpc_provider, program_id, function_name, page
     );
     const transitions = transactions.reduce(
       (acc, transaction, index) => {
@@ -76,7 +85,7 @@ export const travel_transaction_pages = async (
         const filtered_transitions = transaction
           .transaction.execution.transitions.filter(
             (transition) => (
-              transition.program === protocol_transfers_program
+              transition.program === program_id
               && transition.function === function_name
             )
           );
@@ -96,17 +105,25 @@ export const travel_transaction_pages = async (
 }
 
 
-const get_record_data_columns = (record_name, plaintext) => {
-  const record_object = parse_record_plaintext(plaintext);
-  if (record_name == share_record) {
-    return [record_object.custody_key.slice(0, -"field".length)];
-  }
-  else if (record_name == request_record) {
+const record_attributes = (record) => (
+  Object.values(record).map(struct_repr)
+);
+
+
+const get_record_data_columns = async (account, record_id, plaintext) => {
+  const record = parse_record_plaintext(plaintext);
+  if (record_id == share_record) {
+    const custody = struct_repr(record.custody);
+    const custody_hash = await hash_custody(account, custody);
     return [
-      record_object.custody_key.slice(0, -"field".length),
-      record_object.request_id.slice(0, -"field".length)
+      custody_hash,
+      ...record_attributes(record)
     ];
-  } else {
+  }
+  else if (record_id == request_record) {
+    return record_attributes(record);
+  }
+  else {
     throw new Error("Unknown record name.")
   }
 }
@@ -119,8 +136,8 @@ const owned_records_from_outputs = (account, outputs) => (
 );
 
 
-const retrieve_record_from_serial = async (db, record_name, serial) => {
-  const table_name = record_table(record_name);
+const retrieve_record_from_serial = async (db, record_id, serial) => {
+  const table_name = record_table(record_id);
   const where = `serial_number = ${sql_string(serial)}`;
   const found = await select_from_table(db, table_name, where);
   return found.length ? found[0] : null;
@@ -128,29 +145,32 @@ const retrieve_record_from_serial = async (db, record_name, serial) => {
 
 
 const tag_record_received = async (
-  db, account, record_name, record_string
+  db, account, record_id, record_string
 ) => {
   const plaintext = remove_whitespaces(record_string);
+  const [program_id, record_name] = record_id.split("/");
   const serial = serial_number(
-    account, record_string, protocol_transfers_program, record_name
+    account, plaintext, program_id, record_name
   );
-  const found = await retrieve_record_from_serial(db, record_name, serial);
+  const found = await retrieve_record_from_serial(db, record_id, serial);
+
   if (found == null) {
-    const data_columns = get_record_data_columns(record_name, plaintext);
+    const data_columns = await get_record_data_columns(account, record_id, plaintext);
     const values = [serial, plaintext, 0, ...data_columns];
+    const table_name = record_table(record_id);
     await insert_into_table(db, table_name, values);
   }
 };
 
 
-const tag_record_spent = async (db, record_name, serial) => {
-  const found = await retrieve_record_from_serial(db, record_name, serial);
+const tag_record_spent = async (db, record_id, serial) => {
+  const found = await retrieve_record_from_serial(db, record_id, serial);
+  const table_name = record_table(record_id);
   if (found != null) {
-    const table_name = record_table(record_name);
     const where = `serial_number = ${sql_string(serial)}`;
     await update_in_table(db, table_name, { spent: 1 }, where);
   } else {
-    const values = [serial, null, 1];
+    const values = [serial, null, 1, ...(new Array(record_data_columns_amounts[record_id]).fill(null))];
     await insert_into_table(db, table_name, values);
   }
 }
@@ -158,10 +178,10 @@ const tag_record_spent = async (db, record_name, serial) => {
 
 const retrieve_processed_transitions = async (db) => {
   const elements = await select_from_table(db, tables.processed_transitions.name);
-  return !found.length ? null : Object.fromEntries(
+  return !elements.length ? null : Object.fromEntries(
     elements.map(
       (element) => (
-        [element.function, element.page]
+        [element.function, element.amount]
       )
     )
   );
@@ -171,10 +191,10 @@ const retrieve_processed_transitions = async (db) => {
 const load_processed_transitions = async (db) => {
   const found = await retrieve_processed_transitions(db);
   return (found != null) ? found : {
-    sstv_function: 0,
-    jsav_function: 0,
-    srtv_function: 0,
-    prav_function: 0
+    [sstv_function]: 0,
+    [jsav_function]: 0,
+    [srtv_function]: 0,
+    [swr_function]: 0
   }
 }
 
@@ -189,9 +209,9 @@ const update_processed_transitions = async (db, processed_transitions) => {
       const values = [function_name, amount];
       await insert_into_table(db, tables.processed_transitions.name, values);
     } else {
-      const where = `function = ${function_name}`;
-      const udpate = { amount };
-      await update_in_table(db, tables.processed_transitions.name, udpate, where);
+      const where = `function = '${function_name}'`;
+      const update = { amount };
+      await update_in_table(db, tables.processed_transitions.name, update, where);
     }
   }
 }
@@ -254,22 +274,66 @@ const sync_srtv_transitions = async (
 }
 
 
-const sync_prav_transitions = async (
+const sync_swr_transitions = async (
   rpc_provider, db, account, processed_transitions
 ) => {
-  const apply_to_prav_transition = async ({ inputs, outputs }) => {
+  const apply_to_swr_transition = async ({ inputs, outputs }) => {
     await Promise.all([
-      tag_record_spent(db, share_record, inputs[0].id),
-      tag_record_spent(db, request_record, inputs[1].id)
+      tag_record_spent(db, request_record, inputs[0].id)
     ]);
   };
-  processed_transitions[prav_function] = await travel_transaction_pages(
+  processed_transitions[swr_function] = await travel_transaction_pages(
     rpc_provider,
-    prav_function,
-    apply_to_prav_transition,
-    processed_transitions[prav_function]
+    swr_function,
+    apply_to_swr_transition,
+    processed_transitions[swr_function]
   );
 }
+
+
+const [
+  hash_custody_program_id,
+  hash_custody_function_name
+] = hash_custody_function.split("/");
+const hash_custody_program_name = hash_custody_program_id.split(".")[0];
+
+const load_hash_custody = async () => {
+  const hash_custody_program_path = `${programs_dir}/${hash_custody_program_name}/build/main.aleo`;
+  try {
+    return await fs.readFile(hash_custody_program_path, "utf-8");
+  }
+  catch (e) {
+    throw new Error(
+      `'${hash_custody_program_id}' build not found,`
+      + `start by executing './development/build.sh' from project root.`
+    );
+  }
+}
+const hash_custody_program_source = await load_hash_custody();
+
+
+const hash_custody = async (account, custody) => {
+  const outputs = await execute_program_offchain(
+    account,
+    hash_custody_program_source,
+    hash_custody_program_name,
+    hash_custody_function_name,
+    [custody]
+  );
+  return outputs[0];
+}
+
+
+export const synthetize_hash_custody_keys = async (account) => {
+  return await synthetize_program_keys(
+    account,
+    "dcp_hash_custody_offchain",
+    hash_custody_program_source,
+    "hash_custody",
+    ["{origin: aleo1050n3kd4x3spur952m58v56a572uxw8dlnxvmtn9qcjcqnjkty9q0xu8x5,custody_key: 7828field,threshold: 8u8}"]
+  )
+}
+
 
 
 /*
@@ -288,14 +352,13 @@ const sync_prav_transitions = async (
     - inputs[1]: ValidatorShare
     - outputs[0]: ValidatorShare
 
-  (dcp_destination_shares.aleo, submit_requests_to_validators)
+  (dcp_withdraw_requests.aleo, submit_requests_to_validators)
     - outputs[0]: WithdrawRequest
     - outputs[1]: WithdrawRequest
     ...
     - outputs[15]: WithdrawRequest
 
-  (dcp_destination_shares.aleo, process_request_as_validator)
-    - inputs[0]: ValidatorShare
-    - inputs[1]: WithdrawRequest
+  (dcp_withdraw_requests.aleo, spend_withdraw_request)
+    - inputs[0]: WithdrawRequest
 
 */

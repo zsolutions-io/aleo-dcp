@@ -1,5 +1,5 @@
 {
-  "name": "aleo-dcp-validator",
+  "name": "aleo-rpc",
   "version": "1.0.0",
   "description": "",
   "main": "run.js",
@@ -10,10 +10,11 @@
   "license": "ISC",
   "dependencies": {
     "@aleohq/sdk": "^0.6.9",
+    "cors": "^2.8.5",
     "dotenv": "^16.4.5",
-    "fs.promises": "^0.1.2",
+    "express": "^4.19.2",
     "fs.promises.exists": "^1.1.4",
-    "sql.js": "^1.10.3"
+    "pg": "^8.12.0"
   },
   "type": "module"
 }
