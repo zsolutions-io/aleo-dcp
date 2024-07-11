@@ -1,22 +1,35 @@
 import {
   Account, RecordPlaintext, ProgramManager,
-  initThreadPool, AleoKeyProvider, ProvingKey, VerifyingKey
+  initThreadPool, AleoKeyProvider, ProvingKey, VerifyingKey,
+  AleoNetworkClient, NetworkRecordProvider
 } from '@aleohq/sdk';
 
-import { data_dir } from "./path.js";
+import { data_dir, programs_dir } from "./path.js";
 import fsExists from 'fs.promises.exists';
 import fs from 'fs.promises';
+
+import * as dotenv from 'dotenv';
+dotenv.config();
 
 await initThreadPool();
 
 const keyProvider = new AleoKeyProvider();
 keyProvider.useCache(true);
 
+
 export const load_aleo_account = async (privateKey) => {
   const account = new Account({ privateKey });
+  const networkClient = new AleoNetworkClient(`${process.env.NODE_URL}`);
+  const recordProvider = new NetworkRecordProvider(account, networkClient);
+  const programManager = new ProgramManager(
+    `${process.env.NODE_URL}`, keyProvider, recordProvider
+  );
 
-  const programManager = new ProgramManager(null, keyProvider);
+  // await programManager.networkClient.getLatestHeight();
+
   programManager.setAccount(account);
+  programManager.networkClient.fs = fs;
+  programManager.networkClient.programs_dir = programs_dir;
   account.programManager = programManager;
   return account;
 }
@@ -101,30 +114,78 @@ export const execute_program_offchain = async (
 }
 
 
+export const execute_program_onchain = async (
+  account,
+  program_id,
+  function_name,
+  inputs,
+  fee,
+) => {
+  const program_name = program_id.split(".")[0];
+  const [
+    proving_key,
+    verifying_key
+  ] = await load_program_keys(program_name, function_name);
+
+  const transaction = await account.programManager.buildExecutionTransaction(
+    program_id,
+    function_name,
+    fee,
+    false,
+    inputs,
+    null,
+    null,
+    null,
+    proving_key,
+    verifying_key,
+    account.privateKey(),
+    null,
+  );
+  const result = await account.programManager.networkClient.submitTransaction(transaction);
+  console.log(`Submited: ${result}`)
+  return result;
+}
+
+
+
+const get_key_paths = (program_name, function_name) => {
+  const proving_key_path =
+    `${data_dir}/${program_name}_${function_name}.prover`;
+  const verifying_key_path =
+    `${data_dir}/${program_name}_${function_name}.verifier`;
+
+  return [proving_key_path, verifying_key_path]
+}
+
+
 export const synthetize_program_keys = async (
   account, program_name, program_source, function_name, inputs
 ) => {
-  const proving_key_path = `${data_dir}/${program_name}_${function_name}.prover`;
-  const verifying_key_path = `${data_dir}/${program_name}_${function_name}.verifier`;
+  const [proving_key_path, verifying_key_path] = get_key_paths(
+    program_name, function_name
+  );
 
   if (await fsExists(proving_key_path) && await fsExists(verifying_key_path)) {
     return;
   }
-  const [proving_key, verifying_key] = await account.programManager.synthesizeKeys(
-    program_source,
-    function_name,
-    inputs,
-    account.privateKey()
-  );
+  const [proving_key, verifying_key] =
+    await account
+      .programManager
+      .synthesizeKeys(
+        program_source,
+        function_name,
+        inputs,
+        account.privateKey()
+      );
   await fs.writeFile(proving_key_path, proving_key.toBytes());
   await fs.writeFile(verifying_key_path, verifying_key.toBytes());
 }
 
 
 export const load_program_keys = async (program_name, function_name) => {
-  const proving_key_path = `${data_dir}/${program_name}_${function_name}.prover`;
-  const verifying_key_path = `${data_dir}/${program_name}_${function_name}.verifier`;
-
+  const [proving_key_path, verifying_key_path] = get_key_paths(
+    program_name, function_name
+  );
   const proving_key = ProvingKey.fromBytes(
     new Uint8Array(await fs.readFile(proving_key_path))
   );
@@ -136,3 +197,22 @@ export const load_program_keys = async (program_name, function_name) => {
 }
 
 
+const record_attributes = (record) => (
+  Object.values(record).map(struct_repr)
+);
+
+
+const snarkvm_int_pattern = /^(\-*\d+)((i|u)(\d+))$/;
+const convert_snarkvm_value = (col_value) => {
+  const matches_int = col_value.match(snarkvm_int_pattern);
+  if (matches_int) {
+    const [, number1, type, number2] = matches_int;
+    return BigInt(number1, 10);
+  }
+  return col_value;
+}
+
+
+export const converted_record_attributes = (record) => (
+  record_attributes(record).map(convert_snarkvm_value)
+);

@@ -1,4 +1,8 @@
-import { sync_db_with_blockchain, synthetize_hash_custody_keys } from "./lib/sync.js";
+import {
+  sync_db_with_blockchain,
+  remove_actually_unspent_records
+} from "./lib/sync.js";
+import { synthetize_programs_keys, } from "./lib/programs.js";
 import { process_requests } from "./lib/process.js";
 import { load_database } from "./lib/db.js";
 import { load_aleo_account, } from "./lib/aleo.js";
@@ -20,6 +24,7 @@ const load_env = async () => {
   try {
     const account = await load_aleo_account(process.env["PRIVATE_KEY"]);
     const address = account.address().to_string();
+    console.log(private_key_success_msg, address)
     return { account, refresh_period_s, rpc_provider };
   } catch (e) {
     throw new Error(private_key_error_msg + " " + e);
@@ -29,6 +34,7 @@ const load_env = async () => {
 
 const sync_and_process = async (rpc_provider, db, account) => {
   await sync_db_with_blockchain(rpc_provider, db, account);
+  await remove_actually_unspent_records(db);
   await process_requests(rpc_provider, db, account);
 }
 
@@ -36,7 +42,7 @@ const sync_and_process = async (rpc_provider, db, account) => {
 const main = async () => {
   const { account, refresh_period_s, rpc_provider } = await load_env();
   const db = await load_database();
-  await synthetize_hash_custody_keys(account);
+  await synthetize_programs_keys(account);
   while (true) {
     try {
       await sync_and_process(rpc_provider, db, account);

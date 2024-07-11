@@ -74,9 +74,14 @@ export const update_in_table = async (db, table, updates, where) => {
 
 export const select_from_table = async (db, table, where) => {
   const where_expr = (where == null) ? "" : ` WHERE ${where}`
-  const sql_cmd = `SELECT * FROM ${table}${where_expr}`;
-  console.log(`Executing: \`${sql_cmd}\``)
-  const result = db.exec(sql_cmd);
+  const sql_req = `SELECT * FROM ${table}${where_expr}`;
+  return await run_select_request(db, sql_req)
+}
+
+
+export const run_select_request = async (db, request) => {
+  console.log(`Executing: \`${request}\``)
+  const result = db.exec(request);
   if (result.length === 0) {
     return [];
   }
@@ -91,6 +96,8 @@ export const select_from_table = async (db, table, where) => {
     )
   );
 }
+
+
 
 
 export const save_db = async (db) => {

@@ -376,9 +376,7 @@ program dcp_core_protocol.aleo {
         assert_eq(validators, validator_set);
     }
 
-    /* TODO UNCOMMENT ON LEO BUG FIX :
-    https://github.com/ProvableHQ/leo/issues/28192
-    
+
     transition process_request_as_validator(
         validator_share: dcp_validator_shares.aleo/ValidatorShare,
         withdraw_request: dcp_withdraw_requests.aleo/WithdrawRequest,
@@ -395,13 +393,15 @@ program dcp_core_protocol.aleo {
         dcp_withdraw_requests.aleo/spend_withdraw_request(withdraw_request);
         let fee: dcp_fee_management.aleo/Fee 
             = dcp_fee_management.aleo/mint_fee(
-                self.caller, withdraw_request.fee_amount
+                self.caller, 
+                withdraw_request.fee_amount, 
+                withdraw_request.expire
             );
         assert_eq(withdraw_request.expected_weight, validator_share.weight);
 
         return (destination_share, fee);
     }
-    */
+
 
     transition spend_destination_shares(
         destination_share_0: DestinationShare,

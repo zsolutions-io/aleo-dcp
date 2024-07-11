@@ -4,15 +4,18 @@
   "description": "",
   "main": "run.js",
   "scripts": {
-    "start": "node start.js"
+    "start": "node start.js",
+    "postinstall": "patch-package"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
     "@aleohq/sdk": "^0.6.9",
+    "@demox-labs/aleo-sdk-staging": "^0.3.35",
     "dotenv": "^16.4.5",
     "fs.promises": "^0.1.2",
     "fs.promises.exists": "^1.1.4",
+    "patch-package": "^8.0.0",
     "sql.js": "^1.10.3"
   },
   "type": "module"

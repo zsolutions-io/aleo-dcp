@@ -3,11 +3,10 @@ import {
 } from "./db.js"
 import { remove_whitespaces } from "./string.js"
 import {
-  serial_number, parse_record_plaintext, execute_program_offchain,
-  struct_repr, synthetize_program_keys
+  serial_number, parse_record_plaintext, struct_repr, converted_record_attributes
 } from "./aleo.js"
 import { sql_string } from "./string.js";
-
+import { hash_custody } from "./programs.js";
 
 import {
   share_record,
@@ -16,19 +15,33 @@ import {
   jsav_function,
   srtv_function,
   swr_function,
-  hash_custody_function,
-  record_data_columns_amounts
+  record_data_columns_amounts,
 } from "../config/programs.js";
 import { tables } from "../config/db.js"
 import { transaction_per_batch } from "../config/rpc.js"
 
-import { programs_dir } from "./path.js";
-import fs from 'fs.promises';
 
 
 const record_tables = {
   [share_record]: tables.share_records.name,
   [request_record]: tables.request_records.name,
+}
+
+
+export const remove_actually_unspent_records = async (db) => {
+  await Promise.all(
+    Object.keys(record_tables).map(
+      async (record_id) => await remove_actually_unspent_record(db, record_id)
+    )
+  );
+}
+
+
+const remove_actually_unspent_record = async (db, record_id) => {
+  const table_name = record_table(record_id);
+  const now = Date.now();
+  const where = `spent > 1 AND spent <= ${now}`;
+  await update_in_table(db, table_name, { spent: 0 }, where);
 }
 
 
@@ -58,7 +71,7 @@ const load_transactions_page = async (rpc_provider, programId, functionName, pag
 };
 
 
-const record_table = (record_id) => {
+export const record_table = (record_id) => {
   const table_name = record_tables?.[record_id];
   if (!table_name) {
     throw new Error("Unknown record name.");
@@ -105,11 +118,6 @@ export const travel_transaction_pages = async (
 }
 
 
-const record_attributes = (record) => (
-  Object.values(record).map(struct_repr)
-);
-
-
 const get_record_data_columns = async (account, record_id, plaintext) => {
   const record = parse_record_plaintext(plaintext);
   if (record_id == share_record) {
@@ -117,11 +125,11 @@ const get_record_data_columns = async (account, record_id, plaintext) => {
     const custody_hash = await hash_custody(account, custody);
     return [
       custody_hash,
-      ...record_attributes(record)
+      ...converted_record_attributes(record)
     ];
   }
   else if (record_id == request_record) {
-    return record_attributes(record);
+    return converted_record_attributes(record);
   }
   else {
     throw new Error("Unknown record name.")
@@ -163,12 +171,13 @@ const tag_record_received = async (
 };
 
 
-const tag_record_spent = async (db, record_id, serial) => {
+const tag_record_spent = async (db, record_id, serial, expire_timestamp) => {
   const found = await retrieve_record_from_serial(db, record_id, serial);
   const table_name = record_table(record_id);
   if (found != null) {
     const where = `serial_number = ${sql_string(serial)}`;
-    await update_in_table(db, table_name, { spent: 1 }, where);
+    const spent = (expire_timestamp == null) ? 1 : expire_timestamp;
+    await update_in_table(db, table_name, { spent }, where);
   } else {
     const values = [serial, null, 1, ...(new Array(record_data_columns_amounts[record_id]).fill(null))];
     await insert_into_table(db, table_name, values);
@@ -288,50 +297,6 @@ const sync_swr_transitions = async (
     apply_to_swr_transition,
     processed_transitions[swr_function]
   );
-}
-
-
-const [
-  hash_custody_program_id,
-  hash_custody_function_name
-] = hash_custody_function.split("/");
-const hash_custody_program_name = hash_custody_program_id.split(".")[0];
-
-const load_hash_custody = async () => {
-  const hash_custody_program_path = `${programs_dir}/${hash_custody_program_name}/build/main.aleo`;
-  try {
-    return await fs.readFile(hash_custody_program_path, "utf-8");
-  }
-  catch (e) {
-    throw new Error(
-      `'${hash_custody_program_id}' build not found,`
-      + `start by executing './development/build.sh' from project root.`
-    );
-  }
-}
-const hash_custody_program_source = await load_hash_custody();
-
-
-const hash_custody = async (account, custody) => {
-  const outputs = await execute_program_offchain(
-    account,
-    hash_custody_program_source,
-    hash_custody_program_name,
-    hash_custody_function_name,
-    [custody]
-  );
-  return outputs[0];
-}
-
-
-export const synthetize_hash_custody_keys = async (account) => {
-  return await synthetize_program_keys(
-    account,
-    "dcp_hash_custody_offchain",
-    hash_custody_program_source,
-    "hash_custody",
-    ["{origin: aleo1050n3kd4x3spur952m58v56a572uxw8dlnxvmtn9qcjcqnjkty9q0xu8x5,custody_key: 7828field,threshold: 8u8}"]
-  )
 }
 
 

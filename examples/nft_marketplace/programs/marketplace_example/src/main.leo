@@ -48,7 +48,8 @@ program marketplace_example.aleo {
         public dcp_key: field, // random scalar
         private secret_random_viewkey: scalar,
         private privacy_random_coefficients: [field; 15],
-        private validators: [address; 16],
+        public validators: [address; 16],
+        public current_block_height: u32
     ) -> (NFTView, Future) {
         let (nft_view, transfer_future): (arc721_example.aleo/NFTView, Future) 
             = arc721_example.aleo/transfer_private_to_public(
@@ -69,7 +70,8 @@ program marketplace_example.aleo {
                 dcp_key, // private custody_key: field,
                 privacy_random_coefficients, // private coefficients: [field; 15],
                 validators, // private validators: [address; 16],
-                MPC_THRESHOLD // private threshold: u8 <= 15
+                MPC_THRESHOLD, // private threshold: u8 <= 15
+                current_block_height
             );
 
         let list_future: Future = finalize_list(

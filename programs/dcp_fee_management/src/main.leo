@@ -4,16 +4,22 @@ import credits.aleo;
 program dcp_fee_management.aleo {
     record Fee {
         owner: address,
-        microcredits: u64
+        microcredits: u64,
+        expire: u32
+    }
+
+    inline min_u32(a: u32, b: u32) -> u32{
+        return a<b ? a : b;
     }
     
     transition mint_fee(
-        public receiver: address, amount: u64
+        public receiver: address, amount: u64, expire_height: u32
     ) -> Fee {
         assert_eq(self.caller, dcp_core_protocol.aleo);
         return Fee{
             owner: receiver,
             microcredits: amount,
+            expire: expire_height
         };
     }
 
@@ -24,10 +30,14 @@ program dcp_fee_management.aleo {
             fee.owner,
             fee.microcredits,
         );
-        return finalize_burn_fee(unlock_fee_future);
+        return finalize_burn_fee(unlock_fee_future, fee.expire);
     }
-    async function finalize_burn_fee(unlock_fee_future: Future){
+    async function finalize_burn_fee(
+        unlock_fee_future: Future,
+        expire_height: u32
+    ){
         unlock_fee_future.await();
+        assert(expire_height >= block.height);
     }
 
 
@@ -38,83 +48,7 @@ program dcp_fee_management.aleo {
         return Fee{
             owner: fee_0.owner,
             microcredits: fee_0.microcredits + fee_1.microcredits,
+            expire: min_u32(fee_0.expire, fee_2.expire)
         };
     }
-
-    /*
-    async transition burn_2_fee(
-        private fee_0: Fee,
-        private fee_1: Fee,
-    ) -> Future {
-        let amount: u64 = (
-            fee_0.microcredits 
-            + fee_1.microcredits
-        );
-        let unlock_fee_future: Future = credits.aleo/transfer_public(
-            fee_0.owner,
-            amount,
-        );
-        return finalize_burn_fee(unlock_fee_future);
-    }
-
-    async transition burn_3_fee(
-        private fee_0: Fee,
-        private fee_1: Fee,
-        private fee_2: Fee,
-    ) -> Future {
-        let amount: u64 = (
-            fee_0.microcredits 
-            + fee_1.microcredits
-            + fee_2.microcredits
-        );
-        let unlock_fee_future: Future = credits.aleo/transfer_public(
-            fee_0.owner,
-            amount,
-        );
-        return finalize_burn_fee(unlock_fee_future);
-    }
-
-
-    async transition burn_16_fee(
-        private fee_0: Fee,
-        private fee_1: Fee,
-        private fee_2: Fee,
-        private fee_3: Fee,
-        private fee_4: Fee,
-        private fee_5: Fee,
-        private fee_6: Fee,
-        private fee_7: Fee,
-        private fee_8: Fee,
-        private fee_9: Fee,
-        private fee_10: Fee,
-        private fee_11: Fee,
-        private fee_12: Fee,
-        private fee_13: Fee,
-        private fee_14: Fee,
-        private fee_15: Fee,
-    ) -> Future {
-        let amount: u64 = (
-            fee_0.microcredits 
-            + fee_1.microcredits
-            + fee_2.microcredits
-            + fee_3.microcredits
-            + fee_4.microcredits
-            + fee_5.microcredits
-            + fee_6.microcredits
-            + fee_7.microcredits
-            + fee_8.microcredits
-            + fee_9.microcredits
-            + fee_10.microcredits
-            + fee_11.microcredits
-            + fee_12.microcredits
-            + fee_13.microcredits
-            + fee_14.microcredits
-            + fee_15.microcredits
-        );
-        credits.aleo/transfer_public(
-            fee_0.owner,
-            amount,
-        );
-    }
-    */
 }

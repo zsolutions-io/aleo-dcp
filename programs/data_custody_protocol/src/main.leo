@@ -13,6 +13,9 @@ program data_custody_protocol.aleo {
     const MAX_VALIDATORS: u8 = 16u8;
     const MAX_VALIDATORS_MINUS_1: u8 = 15u8;
     const VALIDATORS_PER_BATCH: u8 = 16u8;
+     // 1 block every 5s ?
+    const INCENTIVE_TTL: u32 = 120u32; // 10min
+    const HEIGHT_RANGE: u32 = 60u32; // 5min
 
     inline hash_custody(custody: Custody) -> field {
         return BHP256::hash_to_field(custody);
@@ -278,6 +281,7 @@ program data_custody_protocol.aleo {
         public validators: [address; 16], // MAX_VALIDATORS
         private validator_fee: u64,
         private protocol_fee_record: credits.aleo/credits,
+        public current_height: u32
     ) -> (credits.aleo/credits, Future) {
         assert_neq(self.caller, self.signer);
         let custodied_data: Custody = Custody {
@@ -312,6 +316,7 @@ program data_custody_protocol.aleo {
             to,
             validator_fee,
             expected_weight,
+            current_height + INCENTIVE_TTL
         );
 
         let protocol_fee_amount: u64 = (MAX_VALIDATORS as u64) * validator_fee;
@@ -331,16 +336,32 @@ program data_custody_protocol.aleo {
         );
 
         let request_data_as_program_future: Future = finalize_request_data_as_program(
+            current_height,
             protocol_core_future,
             lock_fee_future
         );
         return (protocol_fee_change, request_data_as_program_future);
     }
     async function finalize_request_data_as_program(
+        pretended_current_height: u32
         protocol_core_future: Future,
         lock_fee_future: Future
     ){
+        let actual_height: u32 = block.height;
+        assert(pretended_current_height <= actual_height);
+        assert(actual_height <= pretended_current_height + HEIGHT_RANGE);
+        /*
+
+        -------|------------------|---------------------|------------|-------->
+        tx gen height   finalize exec height      Max accepted   Incentive dies
+                <-------------------------------------->
+                                HEIGHT_RANGE
+                <---------------------------------------------------->
+                                        INCENTIVE_TTL
+        
+        */
         protocol_core_future.await();
         lock_fee_future.await();
     }
 }
+

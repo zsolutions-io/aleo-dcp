@@ -46,6 +46,7 @@ const try_call_rpc_method = async (rpc_request) => {
 }
 
 
+
 app.post("/", async (req, res) => {
   const rpc_request = req.body;
   try {
@@ -61,4 +62,20 @@ app.post("/", async (req, res) => {
   }
 });
 
+/*
+app.get(
+  "*", async (req, res) => {
+    try {
+      console.log(req);
+    } catch (e) {
+      const response = {
+        ...rpc_base,
+        error: e + ''
+      };
 
+      return res.status(400).send(response,);
+    }
+  }
+);
+
+*/

@@ -2,6 +2,7 @@
 
 source ./development/.env
 
+LATEST_HEIGHT_ENDPOINT="$NODE_URL/testnet/latest/height";
 TRANSACTION_ENDPOINT="$NODE_URL/testnet/transaction";
 BROADCAST_ENDPOINT="$TRANSACTION_ENDPOINT/broadcast";
 
@@ -93,6 +94,13 @@ SLEEP_BETWEEN_TX=10
 }
 
 
+# Get current block height
+
+latest_height=$(
+    curl "$LATEST_HEIGHT_ENDPOINT"
+);
+
+
 # List NFT
 {
     secret_random_viewkey="$((1 + $RANDOM % 100000))scalar"
@@ -128,6 +136,7 @@ SLEEP_BETWEEN_TX=10
                 $((1 + $RANDOM % 100000))field
             ]" \
             "$validators" \
+            "${latest_height}u32"\
         | awk 'NR==6'
     );
     sleep $SLEEP_BETWEEN_TX;
