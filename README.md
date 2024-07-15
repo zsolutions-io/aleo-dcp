@@ -28,9 +28,9 @@ Data is splitted following **Shamir Secret Sharing (SSS)** algorithm. Shares are
 The protocol allows any program to privately hold a `field` element and distribute it transactionally. It can be used to store:
 
 - A View Key protecting record(s), enabling arbitrary data storage.
-- A `field` directly, allowing addition updates on stored data by leveraging additive homomorphic properties of SSS.
+- A `field` directly, allowing addition/multiplication updates on stored data.
 
-### Custodying arbitrary record data
+### Arbitrary record data custody
 
 Protocol enables programs to hold and distribute data stored in any arbitrary record:
 
@@ -43,9 +43,14 @@ Protocol enables programs to hold and distribute data stored in any arbitrary re
 
 ![alt text](./media/aleo-dcp-schema.png)
 
-### Additive homomorphic operations support
+### Full-circuit fields custody
 
-**Custody** step can be call multiple times, with the same `custody_key`, by a program that imports DCP. In that case, shares associated with custodied `field` elements must simply be added by validators before being submitted to destinator.
+Protocol enables programs to custody a field value and distribute it to a destinator. This value can be updated using the following operations:
+
+- **`add_private`** - Add a private operand to custodied value.
+- **`add_public`** - Add a public operand to custodied value.
+- **`mul_public`** - Multiply custodied value by a public operand.
+- **`mul_private`** - TODO: beaver triple generation.
 
 ![alt text](./media/aleo-dcp-schema-homomorphic.png)
 
