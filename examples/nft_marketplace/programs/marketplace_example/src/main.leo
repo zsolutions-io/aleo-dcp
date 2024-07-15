@@ -49,7 +49,7 @@ program marketplace_example.aleo {
         private secret_random_viewkey: scalar,
         private privacy_random_coefficients: [field; 15],
         public validators: [address; 16],
-        public current_block_height: u32
+        public obfuscator: scalar
     ) -> (NFTView, Future) {
         let (nft_view, transfer_future): (arc721_example.aleo/NFTView, Future) 
             = arc721_example.aleo/transfer_private_to_public(
@@ -65,13 +65,13 @@ program marketplace_example.aleo {
         let nft_commit: field = commit_nft(nft.data, nft.edition);
 
         let custody_data_as_program_future: Future =
-            data_custody_protocol.aleo/custody_data_as_program(
+            data_custody_protocol.aleo/add_private(
                 secret, // private data_view_key: scalar,
                 dcp_key, // private custody_key: field,
                 privacy_random_coefficients, // private coefficients: [field; 15],
                 validators, // private validators: [address; 16],
                 MPC_THRESHOLD, // private threshold: u8 <= 15
-                current_block_height
+                obfuscator
             );
 
         let list_future: Future = finalize_list(
@@ -117,6 +117,8 @@ program marketplace_example.aleo {
         public validators: [address; 16],
         public validator_fee: u64,
         private protocol_fee_record: credits.aleo/credits,
+        public current_block_height: u32,
+        public custody_trace: field
         /*
             Validators associated with the listing can be retrieved using: 
                 protocol_validators.aleo/validator_sets.get(
@@ -130,6 +132,8 @@ program marketplace_example.aleo {
                         )
                     )
                 )
+
+             = dcp_core_protocol.aleo/custodies.get(custody_hash).custody_trace;
         */
     ) -> (credits.aleo/credits, Future) {
         let pay_marketplace_future: Future =
@@ -140,26 +144,27 @@ program marketplace_example.aleo {
 
         let (
             change,
-            request_data_as_program_future
+            request_open_future
         ): (
             credits.aleo/credits,
             Future
         ) =
-            data_custody_protocol.aleo/request_data_as_program(
+            data_custody_protocol.aleo/request_open(
                 listing_data.dcp_key, // private data_address: address,
                 self.signer, // private to: address,
                 MPC_THRESHOLD, // private threshold: u8,
-                1u64, // public expected_weight: u64,
+                custody_trace, // public custody_trace: field,
                 validators, // public validators: [address; 16],
                 validator_fee, // private validator_fee: u64,
                 protocol_fee_record, // private protocol_fee_record: credits.aleo/credits,
+                current_block_height
             );
         let accept_listing_future: Future = finalize_accept_listing(
             self.caller,
             nft_commit,
             listing_data,
             pay_marketplace_future,
-            request_data_as_program_future,
+            request_open_future,
         );
         return (change, accept_listing_future);
     }
@@ -168,7 +173,7 @@ program marketplace_example.aleo {
         nft_commit: field,
         listing_data: ListingData,
         pay_marketplace_future: Future,
-        request_data_as_program_future: Future
+        request_open_future: Future
     ) {
         let retrieved_listing_data: ListingData = listings.get(nft_commit);
         assert_eq(retrieved_listing_data, listing_data);
@@ -176,7 +181,7 @@ program marketplace_example.aleo {
         listings_buyer.set(nft_commit, caller);
         
         pay_marketplace_future.await();
-        request_data_as_program_future.await();
+        request_open_future.await();
     }
 
 

@@ -48,7 +48,7 @@ program dcp_fee_management.aleo {
         return Fee{
             owner: fee_0.owner,
             microcredits: fee_0.microcredits + fee_1.microcredits,
-            expire: min_u32(fee_0.expire, fee_2.expire)
+            expire: min_u32(fee_0.expire, fee_1.expire)
         };
     }
 }

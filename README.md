@@ -90,7 +90,7 @@ For a program to custody private data, it must import **`data_custody_protocol.a
 1. To custody data, it can:
     - Call `data_custody_protocol.aleo/custody_data_as_program((data_view_key as field), threshold, ...)`
     - Send any records to `(data_view_key * 522678458525321116977504528531602186870683848189190546523208313015552693483group) as address`
-2. It can then call `data_custody_protocol.aleo/request_data_as_program` to initiate a data request.
+2. It can then call `data_custody_protocol.aleo/request_open_as_program` to initiate a data request.
 3. Validator bots automatically call `dcp_core_protocol.aleo/process_request_as_validator` to accept the data request.
 4. `data_custody_protocol.aleo/assert_completed_as_program` can then be used by the program to check if data was effectively transmitted.
 

@@ -31,7 +31,7 @@ record ValidatorShare {
 }
 
 
-record WithdrawRequest {
+record OpenRequest {
     owner: address,
     custody_hash: field,
     to: address,

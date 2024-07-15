@@ -24,7 +24,7 @@ deploy_program () {
     sleep $SLEEP_BETWEEN_TX;
 }
 
-deploy_program "dcp_withdraw_requests";
+deploy_program "dcp_open_requests";
 deploy_program "dcp_validator_shares";
 deploy_program "dcp_fee_management";
 deploy_program "dcp_core_protocol";

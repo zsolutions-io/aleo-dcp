@@ -1,6 +1,6 @@
 import credits.aleo;
 import dcp_validator_shares.aleo;
-import dcp_withdraw_requests.aleo;
+import dcp_open_requests.aleo;
 import dcp_fee_management.aleo;
 import dcp_core_protocol.aleo;
 program dcp_reconstruct_secret.aleo;
@@ -18,7 +18,6 @@ struct Share:
 struct ValidatorShareData:
     validator as address;
     share as Share;
-    weight as u64;
 
 
 

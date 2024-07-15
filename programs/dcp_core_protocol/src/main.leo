@@ -16,14 +16,13 @@
 */
 
 import dcp_validator_shares.aleo;
-import dcp_withdraw_requests.aleo;
+import dcp_open_requests.aleo;
 import dcp_fee_management.aleo;
 
 program dcp_core_protocol.aleo {
     const DEFAULT_AUTHORITY: address = aleo1s3ws5tra87fjycnjrwsjcrnw2qxr8jfqqdugnf0xzqqw29q9m5pqem2u4t;
     const ZERO_ADDRESS: address = aleo1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq3ljyzc;
     const MAX_VALIDATORS: u8 = 16u8;
-
 
     struct Proposal {
         validators: [address; 16], // MAX_VALIDATORS
@@ -33,13 +32,13 @@ program dcp_core_protocol.aleo {
 
     struct CustodyState {
         validator_set_index: u64,
-        expected_weight: u64
+        custody_trace: field
     }
 
     struct Custody {
         origin: address,
         custody_key: field,
-        threshold: u8,
+        threshold: u8
     }
 
     struct Share {
@@ -49,8 +48,7 @@ program dcp_core_protocol.aleo {
 
     struct ValidatorShareData {
         validator: address,
-        share: Share,
-        weight: u64
+        share: Share
     }
 
 
@@ -79,9 +77,12 @@ program dcp_core_protocol.aleo {
     mapping custodies: field => CustodyState;
     // hash(Custody) => CustodyState
 
-
     inline hash_proposal(proposal: Proposal) -> field {
         return BHP256::hash_to_field(proposal);
+    }
+    
+    inline hash_tuple(traces: [field; 2]) -> field{
+        return BHP256::hash_to_field(traces);
     }
 
 
@@ -313,27 +314,33 @@ program dcp_core_protocol.aleo {
     async transition custody_data_as_program(
         public custody_hash: field,
         public validators: [address; 16], // MAX_VALIDATORS
+        public operation_trace: field
     ) -> Future {
         assert_eq(self.caller, data_custody_protocol.aleo);
         return finalize_custody_data_as_program(
             custody_hash,
             validators,
+            operation_trace
         );
     }
     async function finalize_custody_data_as_program(
         custody_hash: field,
         validators: [address; 16], // MAX_VALIDATORS
+        operation_trace: field
     ){
         let default_custody_state: CustodyState = CustodyState {
             validator_set_index: 0u64,
-            expected_weight: 0u64
+            custody_trace: operation_trace
         };
         let custody_state: CustodyState = custodies.get_or_use(
             custody_hash, default_custody_state
         );
 
         let validator_sets_len: u64 = validator_sets_length.get(true);
-        let validator_set_index: u64 = (custody_state.expected_weight == 0u64) ?
+        let first_custody: bool = (
+            custody_state.custody_trace == operation_trace
+        );
+        let validator_set_index: u64 = first_custody ?
             (validator_sets_len - 1u64) :
             custody_state.validator_set_index;
         let validator_set: [address; 16] = validator_sets.get(
@@ -341,63 +348,69 @@ program dcp_core_protocol.aleo {
         ); // MAX_VALIDATORS
         assert_eq(validators, validator_set);
 
+        let new_custody_trace: field = first_custody ?
+            operation_trace :
+            hash_tuple([
+                custody_state.custody_trace,
+                operation_trace
+            ]);
+
         let new_custody_state: CustodyState = CustodyState {
             validator_set_index: validator_set_index,
-            expected_weight: custody_state.expected_weight + 1u64
+            custody_trace: new_custody_trace
         };
         custodies.set(custody_hash, new_custody_state);
     }
 
 
-    async transition request_data_as_program(
+    async transition request_open(
         public custody_hash: field,
         public validators: [address; 16], // MAX_VALIDATORS
-        public expected_weight: u64
+        public custody_trace: field
     ) -> Future {
         assert_eq(self.caller, data_custody_protocol.aleo);
-        return finalize_request_data_as_program(
+        return finalize_request_open(
             custody_hash,
             validators,
-            expected_weight
+            custody_trace
         );
     }
-    async function finalize_request_data_as_program(
+    async function finalize_request_open(
         custody_hash: field,
         validators: [address; 16], // MAX_VALIDATORS
-        expected_weight: u64
+        custody_trace: field
     ){
         let custody_state: CustodyState = custodies.get(custody_hash);
-        assert_eq(expected_weight, custody_state.expected_weight);
+        assert_eq(custody_trace, custody_state.custody_trace);
 
         let validator_set: [address; 16] = validator_sets.get(
             custody_state.validator_set_index
         ); // MAX_VALIDATORS
-
         assert_eq(validators, validator_set);
     }
 
 
     transition process_request_as_validator(
         validator_share: dcp_validator_shares.aleo/ValidatorShare,
-        withdraw_request: dcp_withdraw_requests.aleo/WithdrawRequest,
+        open_request: dcp_open_requests.aleo/OpenRequest,
     ) -> (DestinationShare, dcp_fee_management.aleo/Fee) {
         let custody_hash: field = hash_custody(validator_share.custody);
-        assert_eq(withdraw_request.custody_hash, custody_hash);
+        assert_eq(open_request.custody_hash, custody_hash);
 
         let destination_share: DestinationShare = DestinationShare {
-            owner: withdraw_request.to,
+            owner: open_request.to,
             share: validator_share.share,
             custody: validator_share.custody
         };
 
-        dcp_withdraw_requests.aleo/spend_withdraw_request(withdraw_request);
+        dcp_open_requests.aleo/spend_open_request(open_request);
         let fee: dcp_fee_management.aleo/Fee 
             = dcp_fee_management.aleo/mint_fee(
                 self.caller, 
-                withdraw_request.fee_amount, 
-                withdraw_request.expire
+                open_request.fee_amount, 
+                open_request.expire
             );
-        assert_eq(withdraw_request.expected_weight, validator_share.weight);
+        assert_eq(open_request.custody_trace, validator_share.custody_trace);
 
         return (destination_share, fee);
     }

@@ -17,10 +17,10 @@
       "path": "../dcp_validator_shares"
     },
     {
-      "name": "dcp_withdraw_requests.aleo",
+      "name": "dcp_open_requests.aleo",
       "location": "local",
       "network": null,
-      "path": "../dcp_withdraw_requests"
+      "path": "../dcp_open_requests"
     }
   ]
 }

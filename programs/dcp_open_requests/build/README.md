@@ -1,4 +1,4 @@
-# dcp_withdraw_requests.aleo
+# dcp_open_requests.aleo
 
 ## Build Guide
 

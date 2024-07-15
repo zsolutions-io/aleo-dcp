@@ -1,6 +1,6 @@
 {
-  "program": "dcp_hash_custody_offchain.aleo",
-  "version": "0.0.0",
-  "description": "",
-  "license": "MIT"
+    "program": "dcp_hash_custody_offchain.aleo",
+    "version": "0.0.0",
+    "description": "",
+    "license": "MIT"
 }

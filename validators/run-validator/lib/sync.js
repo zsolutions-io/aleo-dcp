@@ -317,13 +317,13 @@ const sync_swr_transitions = async (
     - inputs[1]: ValidatorShare
     - outputs[0]: ValidatorShare
 
-  (dcp_withdraw_requests.aleo, submit_requests_to_validators)
-    - outputs[0]: WithdrawRequest
-    - outputs[1]: WithdrawRequest
+  (dcp_open_requests.aleo, submit_requests_to_validators)
+    - outputs[0]: OpenRequest
+    - outputs[1]: OpenRequest
     ...
-    - outputs[15]: WithdrawRequest
+    - outputs[15]: OpenRequest
 
-  (dcp_withdraw_requests.aleo, spend_withdraw_request)
-    - inputs[0]: WithdrawRequest
+  (dcp_open_requests.aleo, spend_open_request)
+    - inputs[0]: OpenRequest
 
 */

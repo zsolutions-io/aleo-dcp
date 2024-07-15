@@ -1,12 +1,12 @@
 
 
-program dcp_withdraw_requests.aleo {
-    record WithdrawRequest {
+program dcp_open_requests.aleo {
+    record OpenRequest {
         owner: address,
         custody_hash: field,
         to: address,
         fee_amount: u64,
-        expected_weight: u64,
+        custody_trace: field,
         expire: u32
     }
 
@@ -15,178 +15,178 @@ program dcp_withdraw_requests.aleo {
         public custody_hash: field,
         private to: address,
         private validator_fee_amount: u64,
-        public expected_weight: u64,
+        public custody_trace: field,
         public expire_height: u32
     ) -> (
-        WithdrawRequest,
-        WithdrawRequest,
-        WithdrawRequest,
-        WithdrawRequest,
-        WithdrawRequest,
-        WithdrawRequest,
-        WithdrawRequest,
-        WithdrawRequest,
-        WithdrawRequest,
-        WithdrawRequest,
-        WithdrawRequest,
-        WithdrawRequest,
-        WithdrawRequest,
-        WithdrawRequest,
-        WithdrawRequest,
-        WithdrawRequest
+        OpenRequest,
+        OpenRequest,
+        OpenRequest,
+        OpenRequest,
+        OpenRequest,
+        OpenRequest,
+        OpenRequest,
+        OpenRequest,
+        OpenRequest,
+        OpenRequest,
+        OpenRequest,
+        OpenRequest,
+        OpenRequest,
+        OpenRequest,
+        OpenRequest,
+        OpenRequest
     ){
         assert_eq(self.caller, data_custody_protocol.aleo);
 
-        let withdraw_request_0: WithdrawRequest = WithdrawRequest {
+        let open_request_0: OpenRequest = OpenRequest {
             owner: validators[0u8],
             custody_hash: custody_hash,
             to: to,
             fee_amount: validator_fee_amount,
-            expected_weight: expected_weight,
+            custody_trace: custody_trace,
             expire: expire_height
         };
-        let withdraw_request_1: WithdrawRequest = WithdrawRequest {
+        let open_request_1: OpenRequest = OpenRequest {
             owner: validators[1u8],
             custody_hash: custody_hash,
             to: to,
             fee_amount: validator_fee_amount,
-            expected_weight: expected_weight,
+            custody_trace: custody_trace,
             expire: expire_height
         };
-        let withdraw_request_2: WithdrawRequest = WithdrawRequest {
+        let open_request_2: OpenRequest = OpenRequest {
             owner: validators[2u8],
             custody_hash: custody_hash,
             to: to,
             fee_amount: validator_fee_amount,
-            expected_weight: expected_weight,
+            custody_trace: custody_trace,
             expire: expire_height
         };
-        let withdraw_request_3: WithdrawRequest = WithdrawRequest {
+        let open_request_3: OpenRequest = OpenRequest {
             owner: validators[3u8],
             custody_hash: custody_hash,
             to: to,
             fee_amount: validator_fee_amount,
-            expected_weight: expected_weight,
+            custody_trace: custody_trace,
             expire: expire_height
         };
-        let withdraw_request_4: WithdrawRequest = WithdrawRequest {
+        let open_request_4: OpenRequest = OpenRequest {
             owner: validators[4u8],
             custody_hash: custody_hash,
             to: to,
             fee_amount: validator_fee_amount,
-            expected_weight: expected_weight,
+            custody_trace: custody_trace,
             expire: expire_height
         };
-        let withdraw_request_5: WithdrawRequest = WithdrawRequest {
+        let open_request_5: OpenRequest = OpenRequest {
             owner: validators[5u8],
             custody_hash: custody_hash,
             to: to,
             fee_amount: validator_fee_amount,
-            expected_weight: expected_weight,
+            custody_trace: custody_trace,
             expire: expire_height
         };
-        let withdraw_request_6: WithdrawRequest = WithdrawRequest {
+        let open_request_6: OpenRequest = OpenRequest {
             owner: validators[6u8],
             custody_hash: custody_hash,
             to: to,
             fee_amount: validator_fee_amount,
-            expected_weight: expected_weight,
+            custody_trace: custody_trace,
             expire: expire_height
         };
-        let withdraw_request_7: WithdrawRequest = WithdrawRequest {
+        let open_request_7: OpenRequest = OpenRequest {
             owner: validators[7u8],
             custody_hash: custody_hash,
             to: to,
             fee_amount: validator_fee_amount,
-            expected_weight: expected_weight,
+            custody_trace: custody_trace,
             expire: expire_height
         };
-        let withdraw_request_8: WithdrawRequest = WithdrawRequest {
+        let open_request_8: OpenRequest = OpenRequest {
             owner: validators[8u8],
             custody_hash: custody_hash,
             to: to,
             fee_amount: validator_fee_amount,
-            expected_weight: expected_weight,
+            custody_trace: custody_trace,
             expire: expire_height
         };
-        let withdraw_request_9: WithdrawRequest = WithdrawRequest {
+        let open_request_9: OpenRequest = OpenRequest {
             owner: validators[9u8],
             custody_hash: custody_hash,
             to: to,
             fee_amount: validator_fee_amount,
-            expected_weight: expected_weight,
+            custody_trace: custody_trace,
             expire: expire_height
         };
-        let withdraw_request_10: WithdrawRequest = WithdrawRequest {
+        let open_request_10: OpenRequest = OpenRequest {
             owner: validators[10u8],
             custody_hash: custody_hash,
             to: to,
             fee_amount: validator_fee_amount,
-            expected_weight: expected_weight,
+            custody_trace: custody_trace,
             expire: expire_height
         };
-        let withdraw_request_11: WithdrawRequest = WithdrawRequest {
+        let open_request_11: OpenRequest = OpenRequest {
             owner: validators[11u8],
             custody_hash: custody_hash,
             to: to,
             fee_amount: validator_fee_amount,
-            expected_weight: expected_weight,
+            custody_trace: custody_trace,
             expire: expire_height
         };
-        let withdraw_request_12: WithdrawRequest = WithdrawRequest {
+        let open_request_12: OpenRequest = OpenRequest {
             owner: validators[12u8],
             custody_hash: custody_hash,
             to: to,
             fee_amount: validator_fee_amount,
-            expected_weight: expected_weight,
+            custody_trace: custody_trace,
             expire: expire_height
         };
-        let withdraw_request_13: WithdrawRequest = WithdrawRequest {
+        let open_request_13: OpenRequest = OpenRequest {
             owner: validators[13u8],
             custody_hash: custody_hash,
             to: to,
             fee_amount: validator_fee_amount,
-            expected_weight: expected_weight,
+            custody_trace: custody_trace,
             expire: expire_height
         };
-        let withdraw_request_14: WithdrawRequest = WithdrawRequest {
+        let open_request_14: OpenRequest = OpenRequest {
             owner: validators[14u8],
             custody_hash: custody_hash,
             to: to,
             fee_amount: validator_fee_amount,
-            expected_weight: expected_weight,
+            custody_trace: custody_trace,
             expire: expire_height
         };
-        let withdraw_request_15: WithdrawRequest = WithdrawRequest {
+        let open_request_15: OpenRequest = OpenRequest {
             owner: validators[15u8],
             custody_hash: custody_hash,
             to: to,
             fee_amount: validator_fee_amount,
-            expected_weight: expected_weight,
+            custody_trace: custody_trace,
             expire: expire_height
         };
 
         return (
-            withdraw_request_0,
-            withdraw_request_1,
-            withdraw_request_2,
-            withdraw_request_3,
-            withdraw_request_4,
-            withdraw_request_5,
-            withdraw_request_6,
-            withdraw_request_7,
-            withdraw_request_8,
-            withdraw_request_9,
-            withdraw_request_10,
-            withdraw_request_11,
-            withdraw_request_12,
-            withdraw_request_13,
-            withdraw_request_14,
-            withdraw_request_15,
+            open_request_0,
+            open_request_1,
+            open_request_2,
+            open_request_3,
+            open_request_4,
+            open_request_5,
+            open_request_6,
+            open_request_7,
+            open_request_8,
+            open_request_9,
+            open_request_10,
+            open_request_11,
+            open_request_12,
+            open_request_13,
+            open_request_14,
+            open_request_15,
         );
     }
 
-    transition spend_withdraw_request(request: WithdrawRequest){
+    transition spend_open_request(request: OpenRequest){
         assert_eq(self.caller, dcp_core_protocol.aleo);
     }
 }

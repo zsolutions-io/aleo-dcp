@@ -1,5 +1,5 @@
 {
-  "program": "dcp_withdraw_requests.aleo",
+  "program": "dcp_open_requests.aleo",
   "version": "0.1.0",
   "description": "",
   "license": "MIT",
