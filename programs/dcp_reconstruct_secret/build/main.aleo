@@ -1,7 +1,7 @@
 import credits.aleo;
 import dcp_validator_shares.aleo;
 import dcp_open_requests.aleo;
-import dcp_fee_management.aleo;
+import dcp_validator_fee.aleo;
 import dcp_core_protocol.aleo;
 program dcp_reconstruct_secret.aleo;
 
@@ -31,8 +31,13 @@ struct Proposal:
 record ReconstructedSecret:
     owner as address.private;
     secret as field.private;
-    custody_hash as field.private;
+    custody as Custody.private;
+    custody_trace as field.private;
 
+
+mapping reconstructed_secrets:
+	key as field.public;
+	value as field.public;
 
 
 
@@ -2353,9 +2358,7 @@ closure reconstruct_onchain:
     output r2310 as field;
 
 
-
-
-function reconstruct_secret_onchain:
+function reconstruct_secret_private:
     input r0 as dcp_core_protocol.aleo/DestinationShare.record;
     input r1 as dcp_core_protocol.aleo/DestinationShare.record;
     input r2 as dcp_core_protocol.aleo/DestinationShare.record;
@@ -2372,7 +2375,34 @@ function reconstruct_secret_onchain:
     input r13 as dcp_core_protocol.aleo/DestinationShare.record;
     input r14 as dcp_core_protocol.aleo/DestinationShare.record;
     call dcp_core_protocol.aleo/spend_destination_shares r0 r1 r2 r3 r4 r5 r6 r7 r8 r9 r10 r11 r12 r13 r14;
-    assert.eq self.caller r0.custody.origin;
+    assert.eq r1.custody r0.custody;
+    assert.eq r2.custody r0.custody;
+    assert.eq r3.custody r0.custody;
+    assert.eq r4.custody r0.custody;
+    assert.eq r5.custody r0.custody;
+    assert.eq r6.custody r0.custody;
+    assert.eq r7.custody r0.custody;
+    assert.eq r8.custody r0.custody;
+    assert.eq r9.custody r0.custody;
+    assert.eq r10.custody r0.custody;
+    assert.eq r11.custody r0.custody;
+    assert.eq r12.custody r0.custody;
+    assert.eq r13.custody r0.custody;
+    assert.eq r14.custody r0.custody;
+    assert.eq r1.custody_trace r0.custody_trace;
+    assert.eq r2.custody_trace r0.custody_trace;
+    assert.eq r3.custody_trace r0.custody_trace;
+    assert.eq r4.custody_trace r0.custody_trace;
+    assert.eq r5.custody_trace r0.custody_trace;
+    assert.eq r6.custody_trace r0.custody_trace;
+    assert.eq r7.custody_trace r0.custody_trace;
+    assert.eq r8.custody_trace r0.custody_trace;
+    assert.eq r9.custody_trace r0.custody_trace;
+    assert.eq r10.custody_trace r0.custody_trace;
+    assert.eq r11.custody_trace r0.custody_trace;
+    assert.eq r12.custody_trace r0.custody_trace;
+    assert.eq r13.custody_trace r0.custody_trace;
+    assert.eq r14.custody_trace r0.custody_trace;
     cast  r0.share r1.share r2.share r3.share r4.share r5.share r6.share r7.share r8.share r9.share r10.share r11.share r12.share r13.share r14.share into r15 as [Share; 15u32];
     is.neq r15[0u32].index 0field into r16;
     cast r16 into r17 as u8;
@@ -2419,9 +2449,14 @@ function reconstruct_secret_onchain:
     is.neq r15[14u32].index 0field into r58;
     cast r58 into r59 as u8;
     add r57 r59 into r60;
-    is.eq r60 r0.custody.threshold into r61;
+    gte r60 r0.custody.threshold into r61;
     assert.eq r61 true;
     call reconstruct_onchain r15 into r62;
-    hash.bhp256 r0.custody into r63 as field;
-    cast self.caller r62 r63 into r64 as ReconstructedSecret.record;
-    output r64 as ReconstructedSecret.record;
+    cast self.caller r62 r0.custody r0.custody_trace into r63 as ReconstructedSecret.record;
+    output r63 as ReconstructedSecret.record;
+
+
+function spend_reconstructed_secret:
+    input r0 as ReconstructedSecret.record;
+
+

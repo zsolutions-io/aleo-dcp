@@ -1,7 +1,7 @@
 import credits.aleo;
 import dcp_validator_shares.aleo;
 import dcp_open_requests.aleo;
-import dcp_fee_management.aleo;
+import dcp_validator_fee.aleo;
 import dcp_core_protocol.aleo;
 program data_custody_protocol.aleo;
 
@@ -54,7 +54,7 @@ function request_open:
     call dcp_open_requests.aleo/submit_requests_to_validators r10 r9 r1 r5 r3 r12 into r13 r14 r15 r16 r17 r18 r19 r20 r21 r22 r23 r24 r25 r26 r27 r28;
     cast 16u8 into r29 as u64;
     mul r29 r5 into r30;
-    call credits.aleo/transfer_private_to_public r6 dcp_fee_management.aleo r30 into r31 r32;
+    call credits.aleo/transfer_private_to_public r6 dcp_validator_fee.aleo r30 into r31 r32;
     call dcp_core_protocol.aleo/request_open r9 r4 r3 into r33;
     async request_open r7 r33 r32 into r34;
     output r31 as credits.aleo/credits.record;

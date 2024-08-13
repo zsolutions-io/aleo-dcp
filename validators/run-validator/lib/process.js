@@ -50,7 +50,7 @@ export const process_requests = async (rpc_provider, db, account) => {
   const couple_to_execute = get_highest_fee_couple(executable_couples);
 
   console.log(couple_to_execute);
-  // execute process_request_as_validator on couple_to_execute
+  // execute process_private_request on couple_to_execute
   await process_request(account, couple_to_execute);
 
   const expire_timestamp = (

@@ -1,4 +1,4 @@
-# dcp_fee_management.aleo
+# dcp_reconstruct_secret_public.aleo
 
 ## Build Guide
 

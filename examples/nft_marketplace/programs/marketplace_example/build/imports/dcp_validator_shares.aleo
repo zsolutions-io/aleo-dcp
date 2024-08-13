@@ -63,7 +63,7 @@ function submit_shares_to_validators:
 
 
 
-function join_shares_as_validator:
+function join_shares:
     input r0 as ValidatorShare.record;
     input r1 as ValidatorShare.record;
     is.eq r0.custody r1.custody into r2;

@@ -84,7 +84,7 @@ SLEEP_BETWEEN_TX=10
     sleep $SLEEP_BETWEEN_TX;
     nft_record_ciphertext=$(
         curl $TRANSACTION_ENDPOINT/$mint_tx_id \
-        | jq --raw-output '.execution.transitions[0].outputs[0].value'
+        | jq --raw-output '.execution.transitions[0].outputs[0].share_val'
     );
     nft_record_plaintext=$(
         snarkos developer decrypt \
@@ -143,7 +143,7 @@ latest_height=$(
     list_raw_tx=$(curl $TRANSACTION_ENDPOINT/$list_tx_id)
     nft_record_ciphertext=$(
         echo $list_raw_tx \
-        | jq --raw-output '.execution.transitions[0].outputs[0].value'
+        | jq --raw-output '.execution.transitions[0].outputs[0].share_val'
     );
     nft_record_plaintext=$(
         snarkos developer decrypt \
@@ -152,7 +152,7 @@ latest_height=$(
     );
     nft_commit=$(
         echo $list_raw_tx \
-        | jq --raw-output '.execution.transitions[0].outputs[1].value' \
+        | jq --raw-output '.execution.transitions[0].outputs[1].share_val' \
         | awk 'NR==6' \
         | tr -d " \t\r\n," 
     );
@@ -177,7 +177,7 @@ latest_height=$(
     sleep $SLEEP_BETWEEN_TX;
     credits_ciphertext=$(
         curl "$TRANSACTION_ENDPOINT/$transfer_public_to_private_tx_id" \
-        | jq --raw-output '.execution.transitions[0].outputs[0].value'
+        | jq --raw-output '.execution.transitions[0].outputs[0].share_val'
     );
     credits_plaintext=$(
         snarkos developer decrypt \
@@ -202,19 +202,19 @@ sleep $SLEEP_BETWEEN_TX;
 
 price=$(
     echo $list_raw_tx \
-    | jq --raw-output '.execution.transitions[4].outputs[1].value' \
+    | jq --raw-output '.execution.transitions[4].outputs[1].share_val' \
     | awk 'NR==6' \
     | tr -d " \t\r\n," 
 );
 seller_address=$(
     echo $list_raw_tx \
-    | jq --raw-output '.execution.transitions[4].outputs[1].value' \
+    | jq --raw-output '.execution.transitions[4].outputs[1].share_val' \
     | awk 'NR==7' \
     | tr -d " \t\r\n," 
 );
 dcp_key=$(
     echo $list_raw_tx \
-    | jq --raw-output '.execution.transitions[4].outputs[1].value' \
+    | jq --raw-output '.execution.transitions[4].outputs[1].share_val' \
     | awk 'NR==8' \
     | tr -d " \t\r\n," 
 );
@@ -252,7 +252,7 @@ for i in {0..7}
 do
     share_record_ciphertext=$(
         echo $list_raw_tx \
-            | jq --raw-output ".execution.transitions[1].outputs[$i].value"
+            | jq --raw-output ".execution.transitions[1].outputs[$i].share_val"
     )
     share_record_plaintext=$(
         snarkos developer decrypt \
@@ -270,7 +270,7 @@ for i in {0..7}
 do
     request_record_ciphertext=$(
         echo $accept_listing_raw_tx \
-            | jq --raw-output ".execution.transitions[1].outputs[$i].value"
+            | jq --raw-output ".execution.transitions[1].outputs[$i].share_val"
     )
     request_record_plaintext=$(
         snarkos developer decrypt \
@@ -300,7 +300,7 @@ done
                 --broadcast $BROADCAST_ENDPOINT \
                 --network 1 \
                 "dcp_core_protocol.aleo" \
-                "process_request_as_validator" \
+                "process_private_request" \
                 "$share_plaintext" \
                 "$request_plaintext" \
             | awk 'NR==6'
@@ -316,7 +316,7 @@ for i in {0..7}
 do
     destination_share_ciphertext=$(
         curl $TRANSACTION_ENDPOINT/${process_tx_ids[$i]} \
-            | jq --raw-output ".execution.transitions[2].outputs[0].value"
+            | jq --raw-output ".execution.transitions[2].outputs[0].share_val"
     )
     sleep 1;
     destination_share_plaintext=$(
@@ -363,7 +363,7 @@ nft_data_view_key=$(
 
 nft_view_record_ciphertext=$(
     echo $list_raw_tx \
-    | jq --raw-output '.execution.transitions[4].outputs[0].value'
+    | jq --raw-output '.execution.transitions[4].outputs[0].share_val'
 );
 
 nft_view_record_plaintext=$(

@@ -312,7 +312,7 @@ const sync_swr_transitions = async (
     ...
     - outputs[15]: ValidatorShare
 
-  (dcp_destination_shares.aleo, join_shares_as_validator)
+  (dcp_destination_shares.aleo, join_shares)
     - inputs[0]: ValidatorShare
     - inputs[1]: ValidatorShare
     - outputs[0]: ValidatorShare

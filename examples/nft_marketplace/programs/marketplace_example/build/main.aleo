@@ -1,7 +1,7 @@
 import credits.aleo;
 import dcp_validator_shares.aleo;
 import dcp_open_requests.aleo;
-import dcp_fee_management.aleo;
+import dcp_validator_fee.aleo;
 import dcp_core_protocol.aleo;
 import data_custody_protocol.aleo;
 import arc721_example.aleo;

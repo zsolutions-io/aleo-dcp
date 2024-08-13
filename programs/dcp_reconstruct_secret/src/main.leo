@@ -5,12 +5,11 @@
     contact@aleo.store - Pierre-André LONG
 */
 
-import dcp_core_protocol.aleo;
+import dcp_destination_shares.aleo;
 
 
 program dcp_reconstruct_secret.aleo {
     const MAX_ON_CHAIN_RECONSTRUCT_SHARES: u8 = 15u8;
-
 
     struct Share {
         share_val: field,
@@ -20,7 +19,8 @@ program dcp_reconstruct_secret.aleo {
     record ReconstructedSecret{
         owner: address,
         secret: field,
-        custody_hash: field
+        custody: Custody,
+        custody_trace: field
     }
 
 
@@ -66,24 +66,24 @@ program dcp_reconstruct_secret.aleo {
     }
 
 
-    transition reconstruct_secret_onchain(
-        destination_share_0: dcp_core_protocol.aleo/DestinationShare,
-        destination_share_1: dcp_core_protocol.aleo/DestinationShare,
-        destination_share_2: dcp_core_protocol.aleo/DestinationShare,
-        destination_share_3: dcp_core_protocol.aleo/DestinationShare,
-        destination_share_4: dcp_core_protocol.aleo/DestinationShare,
-        destination_share_5: dcp_core_protocol.aleo/DestinationShare,
-        destination_share_6: dcp_core_protocol.aleo/DestinationShare,
-        destination_share_7: dcp_core_protocol.aleo/DestinationShare,
-        destination_share_8: dcp_core_protocol.aleo/DestinationShare,
-        destination_share_9: dcp_core_protocol.aleo/DestinationShare,
-        destination_share_10: dcp_core_protocol.aleo/DestinationShare,
-        destination_share_11: dcp_core_protocol.aleo/DestinationShare,
-        destination_share_12: dcp_core_protocol.aleo/DestinationShare,
-        destination_share_13: dcp_core_protocol.aleo/DestinationShare,
-        destination_share_14: dcp_core_protocol.aleo/DestinationShare
+    transition reconstruct_secret_private(
+        destination_share_0: dcp_destination_shares.aleo/DestinationShare,
+        destination_share_1: dcp_destination_shares.aleo/DestinationShare,
+        destination_share_2: dcp_destination_shares.aleo/DestinationShare,
+        destination_share_3: dcp_destination_shares.aleo/DestinationShare,
+        destination_share_4: dcp_destination_shares.aleo/DestinationShare,
+        destination_share_5: dcp_destination_shares.aleo/DestinationShare,
+        destination_share_6: dcp_destination_shares.aleo/DestinationShare,
+        destination_share_7: dcp_destination_shares.aleo/DestinationShare,
+        destination_share_8: dcp_destination_shares.aleo/DestinationShare,
+        destination_share_9: dcp_destination_shares.aleo/DestinationShare,
+        destination_share_10: dcp_destination_shares.aleo/DestinationShare,
+        destination_share_11: dcp_destination_shares.aleo/DestinationShare,
+        destination_share_12: dcp_destination_shares.aleo/DestinationShare,
+        destination_share_13: dcp_destination_shares.aleo/DestinationShare,
+        destination_share_14: dcp_destination_shares.aleo/DestinationShare
     ) -> ReconstructedSecret {
-        dcp_core_protocol.aleo/spend_destination_shares(
+        dcp_destination_shares.aleo/spend_destination_shares(
             destination_share_0,
             destination_share_1,
             destination_share_2,
@@ -100,8 +100,36 @@ program dcp_reconstruct_secret.aleo {
             destination_share_13,
             destination_share_14
         );
-        // TODO DETERMINE IF WE SHOULD: only allow origin custodier program to reconstruct the share
-        assert_eq(self.caller, destination_share_0.custody.origin);
+        assert_eq(destination_share_1.custody, destination_share_0.custody);
+        assert_eq(destination_share_2.custody, destination_share_0.custody);
+        assert_eq(destination_share_3.custody, destination_share_0.custody);
+        assert_eq(destination_share_4.custody, destination_share_0.custody);
+        assert_eq(destination_share_5.custody, destination_share_0.custody);
+        assert_eq(destination_share_6.custody, destination_share_0.custody);
+        assert_eq(destination_share_7.custody, destination_share_0.custody);
+        assert_eq(destination_share_8.custody, destination_share_0.custody);
+        assert_eq(destination_share_9.custody, destination_share_0.custody);
+        assert_eq(destination_share_10.custody, destination_share_0.custody);
+        assert_eq(destination_share_11.custody, destination_share_0.custody);
+        assert_eq(destination_share_12.custody, destination_share_0.custody);
+        assert_eq(destination_share_13.custody, destination_share_0.custody);
+        assert_eq(destination_share_14.custody, destination_share_0.custody);
+
+        assert_eq(destination_share_1.custody_trace, destination_share_0.custody_trace);
+        assert_eq(destination_share_2.custody_trace, destination_share_0.custody_trace);
+        assert_eq(destination_share_3.custody_trace, destination_share_0.custody_trace);
+        assert_eq(destination_share_4.custody_trace, destination_share_0.custody_trace);
+        assert_eq(destination_share_5.custody_trace, destination_share_0.custody_trace);
+        assert_eq(destination_share_6.custody_trace, destination_share_0.custody_trace);
+        assert_eq(destination_share_7.custody_trace, destination_share_0.custody_trace);
+        assert_eq(destination_share_8.custody_trace, destination_share_0.custody_trace);
+        assert_eq(destination_share_9.custody_trace, destination_share_0.custody_trace);
+        assert_eq(destination_share_10.custody_trace, destination_share_0.custody_trace);
+        assert_eq(destination_share_11.custody_trace, destination_share_0.custody_trace);
+        assert_eq(destination_share_12.custody_trace, destination_share_0.custody_trace);
+        assert_eq(destination_share_13.custody_trace, destination_share_0.custody_trace);
+        assert_eq(destination_share_14.custody_trace, destination_share_0.custody_trace);
+
         let shares: [Share; 15] = [ // MAX_ON_CHAIN_RECONSTRUCT_SHARES
             destination_share_0.share,
             destination_share_1.share,
@@ -120,13 +148,18 @@ program dcp_reconstruct_secret.aleo {
             destination_share_14.share
         ];
         let non_zero_shares: u8 = count_relevant_shares(shares);
-        assert(non_zero_shares == destination_share_0.custody.threshold);
+        assert(non_zero_shares >= destination_share_0.custody.threshold);
         let secret: field = reconstruct_onchain(shares);
         let reconstructed_secret: ReconstructedSecret = ReconstructedSecret {
             owner: self.caller,
             secret: secret,
-            custody_hash: hash_custody(destination_share_0.custody)
+            custody: destination_share_0.custody,
+            custody_trace: destination_share_0.custody_trace
         };
         return reconstructed_secret;
     }
+
+    transition spend_reconstructed_secret(
+        reconstructed_secret: ReconstructedSecret
+    ){}
 }

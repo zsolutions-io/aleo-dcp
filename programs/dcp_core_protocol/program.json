@@ -23,10 +23,16 @@
       "path": "../dcp_open_requests"
     },
     {
-      "name": "dcp_fee_management.aleo",
+      "name": "dcp_validator_fee.aleo",
       "location": "local",
       "network": null,
-      "path": "../dcp_fee_management"
+      "path": "../dcp_validator_fee"
+    },
+    {
+      "name": "dcp_destination_shares.aleo",
+      "location": "local",
+      "network": null,
+      "path": "../dcp_destination_shares"
     }
   ]
 }

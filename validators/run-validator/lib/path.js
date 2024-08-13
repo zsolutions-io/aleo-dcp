@@ -10,7 +10,7 @@ export const config_dir = `${__dirname}/../config`;
 export const programs_dir = `${__dirname}/../../../programs`;
 
 export const create_dir_if_not_exists = async (dir_path) => {
-  const exists = !fsExists(dir_path);
+  const exists = !(await fsExists(dir_path));
   if (exists) {
     await fs.mkdir(dir_path, { recursive: true });
   }

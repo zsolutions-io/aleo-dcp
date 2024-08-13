@@ -1,8 +1,10 @@
 import credits.aleo;
+import dcp_validator_fee.aleo;
 import dcp_validator_shares.aleo;
 import dcp_open_requests.aleo;
-import dcp_fee_management.aleo;
+import dcp_destination_shares.aleo;
 program dcp_core_protocol.aleo;
+
 
 
 struct Custody:
@@ -21,6 +23,7 @@ struct ValidatorShareData:
 
 
 
+
 struct Proposal:
     validators as [address; 16u32];
     threshold as u8;
@@ -30,10 +33,9 @@ struct CustodyState:
     validator_set_index as u64;
     custody_trace as field;
 
-record DestinationShare:
-    owner as address.private;
-    share as Share.private;
-    custody as Custody.private;
+struct OpenRequestIdentifier:
+    custody as Custody;
+    custody_trace as field;
 
 
 mapping validator_sets:
@@ -64,6 +66,11 @@ mapping votes:
 mapping custodies:
 	key as field.public;
 	value as CustodyState.public;
+
+
+mapping public_shares:
+	key as field.public;
+	value as field.public;
 
 
 function initiate_validators:
@@ -170,7 +177,7 @@ finalize vote:
     assert.eq r6.current_validator_set_index r9;
     get validator_sets[r6.current_validator_set_index] into r10;
     is.eq 0u8 r4 into r11;
-    ternary r11 r10[0u32] aleo1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq3ljyzc into r12;
+    ternary r11 r10[0u32] aleo1qgqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqanmpl0 into r12;
     is.eq 1u8 r4 into r13;
     ternary r13 r10[1u32] r12 into r14;
     is.eq 2u8 r4 into r15;
@@ -390,40 +397,83 @@ finalize request_open:
 
 
 
-function process_request_as_validator:
+
+
+function process_private_request:
     input r0 as dcp_validator_shares.aleo/ValidatorShare.record;
     input r1 as dcp_open_requests.aleo/OpenRequest.record;
-    hash.bhp256 r0.custody into r2 as field;
-    assert.eq r1.custody_hash r2;
-    cast r1.to r0.share r0.custody into r3 as DestinationShare.record;
+    input r2 as dcp_validator_fee.aleo/Fee.record;
+    hash.bhp256 r0.custody into r3 as field;
+    assert.eq r1.custody_hash r3;
+    assert.neq r1.to aleo1qgqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqanmpl0;
+    is.eq r0.share_type 0u8 into r4;
+    is.eq r0.share_type 1u8 into r5;
+    or r4 r5 into r6;
+    is.eq r0.share_type 3u8 into r7;
+    or r6 r7 into r8;
+    assert.eq r8 true;
+    call dcp_destination_shares.aleo/submit_request_shares r1.to r0.share r0.custody r1.custody_trace into r9;
     call dcp_open_requests.aleo/spend_open_request r1;
-    call dcp_fee_management.aleo/mint_fee self.caller r1.fee_amount r1.expire into r4;
+    add r1.fee_amount r2.microcredits into r10;
+    lt r1.expire r2.expire into r11;
+    ternary r11 r1.expire r2.expire into r12;
+    call dcp_validator_fee.aleo/update_fee r2 self.signer r10 r12 into r13;
     assert.eq r1.custody_trace r0.custody_trace;
-    output r3 as DestinationShare.record;
-    output r4 as dcp_fee_management.aleo/Fee.record;
+    output r13 as dcp_validator_fee.aleo/Fee.record;
 
 
-function spend_destination_shares:
-    input r0 as DestinationShare.record;
-    input r1 as DestinationShare.record;
-    input r2 as DestinationShare.record;
-    input r3 as DestinationShare.record;
-    input r4 as DestinationShare.record;
-    input r5 as DestinationShare.record;
-    input r6 as DestinationShare.record;
-    input r7 as DestinationShare.record;
-    input r8 as DestinationShare.record;
-    input r9 as DestinationShare.record;
-    input r10 as DestinationShare.record;
-    input r11 as DestinationShare.record;
-    input r12 as DestinationShare.record;
-    input r13 as DestinationShare.record;
-    input r14 as DestinationShare.record;
-    assert.eq self.caller dcp_reconstruct_secret.aleo;
+
+function process_public_request:
+    input r0 as dcp_validator_shares.aleo/ValidatorShare.record;
+    input r1 as dcp_open_requests.aleo/OpenRequest.record;
+    input r2 as dcp_validator_fee.aleo/Fee.record;
+    hash.bhp256 r0.custody into r3 as field;
+    assert.eq r1.custody_hash r3;
+    assert.eq r1.to aleo1qgqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqanmpl0;
+    assert.eq r1.custody_trace r0.custody_trace;
+    is.eq r0.share_type 0u8 into r4;
+    is.eq r0.share_type 1u8 into r5;
+    or r4 r5 into r6;
+    is.eq r0.share_type 3u8 into r7;
+    or r6 r7 into r8;
+    assert.eq r8 true;
+    call dcp_open_requests.aleo/spend_open_request r1;
+    add r1.fee_amount r2.microcredits into r9;
+    lt r1.expire r2.expire into r10;
+    ternary r10 r1.expire r2.expire into r11;
+    call dcp_validator_fee.aleo/update_fee r2 self.signer r9 r11 into r12;
+    cast r0.custody r1.custody_trace into r13 as OpenRequestIdentifier;
+    hash.bhp256 r13 into r14 as field;
+    cast r0.share.index into r15 as scalar;
+    commit.bhp256 r14 r15 into r16 as field;
+    async process_public_request r16 r0.share.share_val into r17;
+    output r12 as dcp_validator_fee.aleo/Fee.record;
+    output r17 as dcp_core_protocol.aleo/process_public_request.future;
+
+finalize process_public_request:
+    input r0 as field.public;
+    input r1 as field.public;
+    set r1 into public_shares[r0];
 
 
-function mint_null_destination_share:
-    input r0 as Custody.private;
-    cast 0field 0field into r1 as Share;
-    cast self.signer r1 r0 into r2 as DestinationShare.record;
-    output r2 as DestinationShare.record;
+
+function process_list_request:
+    input r0 as dcp_validator_shares.aleo/ValidatorShare.record;
+    input r1 as dcp_open_requests.aleo/OpenListRequest.record;
+    input r2 as dcp_validator_fee.aleo/Fee.record;
+    hash.bhp256 r0.custody into r3 as field;
+    assert.eq r1.custody_hash r3;
+    assert.eq r1.custody_trace r0.custody_trace;
+    is.eq r0.share_type 0u8 into r4;
+    is.eq r0.share_type 1u8 into r5;
+    or r4 r5 into r6;
+    is.eq r0.share_type 3u8 into r7;
+    or r6 r7 into r8;
+    assert.eq r8 true;
+    call dcp_destination_shares.aleo/submit_list_request_shares r1.to r0.share r0.custody r1.custody_trace into r9 r10 r11 r12 r13 r14 r15 r16 r17 r18 r19 r20 r21 r22 r23 r24;
+    call dcp_open_requests.aleo/spend_open_l_request r1;
+    add r1.fee_amount r2.microcredits into r25;
+    lt r1.expire r2.expire into r26;
+    ternary r26 r1.expire r2.expire into r27;
+    call dcp_validator_fee.aleo/update_fee r2 self.signer r25 r27 into r28;
+    output r28 as dcp_validator_fee.aleo/Fee.record;

@@ -1,9 +1,17 @@
+import dcp_destination_shares.aleo;
+import dcp_reconstruct_secret.aleo;
+
 
 program dcp_validator_shares.aleo {
     struct Custody {
         origin: address,
         custody_key: field,
         threshold: u8,
+    }
+
+    struct CustodyWithTrace {
+        custody: Custody,
+        trace: field
     }
 
     struct Share {
@@ -16,13 +24,45 @@ program dcp_validator_shares.aleo {
         share: Share
     }
 
+    struct MulParamsData {
+        index: field,
+        right_operand_share_val: field,
+        left_beaver_share_val: field,
+        sum_beaver_share_val: field,
+        custody: Custody,
+        custody_trace: field,
+        left: bool
+    }
+
     record ValidatorShare {
         owner: address,
         share: Share,
         custody: Custody,
         custody_trace: field,
-        is_addition: bool
+        share_type: u8
     }
+
+    record MulParams {
+        owner: address,
+        index: field,
+        right_operand_share_val: field,
+        left_beaver_share_val: field,
+        sum_beaver_share_val: field,
+        custody: Custody,
+        custody_trace: field
+    }
+        /*
+        Types:
+            0u8: addition public/private right operand
+            1u8: multiplication public right operand
+            2u8: multiplication private right operand
+            3u8: operation result
+            4u8: left beaver triple
+            5u8: right beaver triple
+            6u8: left beaver triple summed with left operand
+            7u8: right beaver triple summed with right operand
+            8u8: pre-processed multiplication private right operand
+        */
 
     inline hash_tuple(traces: [field; 2]) -> field{
         return BHP256::hash_to_field(traces);
@@ -32,7 +72,7 @@ program dcp_validator_shares.aleo {
         private validator_shares: [ValidatorShareData; 16],
         private custody: Custody,
         private custody_trace: field,
-        private is_addition: bool,
+        private share_type: u8,
     ) -> (
         ValidatorShare,
         ValidatorShare,
@@ -58,112 +98,112 @@ program dcp_validator_shares.aleo {
             share: validator_shares[0u8].share,
             custody: custody,
             custody_trace: custody_trace,
-            is_addition: is_addition
+            share_type: share_type
         };
         let validator_share_1: ValidatorShare = ValidatorShare {
             owner: validator_shares[1u8].validator,
             share: validator_shares[1u8].share,
             custody: custody,
             custody_trace: custody_trace,
-            is_addition: is_addition
+            share_type: share_type
         };
         let validator_share_2: ValidatorShare = ValidatorShare {
             owner: validator_shares[2u8].validator,
             share: validator_shares[2u8].share,
             custody: custody,
             custody_trace: custody_trace,
-            is_addition: is_addition
+            share_type: share_type
         };
         let validator_share_3: ValidatorShare = ValidatorShare {
             owner: validator_shares[3u8].validator,
             share: validator_shares[3u8].share,
             custody: custody,
             custody_trace: custody_trace,
-            is_addition: is_addition
+            share_type: share_type
         };
         let validator_share_4: ValidatorShare = ValidatorShare {
             owner: validator_shares[4u8].validator,
             share: validator_shares[4u8].share,
             custody: custody,
             custody_trace: custody_trace,
-            is_addition: is_addition
+            share_type: share_type
         };
         let validator_share_5: ValidatorShare = ValidatorShare {
             owner: validator_shares[5u8].validator,
             share: validator_shares[5u8].share,
             custody: custody,
             custody_trace: custody_trace,
-            is_addition: is_addition
+            share_type: share_type
         };
         let validator_share_6: ValidatorShare = ValidatorShare {
             owner: validator_shares[6u8].validator,
             share: validator_shares[6u8].share,
             custody: custody,
             custody_trace: custody_trace,
-            is_addition: is_addition
+            share_type: share_type
         };
         let validator_share_7: ValidatorShare = ValidatorShare {
             owner: validator_shares[7u8].validator,
             share: validator_shares[7u8].share,
             custody: custody,
             custody_trace: custody_trace,
-            is_addition: is_addition
+            share_type: share_type
         };
         let validator_share_8: ValidatorShare = ValidatorShare {
             owner: validator_shares[8u8].validator,
             share: validator_shares[8u8].share,
             custody: custody,
             custody_trace: custody_trace,
-            is_addition: is_addition
+            share_type: share_type
         };
         let validator_share_9: ValidatorShare = ValidatorShare {
             owner: validator_shares[9u8].validator,
             share: validator_shares[9u8].share,
             custody: custody,
             custody_trace: custody_trace,
-            is_addition: is_addition
+            share_type: share_type
         };
         let validator_share_10: ValidatorShare = ValidatorShare {
             owner: validator_shares[10u8].validator,
             share: validator_shares[10u8].share,
             custody: custody,
             custody_trace: custody_trace,
-            is_addition: is_addition
+            share_type: share_type
         };
         let validator_share_11: ValidatorShare = ValidatorShare {
             owner: validator_shares[11u8].validator,
             share: validator_shares[11u8].share,
             custody: custody,
             custody_trace: custody_trace,
-            is_addition: is_addition
+            share_type: share_type
         };
         let validator_share_12: ValidatorShare = ValidatorShare {
             owner: validator_shares[12u8].validator,
             share: validator_shares[12u8].share,
             custody: custody,
             custody_trace: custody_trace,
-            is_addition: is_addition
+            share_type: share_type
         };
         let validator_share_13: ValidatorShare = ValidatorShare {
             owner: validator_shares[13u8].validator,
             share: validator_shares[13u8].share,
             custody: custody,
             custody_trace: custody_trace,
-            is_addition: is_addition
+            share_type: share_type
         };
         let validator_share_14: ValidatorShare = ValidatorShare {
             owner: validator_shares[14u8].validator,
             share: validator_shares[14u8].share,
             custody: custody,
             custody_trace: custody_trace,
-            is_addition: is_addition
+            share_type: share_type
         };
         let validator_share_15: ValidatorShare = ValidatorShare {
             owner: validator_shares[15u8].validator,
             share: validator_shares[15u8].share,
             custody: custody,
             custody_trace: custody_trace,
-            is_addition: is_addition
+            share_type: share_type
         };
 
         return (
@@ -187,15 +227,26 @@ program dcp_validator_shares.aleo {
     }
 
 
-    transition join_shares_as_validator(
+    transition process_trivial_operation(
         private validator_share_0: ValidatorShare,
         private validator_share_1: ValidatorShare,
     ) -> ValidatorShare {
         assert(validator_share_0.custody == validator_share_1.custody);
         assert(validator_share_0.share.index == validator_share_1.share.index);
 
-        let new_share_val: field = (
-            validator_share_1.is_addition ?
+        assert(
+            validator_share_0.share_type == 0u8
+            || validator_share_0.share_type == 1u8
+            || validator_share_0.share_type == 3u8
+        );
+        assert(
+            validator_share_1.share_type == 0u8
+            || validator_share_1.share_type == 1u8
+        );
+        let is_addition: bool = validator_share_1.share_type == 0u8;
+
+        let new_value: field = (
+            is_addition ?
             (
                 validator_share_0.share.share_val 
                 + validator_share_1.share.share_val
@@ -206,7 +257,7 @@ program dcp_validator_shares.aleo {
             )
         );
         let out_share: Share = Share {
-            share_val: new_share_val,
+            share_val: new_value,
             index: validator_share_0.share.index,
         };
 
@@ -220,7 +271,155 @@ program dcp_validator_shares.aleo {
             share: out_share,
             custody: validator_share_0.custody,
             custody_trace: custody_trace,
-            is_addition: validator_share_1.is_addition
+            share_type: 3u8
+        };
+    }
+
+
+    transition preprocess_private_mul(
+        private left_operand: ValidatorShare,
+        private right_operand: ValidatorShare,
+        private left_beaver: ValidatorShare,
+        private right_beaver: ValidatorShare,
+        private sum_beaver: ValidatorShare,
+        public validators: [address; 16]
+    ) -> MulParams {
+        assert_eq(left_operand.custody, right_operand.custody);
+
+        assert_eq(left_operand.share.index, left_beaver.share.index);
+        assert_eq(left_beaver.share.index, right_operand.share.index);
+        assert_eq(right_operand.share.index, right_beaver.share.index);
+
+        assert(
+            left_operand.share_type == 0u8
+            || left_operand.share_type == 1u8
+            || left_operand.share_type == 3u8
+        );
+        assert_eq(left_beaver.share_type, 4u8); // left beaver triple
+
+        assert(right_operand.share_type == 2u8);
+        assert_eq(right_beaver.share_type, 5u8); // right beaver triple
+
+        let beaver_summed_with_left_new_value: field = (
+            left_operand.share.share_val 
+            + left_beaver.share.share_val
+        );
+        let beaver_summed_with_left_share: Share = Share {
+            share_val: beaver_summed_with_left_new_value,
+            index: left_operand.share.index,
+        };
+
+        let beaver_summed_with_right_new_value: field = (
+            right_operand.share.share_val
+            + right_beaver.share.share_val
+        );
+        let beaver_summed_with_right_share: Share = Share {
+            share_val: beaver_summed_with_right_new_value,
+            index: right_operand.share.index,
+        };
+
+        let custody_trace: field = hash_tuple([
+            left_operand.custody_trace,
+            right_operand.custody_trace
+        ]);
+
+        let mul_params: MulParams = MulParams {
+            owner: self.signer,
+            index: right_operand.share.index,
+            right_operand_share_val: right_operand.share.share_val,
+            left_beaver_share_val: left_beaver.share.share_val,
+            sum_beaver_share_val: sum_beaver.share.share_val,
+            custody: left_operand.custody,
+            custody_trace: custody_trace
+        };
+        let mul_params_data_left: MulParamsData = MulParamsData{
+            index: right_operand.share.index,
+            right_operand_share_val: right_operand.share.share_val,
+            left_beaver_share_val: left_beaver.share.share_val,
+            sum_beaver_share_val: sum_beaver.share.share_val,
+            custody: left_operand.custody,
+            custody_trace: custody_trace
+            left: true
+        };
+        let mul_params_hash_left: field = BHP256::hash_to_field(mul_params_data_left);
+
+        let mul_params_data_right: MulParamsData = MulParamsData{
+            index: right_operand.share.index,
+            right_operand_share_val: right_operand.share.share_val,
+            left_beaver_share_val: left_beaver.share.share_val,
+            sum_beaver_share_val: sum_beaver.share.share_val,
+            custody: left_operand.custody,
+            custody_trace: custody_trace
+            left: false
+        };
+        let mul_params_hash_right: field = BHP256::hash_to_field(mul_params_data_right);
+
+        dcp_destination_shares.aleo/submit_list_request_shares(
+            validators,
+            beaver_summed_with_left_share,
+            mul_params_data.custody,
+            mul_params_hash_left
+        );
+        dcp_destination_shares.aleo/submit_list_request_shares(
+            validators,
+            beaver_summed_with_right_share,
+            mul_params_data.custody,
+            mul_params_hash_right
+        );
+        return mul_params;
+    }
+
+    transition process_private_mul(
+        mul_params: MulParams,
+        left_inter_sum: dcp_reconstruct_secret.aleo/ReconstructedSecret,
+        right_inter_sum: dcp_reconstruct_secret.aleo/ReconstructedSecret,
+    ) -> ValidatorShare {
+        let mul_params_data_left: MulParamsData = MulParamsData{
+            index: mul_params.index,
+            right_operand_share_val: mul_params.right_operand_share_val,
+            left_beaver_share_val: mul_params.left_beaver_share_val,
+            sum_beaver_share_val: mul_params.sum_beaver_share_val,
+            custody: mul_params.custody,
+            custody_trace: mul_params.custody_trace,
+            left: true
+        };
+        let mul_params_hash_left: field = BHP256::hash_to_field(mul_params_data_left);
+
+        let mul_params_data_right: MulParamsData = MulParamsData{
+            index: mul_params.index,
+            right_operand_share_val: mul_params.right_operand_share_val,
+            left_beaver_share_val: mul_params.left_beaver_share_val,
+            sum_beaver_share_val: mul_params.sum_beaver_share_val,
+            custody: mul_params.custody,
+            custody_trace: mul_params.custody_trace,
+            left: false
+        };
+        let mul_params_hash_right: field = BHP256::hash_to_field(mul_params_data_right);
+
+        assert_eq(mul_params_hash_left, left_inter_sum.custody_trace);
+        assert_eq(mul_params_hash_right, right_inter_sum.custody_trace);
+        assert_eq(mul_params.custody, left_inter_sum.custody);
+        assert_eq(mul_params.custody, right_inter_sum.custody);
+
+        dcp_reconstruct_secret.aleo/spend_reconstructed_secret(left_inter_sum);
+        dcp_reconstruct_secret.aleo/spend_reconstructed_secret(right_inter_sum);
+        
+        let new_val: field = (
+            left_inter_sum.secret * mul_params.right_operand_share_val
+            - right_inter_sum.secret * mul_params.left_beaver_share_val
+            + mul_params.sum_beaver_share_val
+        ); // [z] = (x+a)[y] — (y+b)[a]+[c] = [x*y]
+        
+        let share: Share = {
+            share_val: new_val,
+            index: mul_params.index
+        };
+        return ValidatorShare {
+            owner: self.signer,
+            share: share,
+            custody: mul_params.custody,
+            custody_trace: mul_params.custody_trace,
+            share_type: 3u8
         };
     }
 }

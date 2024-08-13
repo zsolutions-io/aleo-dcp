@@ -76,8 +76,9 @@ program data_custody_protocol.aleo {
         );
     */
  
-    async transition add_private(
+    async transition add_or_mul_private(
         private value: field,
+        private is_addition: bool,
         private custody_key: field,
         private coefficients: [field; 15], // MAX_VALIDATORS_MINUS_1
         public validators: [address; 16], // MAX_VALIDATORS
@@ -87,10 +88,12 @@ program data_custody_protocol.aleo {
         assert(is_some_coefficient_zero(coefficients).not());
 
         let operation: Operation = Operation {
-            is_addition: true,
+            is_addition: is_addition,
             operand_value: value,
             is_operand_private: true
         };
+
+        // initial operation_hash
 
         let operation_hash: field = BHP256::hash_to_field(operation);
         let operation_trace: field = BHP256::commit_to_field(
@@ -270,7 +273,7 @@ program data_custody_protocol.aleo {
             validator_shares,
             custody,
             operation_trace,
-            true
+            is_addition ? 0u8 : 2u8
         );
 
         let protocol_core_future: Future = dcp_core_protocol.aleo/custody_data_as_program(
@@ -279,11 +282,11 @@ program data_custody_protocol.aleo {
             operation_trace
         );
 
-        return finalize_add_private(
+        return finalize_add_or_mul_private(
             protocol_core_future
         );
     }
-    async function finalize_add_private(
+    async function finalize_add_or_mul_private(
         protocol_core_future: Future
     ){
         protocol_core_future.await();
@@ -477,7 +480,7 @@ program data_custody_protocol.aleo {
             validator_shares,
             custody,
             operation_trace,
-            is_addition
+            is_addition ? 0u8 : 1u8
         );
 
         let protocol_core_future: Future = dcp_core_protocol.aleo/custody_data_as_program(
@@ -548,7 +551,7 @@ program data_custody_protocol.aleo {
         ) =
             credits.aleo/transfer_private_to_public(
                 protocol_fee_record,
-                dcp_fee_management.aleo,
+                dcp_validator_fee.aleo,
                 protocol_fee_amount,
             );
 

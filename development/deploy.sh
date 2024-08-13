@@ -26,7 +26,7 @@ deploy_program () {
 
 deploy_program "dcp_open_requests";
 deploy_program "dcp_validator_shares";
-deploy_program "dcp_fee_management";
+deploy_program "dcp_validator_fee";
 deploy_program "dcp_core_protocol";
 deploy_program "data_custody_protocol";
 deploy_program "dcp_reconstruct_secret";

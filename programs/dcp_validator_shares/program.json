@@ -3,5 +3,12 @@
   "version": "0.1.0",
   "description": "",
   "license": "MIT",
-  "dependencies": []
+  "dependencies": [
+    {
+      "name": "dcp_destination_shares.aleo",
+      "location": "local",
+      "network": null,
+      "path": "../dcp_destination_shares"
+    }
+  ]
 }

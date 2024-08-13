@@ -1,7 +1,7 @@
 program dcp_reconstruct_secret_offchain.aleo;
 
 struct Share:
-    share_val as field;
+    value as field;
     index as field;
 
 
@@ -170,7 +170,7 @@ closure reconstruct_offchain:
     ternary r153 r158 1field into r159;
     mul r150 r159 into r160;
     is.neq r0[0u32].index 0field into r161;
-    mul r0[0u32].share_val r160 into r162;
+    mul r0[0u32].value r160 into r162;
     ternary r161 r162 0field into r163;
     add 0field r163 into r164;
     is.neq 1u8 0u8 into r165;
@@ -334,7 +334,7 @@ closure reconstruct_offchain:
     ternary r317 r322 1field into r323;
     mul r314 r323 into r324;
     is.neq r0[1u32].index 0field into r325;
-    mul r0[1u32].share_val r324 into r326;
+    mul r0[1u32].value r324 into r326;
     ternary r325 r326 0field into r327;
     add r164 r327 into r328;
     is.neq 2u8 0u8 into r329;
@@ -498,7 +498,7 @@ closure reconstruct_offchain:
     ternary r481 r486 1field into r487;
     mul r478 r487 into r488;
     is.neq r0[2u32].index 0field into r489;
-    mul r0[2u32].share_val r488 into r490;
+    mul r0[2u32].value r488 into r490;
     ternary r489 r490 0field into r491;
     add r328 r491 into r492;
     is.neq 3u8 0u8 into r493;
@@ -662,7 +662,7 @@ closure reconstruct_offchain:
     ternary r645 r650 1field into r651;
     mul r642 r651 into r652;
     is.neq r0[3u32].index 0field into r653;
-    mul r0[3u32].share_val r652 into r654;
+    mul r0[3u32].value r652 into r654;
     ternary r653 r654 0field into r655;
     add r492 r655 into r656;
     is.neq 4u8 0u8 into r657;
@@ -826,7 +826,7 @@ closure reconstruct_offchain:
     ternary r809 r814 1field into r815;
     mul r806 r815 into r816;
     is.neq r0[4u32].index 0field into r817;
-    mul r0[4u32].share_val r816 into r818;
+    mul r0[4u32].value r816 into r818;
     ternary r817 r818 0field into r819;
     add r656 r819 into r820;
     is.neq 5u8 0u8 into r821;
@@ -990,7 +990,7 @@ closure reconstruct_offchain:
     ternary r973 r978 1field into r979;
     mul r970 r979 into r980;
     is.neq r0[5u32].index 0field into r981;
-    mul r0[5u32].share_val r980 into r982;
+    mul r0[5u32].value r980 into r982;
     ternary r981 r982 0field into r983;
     add r820 r983 into r984;
     is.neq 6u8 0u8 into r985;
@@ -1154,7 +1154,7 @@ closure reconstruct_offchain:
     ternary r1137 r1142 1field into r1143;
     mul r1134 r1143 into r1144;
     is.neq r0[6u32].index 0field into r1145;
-    mul r0[6u32].share_val r1144 into r1146;
+    mul r0[6u32].value r1144 into r1146;
     ternary r1145 r1146 0field into r1147;
     add r984 r1147 into r1148;
     is.neq 7u8 0u8 into r1149;
@@ -1318,7 +1318,7 @@ closure reconstruct_offchain:
     ternary r1301 r1306 1field into r1307;
     mul r1298 r1307 into r1308;
     is.neq r0[7u32].index 0field into r1309;
-    mul r0[7u32].share_val r1308 into r1310;
+    mul r0[7u32].value r1308 into r1310;
     ternary r1309 r1310 0field into r1311;
     add r1148 r1311 into r1312;
     is.neq 8u8 0u8 into r1313;
@@ -1482,7 +1482,7 @@ closure reconstruct_offchain:
     ternary r1465 r1470 1field into r1471;
     mul r1462 r1471 into r1472;
     is.neq r0[8u32].index 0field into r1473;
-    mul r0[8u32].share_val r1472 into r1474;
+    mul r0[8u32].value r1472 into r1474;
     ternary r1473 r1474 0field into r1475;
     add r1312 r1475 into r1476;
     is.neq 9u8 0u8 into r1477;
@@ -1646,7 +1646,7 @@ closure reconstruct_offchain:
     ternary r1629 r1634 1field into r1635;
     mul r1626 r1635 into r1636;
     is.neq r0[9u32].index 0field into r1637;
-    mul r0[9u32].share_val r1636 into r1638;
+    mul r0[9u32].value r1636 into r1638;
     ternary r1637 r1638 0field into r1639;
     add r1476 r1639 into r1640;
     is.neq 10u8 0u8 into r1641;
@@ -1810,7 +1810,7 @@ closure reconstruct_offchain:
     ternary r1793 r1798 1field into r1799;
     mul r1790 r1799 into r1800;
     is.neq r0[10u32].index 0field into r1801;
-    mul r0[10u32].share_val r1800 into r1802;
+    mul r0[10u32].value r1800 into r1802;
     ternary r1801 r1802 0field into r1803;
     add r1640 r1803 into r1804;
     is.neq 11u8 0u8 into r1805;
@@ -1974,7 +1974,7 @@ closure reconstruct_offchain:
     ternary r1957 r1962 1field into r1963;
     mul r1954 r1963 into r1964;
     is.neq r0[11u32].index 0field into r1965;
-    mul r0[11u32].share_val r1964 into r1966;
+    mul r0[11u32].value r1964 into r1966;
     ternary r1965 r1966 0field into r1967;
     add r1804 r1967 into r1968;
     is.neq 12u8 0u8 into r1969;
@@ -2138,7 +2138,7 @@ closure reconstruct_offchain:
     ternary r2121 r2126 1field into r2127;
     mul r2118 r2127 into r2128;
     is.neq r0[12u32].index 0field into r2129;
-    mul r0[12u32].share_val r2128 into r2130;
+    mul r0[12u32].value r2128 into r2130;
     ternary r2129 r2130 0field into r2131;
     add r1968 r2131 into r2132;
     is.neq 13u8 0u8 into r2133;
@@ -2302,7 +2302,7 @@ closure reconstruct_offchain:
     ternary r2285 r2290 1field into r2291;
     mul r2282 r2291 into r2292;
     is.neq r0[13u32].index 0field into r2293;
-    mul r0[13u32].share_val r2292 into r2294;
+    mul r0[13u32].value r2292 into r2294;
     ternary r2293 r2294 0field into r2295;
     add r2132 r2295 into r2296;
     is.neq 14u8 0u8 into r2297;
@@ -2466,7 +2466,7 @@ closure reconstruct_offchain:
     ternary r2449 r2454 1field into r2455;
     mul r2446 r2455 into r2456;
     is.neq r0[14u32].index 0field into r2457;
-    mul r0[14u32].share_val r2456 into r2458;
+    mul r0[14u32].value r2456 into r2458;
     ternary r2457 r2458 0field into r2459;
     add r2296 r2459 into r2460;
     is.neq 15u8 0u8 into r2461;
@@ -2630,7 +2630,7 @@ closure reconstruct_offchain:
     ternary r2613 r2618 1field into r2619;
     mul r2610 r2619 into r2620;
     is.neq r0[15u32].index 0field into r2621;
-    mul r0[15u32].share_val r2620 into r2622;
+    mul r0[15u32].value r2620 into r2622;
     ternary r2621 r2622 0field into r2623;
     add r2460 r2623 into r2624;
     output r2624 as field;

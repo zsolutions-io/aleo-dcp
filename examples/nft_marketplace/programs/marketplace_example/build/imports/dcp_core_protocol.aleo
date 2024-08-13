@@ -1,5 +1,5 @@
 import credits.aleo;
-import dcp_fee_management.aleo;
+import dcp_validator_fee.aleo;
 import dcp_validator_shares.aleo;
 import dcp_open_requests.aleo;
 program dcp_core_protocol.aleo;
@@ -30,10 +30,16 @@ struct CustodyState:
     validator_set_index as u64;
     custody_trace as field;
 
+struct ShareIdentifier:
+    custody as Custody;
+    custody_trace as field;
+    index as field;
+
 record DestinationShare:
     owner as address.private;
     share as Share.private;
     custody as Custody.private;
+    custody_trace as field.private;
 
 
 mapping validator_sets:
@@ -64,6 +70,11 @@ mapping votes:
 mapping custodies:
 	key as field.public;
 	value as CustodyState.public;
+
+
+mapping publicShares:
+	key as field.public;
+	value as field.public;
 
 
 function initiate_validators:
@@ -390,17 +401,52 @@ finalize request_open:
 
 
 
-function process_request_as_validator:
+
+
+function process_private_request:
     input r0 as dcp_validator_shares.aleo/ValidatorShare.record;
     input r1 as dcp_open_requests.aleo/OpenRequest.record;
-    hash.bhp256 r0.custody into r2 as field;
-    assert.eq r1.custody_hash r2;
-    cast r1.to r0.share r0.custody into r3 as DestinationShare.record;
+    input r2 as dcp_validator_fee.aleo/Fee.record;
+    hash.bhp256 r0.custody into r3 as field;
+    assert.eq r1.custody_hash r3;
+    assert.neq r1.to aleo1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq3ljyzc;
+    cast r1.to r0.share r0.custody r1.custody_trace into r4 as DestinationShare.record;
     call dcp_open_requests.aleo/spend_open_request r1;
-    call dcp_fee_management.aleo/mint_fee self.caller r1.fee_amount r1.expire into r4;
+    add r1.fee_amount r2.microcredits into r5;
+    lt r1.expire r2.expire into r6;
+    ternary r6 r1.expire r2.expire into r7;
+    call dcp_validator_fee.aleo/update_fee r2 self.signer r5 r7 into r8;
     assert.eq r1.custody_trace r0.custody_trace;
-    output r3 as DestinationShare.record;
-    output r4 as dcp_fee_management.aleo/Fee.record;
+    output r4 as DestinationShare.record;
+    output r8 as dcp_validator_fee.aleo/Fee.record;
+
+
+
+function process_public_request:
+    input r0 as dcp_validator_shares.aleo/ValidatorShare.record;
+    input r1 as dcp_open_requests.aleo/OpenRequest.record;
+    input r2 as dcp_validator_fee.aleo/Fee.record;
+    hash.bhp256 r0.custody into r3 as field;
+    assert.eq r1.custody_hash r3;
+    assert.eq r1.to aleo1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq3ljyzc;
+    call dcp_open_requests.aleo/spend_open_request r1;
+    add r1.fee_amount r2.microcredits into r4;
+    lt r1.expire r2.expire into r5;
+    ternary r5 r1.expire r2.expire into r6;
+    call dcp_validator_fee.aleo/update_fee r2 self.signer r4 r6 into r7;
+    assert.eq r1.custody_trace r0.custody_trace;
+    cast r0.custody r1.custody_trace r0.share.index into r8 as ShareIdentifier;
+    hash.bhp256 r8 into r9 as field;
+    async process_public_request r9 r0.share.share_val into r10;
+    output r7 as dcp_validator_fee.aleo/Fee.record;
+    output r10 as dcp_core_protocol.aleo/process_public_request.future;
+
+finalize process_public_request:
+    input r0 as field.public;
+    input r1 as field.public;
+    set r1 into publicShares[r0];
+    assert.eq true true;
+
 
 
 function spend_destination_shares:
@@ -424,6 +470,7 @@ function spend_destination_shares:
 
 function mint_null_destination_share:
     input r0 as Custody.private;
-    cast 0field 0field into r1 as Share;
-    cast self.signer r1 r0 into r2 as DestinationShare.record;
-    output r2 as DestinationShare.record;
+    input r1 as field.private;
+    cast 0field 0field into r2 as Share;
+    cast self.signer r2 r0 r1 into r3 as DestinationShare.record;
+    output r3 as DestinationShare.record;

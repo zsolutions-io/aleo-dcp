@@ -16,12 +16,13 @@
 */
 
 import dcp_validator_shares.aleo;
+import dcp_destination_shares.aleo;
 import dcp_open_requests.aleo;
-import dcp_fee_management.aleo;
+import dcp_validator_fee.aleo;
 
 program dcp_core_protocol.aleo {
     const DEFAULT_AUTHORITY: address = aleo1s3ws5tra87fjycnjrwsjcrnw2qxr8jfqqdugnf0xzqqw29q9m5pqem2u4t;
-    const ZERO_ADDRESS: address = aleo1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq3ljyzc;
+    const TWO_ADDRESS: address = aleo1qgqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqanmpl0;
     const MAX_VALIDATORS: u8 = 16u8;
 
     struct Proposal {
@@ -51,15 +52,12 @@ program dcp_core_protocol.aleo {
         share: Share
     }
 
-
-    record DestinationShare {
-        owner: address,
-        share: Share,
-        custody: Custody
+    struct OpenRequestIdentifier {
+        custody: Custody,
+        custody_trace: field,
     }
 
-
-    mapping validator_sets: u64 => [address; 16]; // MAX_VALIDATORS 
+    mapping validator_sets: u64 => [address; 16]; // MAX_VALIDATORS
     // validator set index => validator addresses
 
     mapping validator_sets_length: bool => u64;
@@ -76,6 +74,9 @@ program dcp_core_protocol.aleo {
 
     mapping custodies: field => CustodyState;
     // hash(Custody) => CustodyState
+
+    mapping public_shares: field => field;
+    // commit(hash(OpenRequestIdentifier), index) => share_val
 
     inline hash_proposal(proposal: Proposal) -> field {
         return BHP256::hash_to_field(proposal);
@@ -97,32 +98,32 @@ program dcp_core_protocol.aleo {
     }
 
     inline set_bool_in_array(
-        array: [bool; 16], index: u8, value: bool // MAX_VALIDATORS
+        array: [bool; 16], index: u8, share_val: bool // MAX_VALIDATORS
     ) -> [bool; 16] { // MAX_VALIDATORS
         return [
-            (index == 0u8) ? value : array[0u8],
-            (index == 1u8) ? value : array[1u8],
-            (index == 2u8) ? value : array[2u8],
-            (index == 3u8) ? value : array[3u8],
-            (index == 4u8) ? value : array[4u8],
-            (index == 5u8) ? value : array[5u8],
-            (index == 6u8) ? value : array[6u8],
-            (index == 7u8) ? value : array[7u8],
-            (index == 8u8) ? value : array[8u8],
-            (index == 9u8) ? value : array[9u8],
-            (index == 10u8) ? value : array[10u8],
-            (index == 11u8) ? value : array[11u8],
-            (index == 12u8) ? value : array[12u8],
-            (index == 13u8) ? value : array[13u8],
-            (index == 14u8) ? value : array[14u8],
-            (index == 15u8) ? value : array[15u8]
+            (index == 0u8) ? share_val : array[0u8],
+            (index == 1u8) ? share_val : array[1u8],
+            (index == 2u8) ? share_val : array[2u8],
+            (index == 3u8) ? share_val : array[3u8],
+            (index == 4u8) ? share_val : array[4u8],
+            (index == 5u8) ? share_val : array[5u8],
+            (index == 6u8) ? share_val : array[6u8],
+            (index == 7u8) ? share_val : array[7u8],
+            (index == 8u8) ? share_val : array[8u8],
+            (index == 9u8) ? share_val : array[9u8],
+            (index == 10u8) ? share_val : array[10u8],
+            (index == 11u8) ? share_val : array[11u8],
+            (index == 12u8) ? share_val : array[12u8],
+            (index == 13u8) ? share_val : array[13u8],
+            (index == 14u8) ? share_val : array[14u8],
+            (index == 15u8) ? share_val : array[15u8]
         ];
     }
 
     inline get_address_in_array(
         array: [address; 16], index: u8 // MAX_VALIDATORS
     ) -> address {
-        let ret: address = ZERO_ADDRESS;
+        let ret: address = TWO_ADDRESS;
         for i: u8 in 0u8..MAX_VALIDATORS {
             ret = (i == index) ? array[i] : ret;
         }
@@ -151,6 +152,10 @@ program dcp_core_protocol.aleo {
 
     inline hash_custody(custody: Custody) -> field {
         return BHP256::hash_to_field(custody);
+    }
+
+    inline min_u32(a: u32, b: u32) -> u32{
+        return a<b ? a : b;
     }
 
 
@@ -213,7 +218,7 @@ program dcp_core_protocol.aleo {
     async transition vote(
         public proposal: Proposal,
         public caller_index: u8,
-        public value: bool
+        public vote_value: bool
     ) -> Future {
         return finalize_vote(
             self.caller,
@@ -221,7 +226,7 @@ program dcp_core_protocol.aleo {
             proposal.threshold,
             proposal.current_validator_set_index,
             caller_index,
-            value,
+            vote_value,
         );
     }
     async function finalize_vote(
@@ -230,7 +235,7 @@ program dcp_core_protocol.aleo {
         threshold: u8,
         current_validator_set_index: u64,
         caller_index: u8,
-        value: bool
+        vote_value: bool
     ) {
         let proposal: Proposal = Proposal {
             validators: validators,
@@ -257,7 +262,7 @@ program dcp_core_protocol.aleo {
         let new_votes: [bool; 16] = set_bool_in_array( // MAX_VALIDATORS
             current_votes,
             caller_index,
-            value
+            vote_value
         );
         votes.set(proposal_hash, new_votes);
     }
@@ -265,14 +270,14 @@ program dcp_core_protocol.aleo {
 
     async transition accept_proposal(
         public proposal: Proposal,
-        public value: bool,
+        public vote_value: bool,
     ) -> Future {
         return finalize_accept_proposal(
             self.caller,
             proposal.validators,
             proposal.threshold,
             proposal.current_validator_set_index,
-            value
+            vote_value
         );
     }
     async function finalize_accept_proposal(
@@ -280,7 +285,7 @@ program dcp_core_protocol.aleo {
         validators: [address; 16], // MAX_VALIDATORS
         threshold: u8,
         current_validator_set_index: u64,
-        value: bool
+        vote_value: bool
     ) {
         let proposal: Proposal = Proposal {
             validators: validators,
@@ -390,62 +395,125 @@ program dcp_core_protocol.aleo {
     }
 
 
-    transition process_request_as_validator(
+    transition process_private_request(
         validator_share: dcp_validator_shares.aleo/ValidatorShare,
         open_request: dcp_open_requests.aleo/OpenRequest,
-    ) -> (DestinationShare, dcp_fee_management.aleo/Fee) {
+        previous_fee: dcp_validator_fee.aleo/Fee,
+    ) -> dcp_validator_fee.aleo/Fee {
         let custody_hash: field = hash_custody(validator_share.custody);
         assert_eq(open_request.custody_hash, custody_hash);
+        assert_neq(open_request.to, TWO_ADDRESS);
 
-        let destination_share: DestinationShare = DestinationShare {
-            owner: open_request.to,
-            share: validator_share.share,
-            custody: validator_share.custody
-        };
+        assert(
+            validator_share.share_type == 0u8
+            || validator_share.share_type == 1u8
+            || validator_share.share_type == 3u8
+        );
 
+        dcp_destination_shares.aleo/submit_request_shares(
+            open_request.to,
+            validator_share.share,
+            validator_share.custody,
+            open_request.custody_trace
+        );
         dcp_open_requests.aleo/spend_open_request(open_request);
-        let fee: dcp_fee_management.aleo/Fee 
-            = dcp_fee_management.aleo/mint_fee(
-                self.caller, 
-                open_request.fee_amount, 
-                open_request.expire
+        
+        let next_fee: dcp_validator_fee.aleo/Fee
+            = dcp_validator_fee.aleo/update_fee(
+                previous_fee,
+                self.signer,
+                open_request.fee_amount + previous_fee.microcredits,
+                min_u32(open_request.expire, previous_fee.expire)
             );
         assert_eq(open_request.custody_trace, validator_share.custody_trace);
 
-        return (destination_share, fee);
+        return next_fee;
     }
 
+    async transition process_public_request(
+        validator_share: dcp_validator_shares.aleo/ValidatorShare,
+        open_request: dcp_open_requests.aleo/OpenRequest,
+        previous_fee: dcp_validator_fee.aleo/Fee,
+    ) -> (dcp_validator_fee.aleo/Fee, Future) {
+        let custody_hash: field = hash_custody(validator_share.custody);
 
-    transition spend_destination_shares(
-        destination_share_0: DestinationShare,
-        destination_share_1: DestinationShare,
-        destination_share_2: DestinationShare,
-        destination_share_3: DestinationShare,
-        destination_share_4: DestinationShare,
-        destination_share_5: DestinationShare,
-        destination_share_6: DestinationShare,
-        destination_share_7: DestinationShare,
-        destination_share_8: DestinationShare,
-        destination_share_9: DestinationShare,
-        destination_share_10: DestinationShare,
-        destination_share_11: DestinationShare,
-        destination_share_12: DestinationShare,
-        destination_share_13: DestinationShare,
-        destination_share_14: DestinationShare
-    ){
-        assert_eq(self.caller, dcp_reconstruct_secret.aleo);
-    }
+        assert_eq(open_request.custody_hash, custody_hash);
+        assert_eq(open_request.to, TWO_ADDRESS);
+        assert_eq(open_request.custody_trace, validator_share.custody_trace);
 
-    transition mint_null_destination_share(
-        custody: Custody,
-    ) -> DestinationShare{
-        return DestinationShare{
-            owner: self.signer,
-            share: Share{
-                share_val: 0field,
-                index: 0field,
-            },
-            custody: custody
+        assert(
+            validator_share.share_type == 0u8
+            || validator_share.share_type == 1u8
+            || validator_share.share_type == 3u8
+        );
+
+        dcp_open_requests.aleo/spend_open_request(open_request);
+        
+        let next_fee: dcp_validator_fee.aleo/Fee
+            = dcp_validator_fee.aleo/update_fee(
+                previous_fee,
+                self.signer,
+                open_request.fee_amount + previous_fee.microcredits,
+                min_u32(open_request.expire, previous_fee.expire)
+            );
+
+        let open_identifier: OpenRequestIdentifier = OpenRequestIdentifier {
+            custody: validator_share.custody,
+            custody_trace: open_request.custody_trace,
         };
+        let open_identifier_hash: field = BHP256::hash_to_field(open_identifier);
+        let share_identifier_commit: field = BHP256::commit_to_field(
+            open_identifier_hash,
+            validator_share.share.index as scalar
+        );
+
+        let process_public_request_future: Future =
+            finalize_process_public_request(
+                share_identifier_commit,
+                validator_share.share.share_val
+            );
+
+        return (next_fee, process_public_request_future);
+    }
+    async function finalize_process_public_request(
+        share_identifier_commit: field,
+        share_value: field
+    ) {
+        public_shares.set(share_identifier_commit, share_value);
+    }
+
+
+    transition process_list_request(
+        validator_share: dcp_validator_shares.aleo/ValidatorShare,
+        open_request: dcp_open_requests.aleo/OpenListRequest,
+        previous_fee: dcp_validator_fee.aleo/Fee,
+    ) -> dcp_validator_fee.aleo/Fee {
+        let custody_hash: field = hash_custody(validator_share.custody);
+        assert_eq(open_request.custody_hash, custody_hash);
+        assert_eq(open_request.custody_trace, validator_share.custody_trace);
+
+        assert(
+            validator_share.share_type == 0u8
+            || validator_share.share_type == 1u8
+            || validator_share.share_type == 3u8
+        );
+
+        dcp_destination_shares.aleo/submit_list_request_shares(
+            open_request.to,
+            validator_share.share,
+            validator_share.custody,
+            open_request.custody_trace
+        ); // Submit first batch
+        dcp_open_requests.aleo/spend_open_l_request(open_request);
+        
+        let next_fee: dcp_validator_fee.aleo/Fee
+            = dcp_validator_fee.aleo/update_fee(
+                previous_fee,
+                self.signer,
+                open_request.fee_amount + previous_fee.microcredits,
+                min_u32(open_request.expire, previous_fee.expire)
+            );
+
+        return next_fee;
     }
 }
