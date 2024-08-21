@@ -15,8 +15,8 @@
     contact@aleo.store - Pierre-André LONG
 */
 
-import dcp_validator_shares.aleo;
 import dcp_destination_shares.aleo;
+import dcp_validator_shares.aleo;
 import dcp_open_requests.aleo;
 import dcp_validator_fee.aleo;
 

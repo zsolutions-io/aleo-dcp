@@ -9,6 +9,12 @@
       "location": "local",
       "network": null,
       "path": "../dcp_destination_shares"
+    },
+    {
+      "name": "dcp_reconstruct_secret.aleo",
+      "location": "local",
+      "network": null,
+      "path": "../dcp_reconstruct_secret"
     }
   ]
 }

@@ -5,10 +5,10 @@
   "license": "MIT",
   "dependencies": [
     {
-      "name": "dcp_core_protocol.aleo",
+      "name": "dcp_destination_shares.aleo",
       "location": "local",
       "network": null,
-      "path": "../dcp_core_protocol"
+      "path": "../dcp_destination_shares"
     }
   ]
 }

@@ -1,0 +1,20 @@
+{
+  "program": "dcp_beaver_triples.aleo",
+  "version": "0.1.0",
+  "description": "",
+  "license": "MIT",
+  "dependencies": [
+    {
+      "name": "data_custody_protocol.aleo",
+      "location": "local",
+      "network": null,
+      "path": "../data_custody_protocol"
+    },
+    {
+      "name": "dcp_beaver_intermediaries.aleo",
+      "location": "local",
+      "network": null,
+      "path": "../dcp_beaver_intermediaries"
+    }
+  ]
+}

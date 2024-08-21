@@ -77,7 +77,7 @@ program data_custody_protocol.aleo {
     */
  
     async transition add_or_mul_private(
-        private value: field,
+        private value_: field,
         private is_addition: bool,
         private custody_key: field,
         private coefficients: [field; 15], // MAX_VALIDATORS_MINUS_1
@@ -89,7 +89,7 @@ program data_custody_protocol.aleo {
 
         let operation: Operation = Operation {
             is_addition: is_addition,
-            operand_value: value,
+            operand_value: value_,
             is_operand_private: true
         };
 
@@ -111,7 +111,7 @@ program data_custody_protocol.aleo {
         let validator_share_0: ValidatorShareData = ValidatorShareData {
             validator: validators[0u8],
             share: Share {
-                share_val: evaluate_polynomial(coefficients, threshold, index_0, value),
+                share_val: evaluate_polynomial(coefficients, threshold, index_0, value_),
                 index: index_0
             }
         };
@@ -120,7 +120,7 @@ program data_custody_protocol.aleo {
         let validator_share_1: ValidatorShareData = ValidatorShareData {
             validator: validators[1u8],
             share: Share {
-                share_val: evaluate_polynomial(coefficients, threshold, index_1, value),
+                share_val: evaluate_polynomial(coefficients, threshold, index_1, value_),
                 index: index_1
             }
         };
@@ -129,7 +129,7 @@ program data_custody_protocol.aleo {
         let validator_share_2: ValidatorShareData = ValidatorShareData {
             validator: validators[2u8],
             share: Share {
-                share_val: evaluate_polynomial(coefficients, threshold, index_2, value),
+                share_val: evaluate_polynomial(coefficients, threshold, index_2, value_),
                 index: index_2
             }
         };
@@ -138,7 +138,7 @@ program data_custody_protocol.aleo {
         let validator_share_3: ValidatorShareData = ValidatorShareData {
             validator: validators[3u8],
             share: Share {
-                share_val: evaluate_polynomial(coefficients, threshold, index_3, value),
+                share_val: evaluate_polynomial(coefficients, threshold, index_3, value_),
                 index: index_3
             }
         };
@@ -147,7 +147,7 @@ program data_custody_protocol.aleo {
         let validator_share_4: ValidatorShareData = ValidatorShareData {
             validator: validators[4u8],
             share: Share {
-                share_val: evaluate_polynomial(coefficients, threshold, index_4, value),
+                share_val: evaluate_polynomial(coefficients, threshold, index_4, value_),
                 index: index_4
             }
         };
@@ -156,7 +156,7 @@ program data_custody_protocol.aleo {
         let validator_share_5: ValidatorShareData = ValidatorShareData {
             validator: validators[5u8],
             share: Share {
-                share_val: evaluate_polynomial(coefficients, threshold, index_5, value),
+                share_val: evaluate_polynomial(coefficients, threshold, index_5, value_),
                 index: index_5
             }
         };
@@ -165,7 +165,7 @@ program data_custody_protocol.aleo {
         let validator_share_6: ValidatorShareData = ValidatorShareData {
             validator: validators[6u8],
             share: Share {
-                share_val: evaluate_polynomial(coefficients, threshold, index_6, value),
+                share_val: evaluate_polynomial(coefficients, threshold, index_6, value_),
                 index: index_6
             }
         };
@@ -174,7 +174,7 @@ program data_custody_protocol.aleo {
         let validator_share_7: ValidatorShareData = ValidatorShareData {
             validator: validators[7u8],
             share: Share {
-                share_val: evaluate_polynomial(coefficients, threshold, index_7, value),
+                share_val: evaluate_polynomial(coefficients, threshold, index_7, value_),
                 index: index_7
             }
         };
@@ -183,7 +183,7 @@ program data_custody_protocol.aleo {
         let validator_share_8: ValidatorShareData = ValidatorShareData {
             validator: validators[8u8],
             share: Share {
-                share_val: evaluate_polynomial(coefficients, threshold, index_8, value),
+                share_val: evaluate_polynomial(coefficients, threshold, index_8, value_),
                 index: index_8
             }
         };
@@ -192,7 +192,7 @@ program data_custody_protocol.aleo {
         let validator_share_9: ValidatorShareData = ValidatorShareData {
             validator: validators[9u8],
             share: Share {
-                share_val: evaluate_polynomial(coefficients, threshold, index_9, value),
+                share_val: evaluate_polynomial(coefficients, threshold, index_9, value_),
                 index: index_9
             }
         };
@@ -201,7 +201,7 @@ program data_custody_protocol.aleo {
         let validator_share_10: ValidatorShareData = ValidatorShareData {
             validator: validators[10u8],
             share: Share {
-                share_val: evaluate_polynomial(coefficients, threshold, index_10, value),
+                share_val: evaluate_polynomial(coefficients, threshold, index_10, value_),
                 index: index_10
             }
         };
@@ -210,7 +210,7 @@ program data_custody_protocol.aleo {
         let validator_share_11: ValidatorShareData = ValidatorShareData {
             validator: validators[11u8],
             share: Share {
-                share_val: evaluate_polynomial(coefficients, threshold, index_11, value),
+                share_val: evaluate_polynomial(coefficients, threshold, index_11, value_),
                 index: index_11
             }
         };
@@ -219,7 +219,7 @@ program data_custody_protocol.aleo {
         let validator_share_12: ValidatorShareData = ValidatorShareData {
             validator: validators[12u8],
             share: Share {
-                share_val: evaluate_polynomial(coefficients, threshold, index_12, value),
+                share_val: evaluate_polynomial(coefficients, threshold, index_12, value_),
                 index: index_12
             }
         };
@@ -228,7 +228,7 @@ program data_custody_protocol.aleo {
         let validator_share_13: ValidatorShareData = ValidatorShareData {
             validator: validators[13u8],
             share: Share {
-                share_val: evaluate_polynomial(coefficients, threshold, index_13, value),
+                share_val: evaluate_polynomial(coefficients, threshold, index_13, value_),
                 index: index_13
             }
         };
@@ -237,7 +237,7 @@ program data_custody_protocol.aleo {
         let validator_share_14: ValidatorShareData = ValidatorShareData {
             validator: validators[14u8],
             share: Share {
-                share_val: evaluate_polynomial(coefficients, threshold, index_14, value),
+                share_val: evaluate_polynomial(coefficients, threshold, index_14, value_),
                 index: index_14
             }
         };
@@ -246,7 +246,7 @@ program data_custody_protocol.aleo {
         let validator_share_15: ValidatorShareData = ValidatorShareData {
             validator: validators[15u8],
             share: Share {
-                share_val: evaluate_polynomial(coefficients, threshold, index_15, value),
+                share_val: evaluate_polynomial(coefficients, threshold, index_15, value_),
                 index: index_15
             }
         };
@@ -294,7 +294,7 @@ program data_custody_protocol.aleo {
 
 
     async transition add_or_mul_public(
-        private value: field,
+        private value_: field,
         private is_addition: bool,
         private custody_key: field,
         public validators: [address; 16], // MAX_VALIDATORS
@@ -302,7 +302,7 @@ program data_custody_protocol.aleo {
     ) -> Future {
         let operation: Operation = Operation {
             is_addition: is_addition,
-            operand_value: value,
+            operand_value: value_,
             is_operand_private: false
         };
         let operation_trace: field = BHP256::hash_to_field(operation);
@@ -318,7 +318,7 @@ program data_custody_protocol.aleo {
         let validator_share_0: ValidatorShareData = ValidatorShareData {
             validator: validators[0u8],
             share: Share {
-                share_val: value,
+                share_val: value_,
                 index: index_0
             }
         };
@@ -327,7 +327,7 @@ program data_custody_protocol.aleo {
         let validator_share_1: ValidatorShareData = ValidatorShareData {
             validator: validators[1u8],
             share: Share {
-                share_val: value,
+                share_val: value_,
                 index: index_1
             }
         };
@@ -336,7 +336,7 @@ program data_custody_protocol.aleo {
         let validator_share_2: ValidatorShareData = ValidatorShareData {
             validator: validators[2u8],
             share: Share {
-                share_val: value,
+                share_val: value_,
                 index: index_2
             }
         };
@@ -345,7 +345,7 @@ program data_custody_protocol.aleo {
         let validator_share_3: ValidatorShareData = ValidatorShareData {
             validator: validators[3u8],
             share: Share {
-                share_val: value,
+                share_val: value_,
                 index: index_3
             }
         };
@@ -354,7 +354,7 @@ program data_custody_protocol.aleo {
         let validator_share_4: ValidatorShareData = ValidatorShareData {
             validator: validators[4u8],
             share: Share {
-                share_val: value,
+                share_val: value_,
                 index: index_4
             }
         };
@@ -363,7 +363,7 @@ program data_custody_protocol.aleo {
         let validator_share_5: ValidatorShareData = ValidatorShareData {
             validator: validators[5u8],
             share: Share {
-                share_val: value,
+                share_val: value_,
                 index: index_5
             }
         };
@@ -372,7 +372,7 @@ program data_custody_protocol.aleo {
         let validator_share_6: ValidatorShareData = ValidatorShareData {
             validator: validators[6u8],
             share: Share {
-                share_val: value,
+                share_val: value_,
                 index: index_6
             }
         };
@@ -381,7 +381,7 @@ program data_custody_protocol.aleo {
         let validator_share_7: ValidatorShareData = ValidatorShareData {
             validator: validators[7u8],
             share: Share {
-                share_val: value,
+                share_val: value_,
                 index: index_7
             }
         };
@@ -390,7 +390,7 @@ program data_custody_protocol.aleo {
         let validator_share_8: ValidatorShareData = ValidatorShareData {
             validator: validators[8u8],
             share: Share {
-                share_val: value,
+                share_val: value_,
                 index: index_8
             }
         };
@@ -399,7 +399,7 @@ program data_custody_protocol.aleo {
         let validator_share_9: ValidatorShareData = ValidatorShareData {
             validator: validators[9u8],
             share: Share {
-                share_val: value,
+                share_val: value_,
                 index: index_9
             }
         };
@@ -408,7 +408,7 @@ program data_custody_protocol.aleo {
         let validator_share_10: ValidatorShareData = ValidatorShareData {
             validator: validators[10u8],
             share: Share {
-                share_val: value,
+                share_val: value_,
                 index: index_10
             }
         };
@@ -417,7 +417,7 @@ program data_custody_protocol.aleo {
         let validator_share_11: ValidatorShareData = ValidatorShareData {
             validator: validators[11u8],
             share: Share {
-                share_val: value,
+                share_val: value_,
                 index: index_11
             }
         };
@@ -426,7 +426,7 @@ program data_custody_protocol.aleo {
         let validator_share_12: ValidatorShareData = ValidatorShareData {
             validator: validators[12u8],
             share: Share {
-                share_val: value,
+                share_val: value_,
                 index: index_12
             }
         };
@@ -435,7 +435,7 @@ program data_custody_protocol.aleo {
         let validator_share_13: ValidatorShareData = ValidatorShareData {
             validator: validators[13u8],
             share: Share {
-                share_val: value,
+                share_val: value_,
                 index: index_13
             }
         };
@@ -444,7 +444,7 @@ program data_custody_protocol.aleo {
         let validator_share_14: ValidatorShareData = ValidatorShareData {
             validator: validators[14u8],
             share: Share {
-                share_val: value,
+                share_val: value_,
                 index: index_14
             }
         };
@@ -453,7 +453,7 @@ program data_custody_protocol.aleo {
         let validator_share_15: ValidatorShareData = ValidatorShareData {
             validator: validators[15u8],
             share: Share {
-                share_val: value,
+                share_val: value_,
                 index: index_15
             }
         };

@@ -3,6 +3,12 @@ import dcp_reconstruct_secret.aleo;
 
 
 program dcp_validator_shares.aleo {
+    struct Beaver {
+        triple_index: field,
+        beaver_type: u8,
+        validators: [address; 16]
+    }
+
     struct Custody {
         origin: address,
         custody_key: field,
@@ -51,18 +57,15 @@ program dcp_validator_shares.aleo {
         custody: Custody,
         custody_trace: field
     }
-        /*
-        Types:
-            0u8: addition public/private right operand
-            1u8: multiplication public right operand
-            2u8: multiplication private right operand
-            3u8: operation result
-            4u8: left beaver triple
-            5u8: right beaver triple
-            6u8: left beaver triple summed with left operand
-            7u8: right beaver triple summed with right operand
-            8u8: pre-processed multiplication private right operand
-        */
+    /*
+    Types:
+        0u8: addition public/private right operand
+        1u8: multiplication public right operand
+        2u8: multiplication private right operand
+        3u8: operation result
+        4u8: left beaver triple
+        5u8: right beaver triple
+    */
 
     inline hash_tuple(traces: [field; 2]) -> field{
         return BHP256::hash_to_field(traces);
@@ -275,16 +278,20 @@ program dcp_validator_shares.aleo {
         };
     }
 
-
     transition preprocess_private_mul(
         private left_operand: ValidatorShare,
         private right_operand: ValidatorShare,
         private left_beaver: ValidatorShare,
         private right_beaver: ValidatorShare,
         private sum_beaver: ValidatorShare,
-        public validators: [address; 16]
+        public validators: [address; 16],
+        public beaver_triple_index: field
     ) -> MulParams {
         assert_eq(left_operand.custody, right_operand.custody);
+
+        assert_eq(left_beaver.custody.origin, dcp_beaver_triples.aleo);
+        assert_eq(right_beaver.custody.origin, dcp_beaver_triples.aleo);
+        assert_eq(sum_beaver.custody.origin, dcp_beaver_triples.aleo);
 
         assert_eq(left_operand.share.index, left_beaver.share.index);
         assert_eq(left_beaver.share.index, right_operand.share.index);
@@ -295,10 +302,42 @@ program dcp_validator_shares.aleo {
             || left_operand.share_type == 1u8
             || left_operand.share_type == 3u8
         );
-        assert_eq(left_beaver.share_type, 4u8); // left beaver triple
-
         assert(right_operand.share_type == 2u8);
-        assert_eq(right_beaver.share_type, 5u8); // right beaver triple
+
+        let left_beaver_custody_key: field = BHP256::hash_to_field(
+            Beaver {
+                triple_index: beaver_triple_index,
+                beaver_type: 0u8,
+                validators: validators
+            }
+        );
+        let right_beaver_custody_key: field = BHP256::hash_to_field(
+            Beaver {
+                triple_index: beaver_triple_index,
+                beaver_type: 1u8,
+                validators: validators
+            }
+        );
+        let sum_beaver_custody_key: field = BHP256::hash_to_field(
+            Beaver {
+                triple_index: beaver_triple_index,
+                beaver_type: 2u8,
+                validators: validators
+            }
+        );
+
+        assert_eq(
+            left_beaver.custody.custody_key,
+            left_beaver_custody_key
+        );
+        assert_eq(
+            right_beaver.custody.custody_key,
+            right_beaver_custody_key
+        );
+        assert_eq(
+            sum_beaver.custody.custody_key,
+            sum_beaver_custody_key
+        );
 
         let beaver_summed_with_left_new_value: field = (
             left_operand.share.share_val 
@@ -338,7 +377,7 @@ program dcp_validator_shares.aleo {
             left_beaver_share_val: left_beaver.share.share_val,
             sum_beaver_share_val: sum_beaver.share.share_val,
             custody: left_operand.custody,
-            custody_trace: custody_trace
+            custody_trace: custody_trace,
             left: true
         };
         let mul_params_hash_left: field = BHP256::hash_to_field(mul_params_data_left);
@@ -349,7 +388,7 @@ program dcp_validator_shares.aleo {
             left_beaver_share_val: left_beaver.share.share_val,
             sum_beaver_share_val: sum_beaver.share.share_val,
             custody: left_operand.custody,
-            custody_trace: custody_trace
+            custody_trace: custody_trace,
             left: false
         };
         let mul_params_hash_right: field = BHP256::hash_to_field(mul_params_data_right);
@@ -357,13 +396,13 @@ program dcp_validator_shares.aleo {
         dcp_destination_shares.aleo/submit_list_request_shares(
             validators,
             beaver_summed_with_left_share,
-            mul_params_data.custody,
+            left_operand.custody,
             mul_params_hash_left
         );
         dcp_destination_shares.aleo/submit_list_request_shares(
             validators,
             beaver_summed_with_right_share,
-            mul_params_data.custody,
+            left_operand.custody,
             mul_params_hash_right
         );
         return mul_params;
@@ -372,8 +411,9 @@ program dcp_validator_shares.aleo {
     transition process_private_mul(
         mul_params: MulParams,
         left_inter_sum: dcp_reconstruct_secret.aleo/ReconstructedSecret,
-        right_inter_sum: dcp_reconstruct_secret.aleo/ReconstructedSecret,
+        right_inter_sum: dcp_reconstruct_secret.aleo/ReconstructedSecret
     ) -> ValidatorShare {
+
         let mul_params_data_left: MulParamsData = MulParamsData{
             index: mul_params.index,
             right_operand_share_val: mul_params.right_operand_share_val,
@@ -404,13 +444,14 @@ program dcp_validator_shares.aleo {
         dcp_reconstruct_secret.aleo/spend_reconstructed_secret(left_inter_sum);
         dcp_reconstruct_secret.aleo/spend_reconstructed_secret(right_inter_sum);
         
+        // The beaver trick happens here 🦫
         let new_val: field = (
             left_inter_sum.secret * mul_params.right_operand_share_val
             - right_inter_sum.secret * mul_params.left_beaver_share_val
             + mul_params.sum_beaver_share_val
-        ); // [z] = (x+a)[y] — (y+b)[a]+[c] = [x*y]
-        
-        let share: Share = {
+        ); // [z] = (x+a)[y] — (y+b)[a] + [c] = [x*y]
+
+        let share: Share = Share {
             share_val: new_val,
             index: mul_params.index
         };
