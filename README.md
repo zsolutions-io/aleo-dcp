@@ -50,7 +50,7 @@ Protocol enables programs to custody a field value and distribute it to a destin
 - **`add_private`** - Add a private operand to custodied value.
 - **`add_public`** - Add a public operand to custodied value.
 - **`mul_public`** - Multiply custodied value by a public operand.
-- **`mul_private`** - TODO: implement [beaver triple generation](./media/beaver-triple-generation.pdf) as well as [compute private multiplication from beaver triple](./media/beaver-triple-multiplication.png).
+- **`mul_private`** - `operation-support` branch implements [beaver triple generation](./media/beaver-triple-generation.pdf) as well as [compute private multiplication from beaver triple](./media/beaver-triple-multiplication.png).
 
 ![alt text](./media/aleo-dcp-schema-homomorphic.png)
 
